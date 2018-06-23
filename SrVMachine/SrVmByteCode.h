@@ -1,22 +1,31 @@
 /*
-  Project     "Script language reduced c++ (rc++)"
-  SubProject  "Virtual machine"
-  Author
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Виртуальная машина"
+  Автор
     Alexander Sibilev
-  Internet
-    www.rc.saliLab.ru - project home site
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
     www.saliLab.ru
     www.saliLab.com
 
-  Description
-    Byte-code for virtual machine
+  Описание
+    Байт-код виртуальной машины.
 */
 #ifndef SRVMBYTECODE_H
 #define SRVMBYTECODE_H
 
+/*!
+   \brief The SrVmByteCode enum перечень кодов команд виртуальной машины
 
-//Byte code command list [Перечень команд]
-//Commands name starts with VBCx when x - command lenght including command itself
+    Байт-код представляет собой линейный массив байтов
+    представляющих собой команды. Каждая команда начинается с кода команды, которая
+    представлена одним байтом. Все коды команд перечислены в SrVmByteCode.
+    За кодом команды может следовать параметр различной длины, а может и не следовать.
+    Длина параметра составляет один, два, три или четыре байта.
+
+    Идентификатор кода команды начинается с VBCx, где x - количество байтов команды
+    включая сам код команды.
+ */
 enum SrVmByteCode {
   VBC1_HALT = 0,
 
@@ -38,6 +47,9 @@ enum SrVmByteCode {
   VBC4_PUSH_GLOBAL,     //stack[--sp] = global[param]
   VBC2_PUSH_LOCAL,      //stack[--sp] = global[bp+offset]
 
+  //Разместить код исключения в стек
+  VBC1_PUSH_THROW,      //stack[--sp] = mThrow
+
   //Манипуляции с указателем стека
   VBC1_STACK_DN1,       //sp--
   VBC1_STACK_DN2,       //sp -= 2
@@ -53,23 +65,6 @@ enum SrVmByteCode {
   VBC3_STACK,           //sp += param; (param - число со знаком)
   VBC2_POP_RESULT,      //stack[bp+param] = stack[sp++]; Поместить верхушку стека в результат функции
   VBC1_ALLOC_RESULT,    //stack[sp-1] = stack[sp--];
-
-  //float operations
-  VBC1_FADD,            //global[sp+1] = global[sp+1] + global[sp]; sp++;
-  VBC1_FSUB,            //global[sp+1] = global[sp+1] - global[sp]; sp++;
-  VBC1_FEQU,            //global[sp+1] = global[sp+1] == global[sp]; sp++;
-  VBC1_FNOT_EQU,        //global[sp+1] = global[sp+1] != global[sp]; sp++;
-  VBC1_FLESS,           //global[sp+1] = global[sp+1] < global[sp]; sp++;
-  VBC1_FLESS_EQU,       //global[sp+1] = global[sp+1] <= global[sp]; sp++;
-  VBC1_FGREAT,          //global[sp+1] = global[sp+1] > global[sp]; sp++;
-  VBC1_FGREAT_EQU,      //global[sp+1] = global[sp+1] >= global[sp]; sp++;
-  VBC1_FMUL,            //global[sp+1] = global[sp+1] * global[sp]; sp++;
-  VBC1_FDIV,            //global[sp+1] = global[sp+1] / global[sp]; sp++;
-  VBC1_FNEG,            //global[sp] = -global[sp]
-
-  //conversion operations
-  VBC1_FLOAT_TO_INT,    //global[sp] = (int)global[sp]
-  VBC1_INT_TO_FLOAT,    //global[sp] = (float)global[sp]
 
   //integer operations
   VBC1_ADD,             //global[sp+1] = global[sp+1] + global[sp]; sp++;
@@ -164,10 +159,16 @@ enum SrVmByteCode {
   //Обработка исключений
   //Объявить, что в данной функции останавливаются заданные исключения
   VBC5_CATCH,           //tm = param;
+  VBC1_CATCH,           //tm = stack[sp++]
+
   //Возбудить исключение
-  VBC5_THROW,           //Делать:
+  VBC1_THROW,           //mThrow = stack[sp]
+  VBC5_THROW,           //mThrow = param
+                        //Если mThrow == 0, то ничего не делать
+                        //Делать:
                         // Возврат из функции
-                        // Пока на корневая функция или маска исключения функции не совпадет с исключением
+                        // Пока на корневая функция или маска исключения
+                        //   функции не совпадет с исключением (tm & mThrow) != 0
 
   //Инструкции, порождаемые специальными функциями
   VBC1_WAIT,            //Передача управления другому потоку

@@ -1,17 +1,30 @@
 /*
-            Virtual Processor Unit  (VPU5)
-  Author
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Виртуальная машина"
+  Автор
     Alexander Sibilev
-  Internet
-     www.saliLab.ru
-     www.saliLab.com
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
 
-  Description
+  Описание
     Утилиты общего назначения
 */
 #ifndef SVUTILS_H
 #define SVUTILS_H
 
+/*!
+  \defgroup srVmUtils Утилиты
+  \brief Функции-утилиты общего назначения
+  */
+
+/*!
+   \brief svIMin минимальное значение из двух целых
+   \param i1 значение 1
+   \param i2 значение 2
+   \return минимальное значение из i1 и i2
+ */
 inline int svIMin( int i1, int i2 ) { return i1 < i2 ? i1 : i2; }
 inline int svIMax( int i1, int i2 ) { return i1 > i2 ? i1 : i2; }
 inline int svIAbs( int i1 ) { return i1 < 0 ? -i1 : i1; }

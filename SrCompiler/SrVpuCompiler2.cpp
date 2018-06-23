@@ -1,16 +1,20 @@
 /*
-Project "Electronic schematic and pcb CAD"
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Пико-компилятор"
+  Автор
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
 
-Author
-  Sibilev Alexander S.
+  Описание
+    Пико генератор байт-кода скриптового языка rc++
 
-Web
-  www.saliLab.com
-  www.saliLab.ru
-
-Description
+    Точка входа для построения и функции генерации
 */
-#include "SrVpuCompiler.h"
+#include "SrCompiler/SrVpuCompiler.h"
+#include "SrVMachine/SrVmByteCode.h"
 #include <QDebug>
 
 using namespace SrCompiler6;
@@ -32,8 +36,22 @@ void SrVpuCompiler::gValue(SrProgramm *prog, SrValue *val, bool keepValue, bool 
 
     case svvWaitFun :   //Специальная функция wait
       //Вызвать функцию ожидания
-      prog->addCode( VPC1_WAIT, val->mMark );
-      codePrint( QString("VPC1_WAIT") );
+      prog->addCode( VBC1_WAIT, val->mMark );
+      codePrint( QString("VBC1_WAIT") );
+      break;
+
+    case svvExceptionFun :
+      //Вызвать функцию возвращающую код исключения
+      prog->addCode( VBC1_PUSH_THROW, val->mMark );
+      codePrint( QString("VBC1_PUSH_THROW") );
+      break;
+
+    case svvCatchFun :
+      gValueCatchFun( prog, dynamic_cast<SrValueCatchFun*>(val) );
+      break;
+
+    case svvThrowFun :
+      gValueThrowFun( prog, dynamic_cast<SrValueThrowFun*>(val) );
       break;
 
     case svvMemberVariable :  //Член от произвольной структуры структуры
@@ -93,95 +111,95 @@ void SrVpuCompiler::gValue(SrProgramm *prog, SrValue *val, bool keepValue, bool 
       break;
 
     case svvMul :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_MUL, QString("VPC1_MUL") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_MUL, QString("VBC1_MUL") );
       break;
 
     case svvMulStore :
-      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_MUL, QString("VPC1_MUL") );
+      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_MUL, QString("VBC1_MUL") );
       break;
 
     case svvDiv :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_DIV, QString("VPC1_DIV") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_DIV, QString("VBC1_DIV") );
       break;
 
     case svvDivStore :
-      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_DIV, QString("VPC1_DIV") );
+      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_DIV, QString("VBC1_DIV") );
       break;
 
     case svvMod :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_MOD, QString("VPC1_MOD") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_MOD, QString("VBC1_MOD") );
       break;
 
     case svvModStore :
-      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_MOD, QString("VPC1_MOD") );
+      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_MOD, QString("VBC1_MOD") );
       break;
 
     case svvAdd :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_ADD, QString("VPC1_ADD") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_ADD, QString("VBC1_ADD") );
       break;
 
     case svvAddStore :
-      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_ADD, QString("VPC1_ADD") );
+      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_ADD, QString("VBC1_ADD") );
       break;
 
     case svvSub :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_SUB, QString("VPC1_SUB") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_SUB, QString("VBC1_SUB") );
       break;
 
     case svvSubStore :
-      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_SUB, QString("VPC1_SUB") );
+      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_SUB, QString("VBC1_SUB") );
       break;
 
     case svvLShift :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_LSHIFT, QString("VPC1_LSHIFT") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_LSHIFT, QString("VBC1_LSHIFT") );
       break;
 
     case svvLShiftStore :
-      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_LSHIFT, QString("VPC1_LSHIFT") );
+      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_LSHIFT, QString("VBC1_LSHIFT") );
       break;
 
     case svvRShift :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_RSHIFT, QString("VPC1_RSHIFT") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_RSHIFT, QString("VBC1_RSHIFT") );
       break;
 
     case svvRShiftStore :
-      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_RSHIFT, QString("VPC1_RSHIFT") );
+      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_RSHIFT, QString("VBC1_RSHIFT") );
       break;
 
     case svvOrStore :
-      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_OR, QString("VPC1_OR") );
+      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_OR, QString("VBC1_OR") );
       break;
 
     case svvAndStore :
-      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_AND, QString("VPC1_AND") );
+      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_AND, QString("VBC1_AND") );
       break;
 
     case svvXorStore :
-      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_XOR, QString("VPC1_XOR") );
+      gvvBinaryStore( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_XOR, QString("VBC1_XOR") );
       break;
 
     case svvEqu :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_EQU, QString("VPC1_EQU") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_EQU, QString("VBC1_EQU") );
       break;
 
     case svvNotEqu :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_NOT_EQU, QString("VPC1_NOT_EQU") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_NOT_EQU, QString("VBC1_NOT_EQU") );
       break;
 
     case svvLessEqu :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_LESS_EQU, QString("VPC1_LESS_EQU") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_LESS_EQU, QString("VBC1_LESS_EQU") );
       break;
 
     case svvLess :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_LESS, QString("VPC1_LESS") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_LESS, QString("VBC1_LESS") );
       break;
 
     case svvGreat :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_GREAT, QString("VPC1_GREAT") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_GREAT, QString("VBC1_GREAT") );
       break;
 
     case svvGreatEqu :
-      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VPC1_GREAT_EQU, QString("VPC1_GREAT_EQU") );
+      gvvBinary( prog, dynamic_cast<SrValueBinary*>(val), keepValue, address, VBC1_GREAT_EQU, QString("VBC1_GREAT_EQU") );
       break;
 
     case svvLogAnd :
@@ -193,15 +211,15 @@ void SrVpuCompiler::gValue(SrProgramm *prog, SrValue *val, bool keepValue, bool 
       break;
 
     case svvOr :
-      gvvBinaryLong( prog, dynamic_cast<SrValueBinaryLong*>(val), keepValue, address, VPC1_OR, QString("VPC1_OR") );
+      gvvBinaryLong( prog, dynamic_cast<SrValueBinaryLong*>(val), keepValue, address, VBC1_OR, QString("VBC1_OR") );
       break;
 
     case svvAnd :
-      gvvBinaryLong( prog, dynamic_cast<SrValueBinaryLong*>(val), keepValue, address, VPC1_AND, QString("VPC1_AND") );
+      gvvBinaryLong( prog, dynamic_cast<SrValueBinaryLong*>(val), keepValue, address, VBC1_AND, QString("VBC1_AND") );
       break;
 
     case svvXor :
-      gvvBinaryLong( prog, dynamic_cast<SrValueBinaryLong*>(val), keepValue, address, VPC1_XOR, QString("VPC1_XOR") );
+      gvvBinaryLong( prog, dynamic_cast<SrValueBinaryLong*>(val), keepValue, address, VBC1_XOR, QString("VBC1_XOR") );
       break;
 
     case svvComma :      //Операция ,
@@ -235,7 +253,7 @@ void SrVpuCompiler::gvvVariable(SrProgramm *prog, SrValueVariable *var, bool kee
     Error( QObject::tr("Error. gvvVariable") );
     return;
     }
-  if( var->mVariable == 0 ) {
+  if( var->mVariable == nullptr ) {
     var->mType = mTypeInt;
     errorInLine( QObject::tr("Error. Undefined variable"), var->mMark );
     return;
@@ -248,25 +266,23 @@ void SrVpuCompiler::gvvVariable(SrProgramm *prog, SrValueVariable *var, bool kee
   else {
 
     //Проверить на массив
-    if( (address || var->mVariable->mType->isArray() || var->mVariable->mType->isStruct()) && keepValue ) {
+    if( (address || var->mVariable->mType->isArray()) && keepValue ) {
       switch ( var->mVariable->mSort ) {
         case tsrGlobal :
           //Глобальная переменная
-          prog->addCodeParam24( VPC4_PUSH_CONST, var->mVariable->mAddress, var->mMark );
-          codePrint( QString("VPC4_PUSH_CONST ") + var->mVariable->mName + QString("<%1>").arg( var->mVariable->mAddress ) );
+          gPushConst( prog, var->mVariable->mAddress + var->mAddonAddress, var->mMark, var->mVariable->mName + QString(".%1").arg(var->mAddonAddress) );
           var->mConst = true;
           var->mConstInt = var->mVariable->mAddress;
           break;
 
         case tsrLocal :
           //Локальная переменная
-          prog->addCodeParam8( VPC2_PUSH_B_OFFSET, var->mVariable->mAddress, var->mMark );
-          codePrint( QString("VPC2_PUSH_B_OFFSET ") + var->mVariable->mName + QString("<%1>").arg( var->mVariable->mAddress ) );
+          prog->addCodeParam8( VBC2_PUSH_B_OFFSET, var->mVariable->mAddress + var->mAddonAddress, var->mMark );
+          codePrint( QString("VBC2_PUSH_B_OFFSET ") + var->mVariable->mName + QString("<%1.%2>").arg( var->mVariable->mAddress ).arg( var->mAddonAddress ) );
           break;
 
         case tsrMember :
-          prog->addCodeParam8( VPC2_PUSH_T_OFFSET, var->mVariable->mAddress, var->mMark );
-          codePrint( QString("VPC2_PUSH_T_OFFSET ") + var->mVariable->mName + QString("<%1>").arg( var->mVariable->mAddress ) );
+          errorInLine( QObject::tr("Internal error 1."), var->mMark );
           break;
         }
       }
@@ -274,31 +290,18 @@ void SrVpuCompiler::gvvVariable(SrProgramm *prog, SrValueVariable *var, bool kee
       switch ( var->mVariable->mSort ) {
         case tsrGlobal :
           //Глобальная переменная
-          if( var->mVariable->mType->isObject() ) {
-            prog->addCodeParam24( VPC4_OBJ_PUSH_GLOBAL, var->mVariable->mAddress, var->mMark );
-            codePrint( QString("VPC4_OBJ_PUSH_GLOBAL ") + var->mVariable->mName + QString("<%1>").arg( var->mVariable->mAddress ) );
-            }
-          else {
-            prog->addCodeParam24( VPC4_PUSH_GLOBAL, var->mVariable->mAddress, var->mMark );
-            codePrint( QString("VPC4_PUSH_GLOBAL ") + var->mVariable->mName + QString("<%1>").arg( var->mVariable->mAddress ) );
-            }
+          prog->addCodeParam24( VBC4_PUSH_GLOBAL, var->mVariable->mAddress + var->mAddonAddress, var->mMark );
+          codePrint( QString("VBC4_PUSH_GLOBAL ") + var->mVariable->mName + QString("<%1.%2>").arg( var->mVariable->mAddress ).arg( var->mAddonAddress ) );
           break;
 
         case tsrLocal :
           //Локальная переменная
-          if( var->mVariable->mType->isObject() ) {
-            prog->addCodeParam8( VPC2_OBJ_PUSH_LOCAL, var->mVariable->mAddress, var->mMark );
-            codePrint( QString("VPC2_OBJ_PUSH_LOCAL ") + var->mVariable->mName + QString("<%1>").arg( var->mVariable->mAddress ) );
-            }
-          else {
-            prog->addCodeParam8( VPC2_PUSH_LOCAL, var->mVariable->mAddress, var->mMark );
-            codePrint( QString("VPC2_PUSH_LOCAL ") + var->mVariable->mName + QString("<%1>").arg( var->mVariable->mAddress ) );
-            }
+          prog->addCodeParam8( VBC2_PUSH_LOCAL, var->mVariable->mAddress + var->mAddonAddress, var->mMark );
+          codePrint( QString("VBC2_PUSH_LOCAL ") + var->mVariable->mName + QString("<%1.%2>").arg( var->mVariable->mAddress ).arg( var->mAddonAddress ) );
           break;
 
         case tsrMember :
-          prog->addCodeParam8( VPC2_PUSH_MEMBER, var->mVariable->mAddress, var->mMark );
-          codePrint( QString("VPC2_PUSH_MEMBER ") + var->mVariable->mName + QString("<%1>").arg( var->mVariable->mAddress ) );
+          errorInLine( QObject::tr("Internal error 2."), var->mMark );
           break;
         }
       }
@@ -322,38 +325,6 @@ void SrVpuCompiler::gvvVariable(SrProgramm *prog, SrValueVariable *var, bool kee
   }
 
 
-
-
-
-void SrVpuCompiler::gvvProperty(SrProgramm *prog, SrValueProperty *prop, bool keepValue, bool address)
-  {
-  if( prop == 0 ) {
-    Error( QObject::tr("Error. gvvProperty") );
-    return;
-    }
-  if( prop->mProperty == 0 ) {
-    prop->mType = mTypeInt;
-    errorInLine( QObject::tr("Error. Undefined property"), prop->mMark );
-    return;
-    }
-  if( keepValue ) {
-    int addr = prop->mProperty->mIndex;
-    if( address ) {
-      prog->addCodeParam32( VPC5_PROP_PUSH_ADDR, addr, prop->mMark );
-      codePrint( QString("VPC5_PUSH_PROP_ADDR ") + prop->mProperty->mName + QString("<%1>").arg(prop->mProperty->mIndex) );
-      }
-    else {
-      prog->addCodeParam32( VPC5_PROP_PUSH, addr, prop->mMark );
-      codePrint( QString("VPC5_PUSH_PROP ") + prop->mProperty->mName + QString("<%1>").arg(prop->mProperty->mIndex) );
-      }
-    }
-
-  //Разобраться с типами
-  if( address )
-    prop->mType = prop->mProperty->mType->getTypePropPointer();
-  else
-    prop->mType = prop->mProperty->mType;
-  }
 
 
 
@@ -383,22 +354,14 @@ void SrVpuCompiler::gvvFunction(SrProgramm *prog, SrValueFunction *fun, bool kee
 
     if( fun->mFunction->mImportIndex ) {
       //Импортная функция
-      prog->addCodeParam32( VPC5_PUSH_CONST, fun->mFunction->mImportIndex | 0x80000000, fun->mMark );
-      codePrint( QString("VPC5_PUSH_CONST %1 [%2]").arg(fun->mFunction->mName).arg(fun->mFunction->mImportIndex) );
+      prog->addCodeParam32( VBC5_PUSH_CONST, fun->mFunction->mImportIndex | 0x80000000, fun->mMark );
+      codePrint( QString("VBC5_PUSH_CONST %1 [%2]").arg(fun->mFunction->mName).arg(fun->mFunction->mImportIndex) );
       fun->mConst = true;
       fun->mConstInt = fun->mFunction->mImportIndex | 0x80000000;
       }
-
-    else if( fun->mFunction->mMemberIndex ) {
-      //Функция-член от this
-      prog->addCodeParam16( VPC3_PUSH_T_FUNCTION, fun->mFunction->mMemberIndex, fun->mMark );
-      codePrint( QString("VPC3_PUSH_T_FUNCTION %1 [%2]").arg(fun->mFunction->mName).arg(fun->mFunction->mMemberIndex) );
-      }
-
     else {
       //Глобальная функция
-      prog->addCodeParam24( VPC4_PUSH_CONST, fun->mFunction->mAddress, fun->mMark );
-      codePrint( QString("VPC4_PUSH_CONST %1 [%2]").arg(fun->mFunction->mName).arg(fun->mFunction->mAddress) );
+      gPushConst( prog, fun->mFunction->mAddress, fun->mMark, fun->mFunction->mName );
       fun->mConst = true;
       fun->mConstInt = fun->mFunction->mAddress;
       }
@@ -446,11 +409,9 @@ void SrVpuCompiler::gvvConstString(SrProgramm *prog, SrValueConstString *cnst, b
     errorInLine( QObject::tr("Error. Need LValue"), cnst->mMark );
     return;
     }
-  if( keepValue ) {
+  if( keepValue )
     //Загружаем константное значение
-    prog->addCodeParam24( VPC4_PUSH_CSTRING, cnst->mIndex, cnst->mMark );
-    codePrint( QString("VPC4_PUSH_CSTRING %1 [%2]").arg(cnst->mIndex).arg(mStringTable.at(cnst->mIndex)) );
-    }
+    gPushConst( prog, cnst->mIndex, cnst->mMark, mStringTable.at(cnst->mIndex) );
   }
 
 
@@ -508,27 +469,34 @@ void SrVpuCompiler::gvvMemberVariable(SrProgramm *prog, SrValueMemberVariable *v
   //Если структура имеет константный адрес, то сразу все вычисляем
   if( var->mStruct->isConst() ) {
     if( keepValue ) {
-      int addr = var->mStruct->mConstInt + var->mVariable->mAddress;
+      int addr = var->mStruct->mConstInt + var->mVariable->mAddress + var->mAddonAddress;
       if( address )
-        gPushConst( prog, addr, var->mMark );
+        gPushConst( prog, addr, var->mMark, QString(".") + var->mVariable->mName );
       else {
         //Глобальная переменная
-        prog->addCodeParam24( VPC4_PUSH_GLOBAL, addr, var->mMark );
-        codePrint( QString("VPC4_PUSH_GLOBAL %1.").arg(var->mStruct->mConstInt) + var->mVariable->mName + QString("<%1>").arg( var->mVariable->mAddress ) );
+        prog->addCodeParam24( VBC4_PUSH_GLOBAL, addr, var->mMark );
+        codePrint( QString("VBC4_PUSH_GLOBAL %1.").arg(addr) + var->mVariable->mName + QString("<%1>").arg( var->mVariable->mAddress ) );
         }
       }
     }
   else {
     //Получить значение указателя
-    gValue( prog, var->mStruct, keepValue, true );
-    if( keepValue ) {
-      //Суммируем с адресом члена
-      gPushConst( prog, var->mVariable->mAddress, var->mMark );
-      prog->addCode( VPC1_ADD, var->mMark );
-      codePrint( QString("VPC1_AAD") );
-      if( !address ) {
-        //Нужно само значение по указателю
-        gLoad( prog, var );
+    SrValueVariable *structVar = dynamic_cast<SrValueVariable*>(var->mStruct);
+    if( structVar != nullptr ) {
+      //Если есть непосредственный доступ к переменной, то выполнить
+      structVar->mAddonAddress = var->mVariable->mAddress + var->mAddonAddress;
+      gValue( prog, var->mStruct, keepValue, address );
+      }
+    else {
+      gValue( prog, var->mStruct, keepValue, true );
+      if( keepValue ) {
+        //Суммируем с адресом члена
+        gPushConst( prog, var->mVariable->mAddress + var->mAddonAddress, var->mMark, QString(".") + var->mVariable->mName );
+        prog->addCode( VBC1_ADD, var->mMark );
+        codePrint( QString("VBC1_ADD") );
+        if( !address )
+          //Нужно само значение по указателю
+          gLoad( prog, var );
         }
       }
     }
@@ -544,43 +512,6 @@ void SrVpuCompiler::gvvMemberVariable(SrProgramm *prog, SrValueMemberVariable *v
 
 
 
-
-void SrVpuCompiler::gvvMemberFunction(SrProgramm *prog, SrValueMemberFunction *fun, bool keepValue, bool address)
-  {
-  if( fun == 0 ) {
-    Error( QObject::tr("Error. gvvMemberFunction") );
-    return;
-    }
-  fun->mType = mTypeInt;
-  if( address ) {
-    errorInLine( QObject::tr("Error. Need LValue"), fun->mMark );
-    return;
-    }
-  if( fun->mFunction == 0 || fun->mStruct == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined function"), fun->mMark );
-    return;
-    }
-
-  fun->mType = fun->mFunction->mType;
-
-  //Получить значение указателя
-  gValue( prog, fun->mStruct, keepValue, false );
-
-  if( keepValue ) {
-    if( fun->mFunction->mImportIndex ) {
-      //Сформировать указатель на функцию-член объекта
-      prog->addCodeParam8( VPC2_OBJ_ADD_FMEMBER, fun->mFunction->mImportIndex, fun->mMark );
-      codePrint( QString("VPC2_OBJ_ADD_FMEMBER %1 [%2]").arg(fun->mFunction->mName).arg(fun->mFunction->mImportIndex) );
-      }
-    else if( fun->mFunction->mMemberIndex == 0 )
-      errorInLine( QObject::tr("Error. Not member function"), fun->mMark );
-    else {
-      //Сформировать указатель на функцию-член
-      prog->addCodeParam8( VPC2_ADD_FMEMBER, fun->mFunction->mMemberIndex, fun->mMark );
-      codePrint( QString("VPC2_ADD_FMEMBER %1 [%2]").arg(fun->mFunction->mName).arg(fun->mFunction->mMemberIndex) );
-      }
-    }
-  }
 
 
 
@@ -638,7 +569,7 @@ void SrVpuCompiler::gvvPredInc(SrProgramm *prog, SrValuePredInc *inc, bool keepV
   //Получить адрес, по которому нужно выполнить инкремент
   gValue( prog, inc->mOperand, true, true );
 
-  if( inc->mOperand->mType->isPointer() && !inc->mOperand->mType->mBaseType->isObject() )
+  if( inc->mOperand->mType->isPointer() )
     inc->mType = inc->mOperand->mType->mBaseType;
   else {
     ErrorInLine( QObject::tr("Error. Undefined increment to"), inc->mMark.mFile, inc->mMark.mLine );
@@ -648,23 +579,23 @@ void SrVpuCompiler::gvvPredInc(SrProgramm *prog, SrValuePredInc *inc, bool keepV
   if( inc->mType->isInt() ) {
     //Для целых чисел инкремент на 1
     if( keepValue ) {
-      prog->addCode( VPC1_PRED_INC, inc->mMark );
-      codePrint( QString("VPC1_PRED_INC") );
+      prog->addCode( VBC1_PRED_INC, inc->mMark );
+      codePrint( QString("VBC1_PRED_INC") );
       }
     else {
-      prog->addCode( VPC1_INC, inc->mMark );
-      codePrint( QString("VPC1_INC") );
+      prog->addCode( VBC1_INC, inc->mMark );
+      codePrint( QString("VBC1_INC") );
       }
     }
   else if( inc->mType->isPointer() ) {
     //Для указателей инкремент на размер объекта
     if( keepValue ) {
-      prog->addCodeParam24( VPC4_PRED_INC, inc->mType->mBaseType->mSize, inc->mMark );
-      codePrint( QString("VPC4_PRED_INC %1").arg(inc->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_PRED_INC, inc->mType->mBaseType->mSize, inc->mMark );
+      codePrint( QString("VBC4_PRED_INC %1").arg(inc->mType->mBaseType->mSize) );
       }
     else {
-      prog->addCodeParam24( VPC4_INC, inc->mType->mBaseType->mSize, inc->mMark );
-      codePrint( QString("VPC4_INC %1").arg(inc->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_INC, inc->mType->mBaseType->mSize, inc->mMark );
+      codePrint( QString("VBC4_INC %1").arg(inc->mType->mBaseType->mSize) );
       }
     }
   else
@@ -696,7 +627,7 @@ void SrVpuCompiler::gvvPredDec(SrProgramm *prog, SrValuePredDec *dec, bool keepV
   //Получить адрес, по которому нужно выполнить инкремент
   gValue( prog, dec->mOperand, true, true );
 
-  if( dec->mOperand->mType->isPointer() && !dec->mOperand->mType->mBaseType->isObject() )
+  if( dec->mOperand->mType->isPointer() )
     dec->mType = dec->mOperand->mType->mBaseType;
   else {
     errorInLine( QObject::tr("Error. Undefined decrement to"), dec->mMark );
@@ -706,23 +637,23 @@ void SrVpuCompiler::gvvPredDec(SrProgramm *prog, SrValuePredDec *dec, bool keepV
   if( dec->mType->isInt() ) {
     //Для целых чисел декремент на 1
     if( keepValue ) {
-      prog->addCode( VPC1_PRED_DEC, dec->mMark );
-      codePrint( QString("VPC1_PRED_DEC") );
+      prog->addCode( VBC1_PRED_DEC, dec->mMark );
+      codePrint( QString("VBC1_PRED_DEC") );
       }
     else {
-      prog->addCode( VPC1_DEC, dec->mMark );
-      codePrint( QString("VPC1_DEC") );
+      prog->addCode( VBC1_DEC, dec->mMark );
+      codePrint( QString("VBC1_DEC") );
       }
     }
   else if( dec->mType->isPointer() ) {
     //Для указателей инкремент на размер объекта
     if( keepValue ) {
-      prog->addCodeParam24( VPC4_PRED_DEC, dec->mType->mBaseType->mSize, dec->mMark );
-      codePrint( QString("VPC4_PRED_DEC %1").arg(dec->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_PRED_DEC, dec->mType->mBaseType->mSize, dec->mMark );
+      codePrint( QString("VBC4_PRED_DEC %1").arg(dec->mType->mBaseType->mSize) );
       }
     else {
-      prog->addCodeParam24( VPC4_DEC, dec->mType->mBaseType->mSize, dec->mMark );
-      codePrint( QString("VPC4_DEC %1").arg(dec->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_DEC, dec->mType->mBaseType->mSize, dec->mMark );
+      codePrint( QString("VBC4_DEC %1").arg(dec->mType->mBaseType->mSize) );
       }
     }
   else
@@ -752,7 +683,7 @@ void SrVpuCompiler::gvvPostInc(SrProgramm *prog, SrValuePostInc *inc, bool keepV
   //Получить адрес, по которому нужно выполнить инкремент
   gValue( prog, inc->mOperand, true, true );
 
-  if( inc->mOperand->mType->isPointer() && !inc->mOperand->mType->mBaseType->isObject() )
+  if( inc->mOperand->mType->isPointer() )
     inc->mType = inc->mOperand->mType->mBaseType;
   else {
     errorInLine( QObject::tr("Error. Undefined increment to"), inc->mMark );
@@ -761,23 +692,23 @@ void SrVpuCompiler::gvvPostInc(SrProgramm *prog, SrValuePostInc *inc, bool keepV
   if( inc->mType->isInt() ) {
     //Для целых чисел инкремент на 1
     if( keepValue ) {
-      prog->addCode( VPC1_POST_INC, inc->mMark );
-      codePrint( QString("VPC1_POST_INC") );
+      prog->addCode( VBC1_POST_INC, inc->mMark );
+      codePrint( QString("VBC1_POST_INC") );
       }
     else {
-      prog->addCode( VPC1_INC, inc->mMark );
-      codePrint( QString("VPC1_INC") );
+      prog->addCode( VBC1_INC, inc->mMark );
+      codePrint( QString("VBC1_INC") );
       }
     }
   else if( inc->mType->isPointer() ) {
     //Для указателей инкремент на размер объекта
     if( keepValue ) {
-      prog->addCodeParam24( VPC4_POST_INC, inc->mType->mBaseType->mSize, inc->mMark );
-      codePrint( QString("VPC4_POST_INC %1").arg(inc->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_POST_INC, inc->mType->mBaseType->mSize, inc->mMark );
+      codePrint( QString("VBC4_POST_INC %1").arg(inc->mType->mBaseType->mSize) );
       }
     else {
-      prog->addCodeParam24( VPC4_INC, inc->mType->mBaseType->mSize, inc->mMark );
-      codePrint( QString("VPC4_INC %1").arg(inc->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_INC, inc->mType->mBaseType->mSize, inc->mMark );
+      codePrint( QString("VBC4_INC %1").arg(inc->mType->mBaseType->mSize) );
       }
     }
   else
@@ -806,7 +737,7 @@ void SrVpuCompiler::gvvPostDec(SrProgramm *prog, SrValuePostDec *dec, bool keepV
   //Получить адрес, по которому нужно выполнить инкремент
   gValue( prog, dec->mOperand, true, true );
 
-  if( dec->mOperand->mType->isPointer() && !dec->mOperand->mType->mBaseType->isObject() )
+  if( dec->mOperand->mType->isPointer() )
     dec->mType = dec->mOperand->mType->mBaseType;
   else {
     errorInLine( QObject::tr("Error. Undefined decrement to"), dec->mMark );
@@ -816,23 +747,23 @@ void SrVpuCompiler::gvvPostDec(SrProgramm *prog, SrValuePostDec *dec, bool keepV
   if( dec->mType->isInt() ) {
     //Для целых чисел декремент на 1
     if( keepValue ) {
-      prog->addCode( VPC1_POST_DEC, dec->mMark );
-      codePrint( QString("VPC1_POST_DEC") );
+      prog->addCode( VBC1_POST_DEC, dec->mMark );
+      codePrint( QString("VBC1_POST_DEC") );
       }
     else {
-      prog->addCode( VPC1_DEC, dec->mMark );
-      codePrint( QString("VPC1_DEC") );
+      prog->addCode( VBC1_DEC, dec->mMark );
+      codePrint( QString("VBC1_DEC") );
       }
     }
   else if( dec->mType->isPointer() ) {
     //Для указателей инкремент на размер объекта
     if( keepValue ) {
-      prog->addCodeParam24( VPC4_POST_DEC, dec->mType->mBaseType->mSize, dec->mMark );
-      codePrint( QString("VPC4_POST_DEC %1").arg(dec->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_POST_DEC, dec->mType->mBaseType->mSize, dec->mMark );
+      codePrint( QString("VBC4_POST_DEC %1").arg(dec->mType->mBaseType->mSize) );
       }
     else {
-      prog->addCodeParam24( VPC4_DEC, dec->mType->mBaseType->mSize, dec->mMark );
-      codePrint( QString("VPC4_DEC %1").arg(dec->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_DEC, dec->mType->mBaseType->mSize, dec->mMark );
+      codePrint( QString("VBC4_DEC %1").arg(dec->mType->mBaseType->mSize) );
       }
     }
   else
@@ -880,8 +811,8 @@ void SrVpuCompiler::gvvNot(SrProgramm *prog, SrValueBitNot *vnot, bool keepValue
       errorInLine( QObject::tr("Error. Not allowed only with int"), vnot->mMark );
 
     if( keepValue ) {
-      prog->addCode( VPC1_NOT, vnot->mMark );
-      codePrint( QString("VPC1_NOT") );
+      prog->addCode( VBC1_NOT, vnot->mMark );
+      codePrint( QString("VBC1_NOT") );
       }
     }
   }
@@ -923,8 +854,8 @@ void SrVpuCompiler::gvvLogNot(SrProgramm *prog, SrValueLogNot *logNot, bool keep
       }
 
     if( keepValue ) {
-      prog->addCode( VPC1_LNOT, logNot->mMark );
-      codePrint( QString("VPC1_LNOT") );
+      prog->addCode( VBC1_LNOT, logNot->mMark );
+      codePrint( QString("VBC1_LNOT") );
       }
     }
   }
@@ -965,8 +896,8 @@ void SrVpuCompiler::gvvNeg(SrProgramm *prog, SrValueNeg *neg, bool keepValue, bo
       errorInLine( QObject::tr("Error. NEG allowed only with int"), neg->mMark );
 
     if( keepValue ) {
-      prog->addCode( VPC1_NEG, neg->mMark );
-      codePrint( QString("VPC1_NEG") );
+      prog->addCode( VBC1_NEG, neg->mMark );
+      codePrint( QString("VBC1_NEG") );
       }
     }
   }
@@ -1004,40 +935,17 @@ void SrVpuCompiler::gvvStore(SrProgramm *prog, SrValueStore *store, bool keepVal
     return;
     }
   if( keepValue ) {
-    if( store->mOperand1->mType->isPropPtr() ) {
-      //Идет сохранение в свойство
-      prog->addCode( VPC1_PROP_STORE, store->mMark );
-      codePrint( QString("VPC1_PROP_STORE") );
-      }
-    else if( store->mOperand2->mType->isObject() ) {
-      //Сохранение объекта
-      prog->addCode( VPC1_OBJ_STORE, store->mMark );
-      codePrint( QString("VPC1_OBJ_STORE") );
-      }
-    else {
-      //Сохранение значения
-      prog->addCode( VPC1_STORE, store->mMark );
-      codePrint( QString("VPC1_STORE") );
-      }
+    //Сохранение значения
+    prog->addCode( VBC1_STORE, store->mMark );
+    codePrint( QString("VBC1_STORE") );
     }
   else {
-    if( store->mOperand1->mType->isPropPtr() ) {
-      //Идет сохранение в свойство
-      prog->addCode( VPC1_PROP_POP, store->mMark );
-      codePrint( QString("VPC1_PROP_POP") );
-      }
-    else if( store->mOperand2->mType->isObject() ) {
-      //Сохранение объекта
-      prog->addCode( VPC1_OBJ_POP, store->mMark );
-      codePrint( QString("VPC1_OBJ_POP") );
-      }
-    else {
-      //Сохранение значения
-      prog->addCode( VPC1_POP, store->mMark );
-      codePrint( QString("VPC1_POP") );
-      }
+    //Сохранение значения
+    prog->addCode( VBC1_POP, store->mMark );
+    codePrint( QString("VBC1_POP") );
     }
   }
+
 
 
 
@@ -1054,8 +962,21 @@ void SrVpuCompiler::gvvArrayCell(SrProgramm *prog, SrValueArrayCell *array, bool
     return;
     }
   if( array->mConst ) {
-    if( keepValue )
+    if( keepValue ) {
       gPushConst( prog, array->mConstInt, array->mMark );
+      if( !address )
+        gLoad( prog, array );
+      }
+    }
+  else if( array->mOperand2->isConst() ) {
+    //Получить адрес массива
+    gValue( prog, array->mOperand1, keepValue, false );
+    //Загрузить константное смещение и сложить
+    gPushConst( prog, array->mOperand2->mConstInt * array->mOperand1->mType->mBaseType->mSize, array->mMark, QString::number(array->mOperand2->mConstInt) );
+    prog->addCode( VBC1_ADD, array->mMark );
+    codePrint( QString("VBC1_ADD") );
+    if( !address )
+      gLoad( prog, array );
     }
   else {
     //Получить адрес массива
@@ -1076,6 +997,7 @@ void SrVpuCompiler::gvvArrayCell(SrProgramm *prog, SrValueArrayCell *array, bool
 
     //Разобраться с константой
     if( address && array->mOperand1->mConst && array->mOperand2->mConst ) {
+      //Оба операнда - константы
       array->mConst = true;
       array->mConstInt = array->mOperand1->mConstInt + array->mOperand2->mConstInt * array->mOperand1->mType->mBaseType->mSize;
       }
@@ -1084,11 +1006,11 @@ void SrVpuCompiler::gvvArrayCell(SrProgramm *prog, SrValueArrayCell *array, bool
       if( array->mOperand1->mType->mBaseType->mSize > 1 ) {
         //Умножить на размер ячейки
         gPushConst( prog, array->mOperand1->mType->mBaseType->mSize, array->mMark );
-        prog->addCode( VPC1_MUL, array->mMark );
-        codePrint( QString("VPC1_MUL") );
+        prog->addCode( VBC1_MUL, array->mMark );
+        codePrint( QString("VBC1_MUL") );
         }
-      prog->addCode( VPC1_ADD, array->mMark );
-      codePrint( QString("VPC1_ADD") );
+      prog->addCode( VBC1_ADD, array->mMark );
+      codePrint( QString("VBC1_ADD") );
       if( !address )
         gLoad( prog, array );
       }
@@ -1098,7 +1020,7 @@ void SrVpuCompiler::gvvArrayCell(SrProgramm *prog, SrValueArrayCell *array, bool
 
 
 
-void SrVpuCompiler::gvvBinaryStore(SrProgramm *prog, SrValueBinary *binary, bool keepValue, bool address, SrVpuCode code, const QString codeList)
+void SrVpuCompiler::gvvBinaryStore(SrProgramm *prog, SrValueBinary *binary, bool keepValue, bool address, SrVmCode code, const QString codeList)
   {
   if( binary == 0 ) {
     Error( QObject::tr("Error. gvvBinaryStore") );
@@ -1118,8 +1040,8 @@ void SrVpuCompiler::gvvBinaryStore(SrProgramm *prog, SrValueBinary *binary, bool
   //Тип результата соответсвует тому, куда указывает операнд 1
   binary->mType = binary->mOperand1->mType->mBaseType;
   //Сдублировать адрес
-  prog->addCode( VPC1_PUSH_TOS, binary->mMark );
-  codePrint( QString("VPC1_PUSH_TOS") );
+  prog->addCode( VBC1_PUSH_TOS, binary->mMark );
+  codePrint( QString("VBC1_PUSH_TOS") );
 
   //Получить значение для операции
   gLoad( prog, binary );
@@ -1135,25 +1057,25 @@ void SrVpuCompiler::gvvBinaryStore(SrProgramm *prog, SrValueBinary *binary, bool
     prog->addCode( code, binary->mMark );
     codePrint( codeList );
     }
-  else if( code == VPC1_ADD && binary->mOperand1->mType->isPointer() && binary->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
+  else if( code == VBC1_ADD && binary->mOperand1->mType->isPointer() && binary->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
     //Операция сложения указателя с целым
     if( binary->mType->mBaseType->mSize > 1 ) {
       //Умножить на размер элемента
       gPushConst( prog, binary->mType->mBaseType->mSize, binary->mMark );
-      prog->addCode( VPC1_MUL, binary->mMark );
-      codePrint( QString("VPC1_MUL") );
+      prog->addCode( VBC1_MUL, binary->mMark );
+      codePrint( QString("VBC1_MUL") );
       }
     //Выполнить операцию
     prog->addCode( code, binary->mMark );
     codePrint( codeList );
     }
-  else if( code == VPC1_SUB && binary->mOperand1->mType->isPointer() && binary->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
+  else if( code == VBC1_SUB && binary->mOperand1->mType->isPointer() && binary->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
     //Операция вычитания указателя с целым
     if( binary->mType->mBaseType->mSize > 1 ) {
       //Умножить на размер элемента
       gPushConst( prog, binary->mType->mBaseType->mSize, binary->mMark );
-      prog->addCode( VPC1_MUL, binary->mMark );
-      codePrint( QString("VPC1_MUL") );
+      prog->addCode( VBC1_MUL, binary->mMark );
+      codePrint( QString("VBC1_MUL") );
       }
     //Выполнить операцию
     prog->addCode( code, binary->mMark );
@@ -1163,12 +1085,12 @@ void SrVpuCompiler::gvvBinaryStore(SrProgramm *prog, SrValueBinary *binary, bool
     errorInLine( QObject::tr("Error. This types not allowed for operation"), binary->mMark );
 
   if( keepValue ) {
-    prog->addCode( VPC1_STORE, binary->mMark );
-    codePrint( QString("VPC1_STORE") );
+    prog->addCode( VBC1_STORE, binary->mMark );
+    codePrint( QString("VBC1_STORE") );
     }
   else {
-    prog->addCode( VPC1_POP, binary->mMark );
-    codePrint( QString("VPC1_POP") );
+    prog->addCode( VBC1_POP, binary->mMark );
+    codePrint( QString("VBC1_POP") );
     }
 
   }
@@ -1179,7 +1101,7 @@ void SrVpuCompiler::gvvBinaryStore(SrProgramm *prog, SrValueBinary *binary, bool
 
 
 
-void SrVpuCompiler::gvvBinary(SrProgramm *prog, SrValueBinary *binary, bool keepValue, bool address, SrVpuCode code, const QString codeList)
+void SrVpuCompiler::gvvBinary(SrProgramm *prog, SrValueBinary *binary, bool keepValue, bool address, SrVmCode code, const QString codeList)
   {
   if( binary == 0 ) {
     Error( QObject::tr("Error. gvvBinary") );
@@ -1219,35 +1141,35 @@ void SrVpuCompiler::gvvBinary(SrProgramm *prog, SrValueBinary *binary, bool keep
         codePrint( codeList );
         }
       }
-    else if( code == VPC1_ADD && binary->mOperand1->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
+    else if( code == VBC1_ADD && binary->mOperand1->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
       //Операция сложения указателя с целым
       if( keepValue ) {
         if( binary->mType->mBaseType->mSize > 1 ) {
           //Умножить на размер элемента
           gPushConst( prog, binary->mType->mBaseType->mSize, binary->mMark );
-          prog->addCode( VPC1_MUL, binary->mMark );
-          codePrint( QString("VPC1_MUL") );
+          prog->addCode( VBC1_MUL, binary->mMark );
+          codePrint( QString("VBC1_MUL") );
           }
         //Выполнить операцию
         prog->addCode( code, binary->mMark );
         codePrint( codeList );
         }
       }
-    else if( code == VPC1_SUB && binary->mOperand1->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
+    else if( code == VBC1_SUB && binary->mOperand1->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
       //Операция вычитания указателя с целым
       if( keepValue ) {
         if( binary->mType->mBaseType->mSize > 1 ) {
           //Умножить на размер элемента
           gPushConst( prog, binary->mType->mBaseType->mSize, binary->mMark );
-          prog->addCode( VPC1_MUL, binary->mMark );
-          codePrint( QString("VPC1_MUL") );
+          prog->addCode( VBC1_MUL, binary->mMark );
+          codePrint( QString("VBC1_MUL") );
           }
         //Выполнить операцию
         prog->addCode( code, binary->mMark );
         codePrint( codeList );
         }
       }
-    else if( code == VPC1_SUB && binary->mOperand1->mType->isPointer() && binary->mOperand1->mType == binary->mOperand2->mType ) {
+    else if( code == VBC1_SUB && binary->mOperand1->mType->isPointer() && binary->mOperand1->mType == binary->mOperand2->mType ) {
       //Операция вычитания двух указателей
 
       //Результат будет целым
@@ -1260,8 +1182,8 @@ void SrVpuCompiler::gvvBinary(SrProgramm *prog, SrValueBinary *binary, bool keep
       if( binary->mOperand1->mType->mBaseType->mSize > 1 ) {
         //Делить расстояние на размер элемента
         gPushConst( prog, binary->mOperand1->mType->mBaseType->mSize, binary->mMark );
-        prog->addCode( VPC1_DIV, binary->mMark );
-        codePrint( QString("VPC1_DIV") );
+        prog->addCode( VBC1_DIV, binary->mMark );
+        codePrint( QString("VBC1_DIV") );
         }
 
       }
@@ -1276,7 +1198,7 @@ void SrVpuCompiler::gvvBinary(SrProgramm *prog, SrValueBinary *binary, bool keep
 
 
 
-void SrVpuCompiler::gvvBinaryLong(SrProgramm *prog, SrValueBinaryLong *binary, bool keepValue, bool address, SrVpuCode code, const QString codeList)
+void SrVpuCompiler::gvvBinaryLong(SrProgramm *prog, SrValueBinaryLong *binary, bool keepValue, bool address, SrVmCode code, const QString codeList)
   {
   if( binary == 0 ) {
     Error( QObject::tr("Error. gvvBinaryLong") );
@@ -1349,23 +1271,26 @@ void SrVpuCompiler::gvvLogAnd(SrProgramm *prog, SrValueLogAnd *binary, bool keep
     gValue( prog, binary->mOperand[i], true, false );
     //Проверка и переход на false
     if( keepValue ) {
-      prog->addCodeParam24( VPC4_FALSE_JUMP_KEEP, binary->mExitLabel, binary->mMark );
-      codePrint( QString("VPC4_FALSE_JUMP_KEEP LAB%1").arg(binary->mExitLabel) );
+      prog->addCodeParam24( VBC4_FALSE_JUMP_KEEP, binary->mExitLabel, binary->mMark );
+      codePrint( QString("VBC4_FALSE_JUMP_KEEP LAB%1").arg(binary->mExitLabel) );
       }
     else {
-      prog->addCodeParam24( VPC4_FALSE_JUMP, binary->mExitLabel, binary->mMark );
-      codePrint( QString("VPC4_FALSE_JUMP LAB%1").arg(binary->mExitLabel) );
+      prog->addCodeParam24( VBC4_FALSE_JUMP, binary->mExitLabel, binary->mMark );
+      codePrint( QString("VBC4_FALSE_JUMP LAB%1").arg(binary->mExitLabel) );
       }
     }
   //Если прошли все, то true
   if( keepValue ) {
-    prog->addCode( VPC1_PUSH_1, binary->mMark );
-    codePrint( QString("VPC1_PUSH_1") );
+    prog->addCode( VBC1_PUSH_1, binary->mMark );
+    codePrint( QString("VBC1_PUSH_1") );
     }
   //Выходная метка
   binary->mExitLabel = prog->codeCount();
   codePrint( QString("LAB%1:").arg(binary->mExitLabel) );
   }
+
+
+
 
 
 
@@ -1393,23 +1318,25 @@ void SrVpuCompiler::gvvLogOr(SrProgramm *prog, SrValueLogOr *binary, bool keepVa
     gValue( prog, binary->mOperand[i], true, false );
     //Проверка и переход на true
     if( keepValue ) {
-      prog->addCodeParam24( VPC4_TRUE_JUMP_KEEP, binary->mExitLabel, binary->mMark );
-      codePrint( QString("VPC4_TRUE_JUMP_KEEP LAB%1").arg(binary->mExitLabel) );
+      prog->addCodeParam24( VBC4_TRUE_JUMP_KEEP, binary->mExitLabel, binary->mMark );
+      codePrint( QString("VBC4_TRUE_JUMP_KEEP LAB%1").arg(binary->mExitLabel) );
       }
     else {
-      prog->addCodeParam24( VPC4_TRUE_JUMP, binary->mExitLabel, binary->mMark );
-      codePrint( QString("VPC4_TRUE_JUMP LAB%1").arg(binary->mExitLabel) );
+      prog->addCodeParam24( VBC4_TRUE_JUMP, binary->mExitLabel, binary->mMark );
+      codePrint( QString("VBC4_TRUE_JUMP LAB%1").arg(binary->mExitLabel) );
       }
     }
   //Если прошли все, то true
   if( keepValue ) {
-    prog->addCode( VPC1_PUSH_0, binary->mMark );
-    codePrint( QString("VPC1_PUSH_0") );
+    prog->addCode( VBC1_PUSH_0, binary->mMark );
+    codePrint( QString("VBC1_PUSH_0") );
     }
   //Выходная метка
   binary->mExitLabel = prog->codeCount();
   codePrint( QString("LAB%1:").arg(binary->mExitLabel) );
   }
+
+
 
 
 
@@ -1441,6 +1368,9 @@ void SrVpuCompiler::gvvComma(SrProgramm *prog, SrValueBinaryLong *binary, bool k
 
 
 
+
+
+
 void SrVpuCompiler::gvvCondition(SrProgramm *prog, SrValueCondition *condition, bool keepValue, bool address)
   {
   if( condition == 0 ) {
@@ -1468,8 +1398,8 @@ void SrVpuCompiler::gvvCondition(SrProgramm *prog, SrValueCondition *condition, 
       gValue( prog, condition->mCondition, true, false );
 
       //Переход на ложное условие
-      prog->addCodeParam24( VPC4_FALSE_JUMP, condition->mFalseAddress, condition->mMark );
-      codePrint( QString("VPC4_FALSE_JUMP LAB%1").arg(condition->mFalseAddress) );
+      prog->addCodeParam24( VBC4_FALSE_JUMP, condition->mFalseAddress, condition->mMark );
+      codePrint( QString("VBC4_FALSE_JUMP LAB%1").arg(condition->mFalseAddress) );
       }
 
     if( !condition->mCondition->isConst() || condition->mCondition->toConstInt() ) {
@@ -1483,8 +1413,8 @@ void SrVpuCompiler::gvvCondition(SrProgramm *prog, SrValueCondition *condition, 
         }
 
       if( !condition->mCondition->isConst() ) {
-        prog->addCodeParam24( VPC4_JUMP, condition->mExitAddress, condition->mMark );
-        codePrint( QString("VPC4_JUMP LAB%1").arg(condition->mExitAddress) );
+        prog->addCodeParam24( VBC4_JUMP, condition->mExitAddress, condition->mMark );
+        codePrint( QString("VBC4_JUMP LAB%1").arg(condition->mExitAddress) );
         }
       }
 
@@ -1512,6 +1442,8 @@ void SrVpuCompiler::gvvCondition(SrProgramm *prog, SrValueCondition *condition, 
     }
 
   }
+
+
 
 
 
@@ -1546,11 +1478,11 @@ void SrVpuCompiler::gvvCall(SrProgramm *prog, SrValueCall *call, bool keepValue,
   else {
     int resultCount = 0;
     //Если функция возвращает значение, то оставим под него место
-    if( funType->mResult->isInt() || funType->mResult->isPointer() || funType->mResult->isObject() ) {
+    if( funType->mResult->isInt() || funType->mResult->isPointer() ) {
       //Возвращает целое или указатель или объект
       resultCount = 1;
-      prog->addCode( VPC1_ALLOC_RESULT, call->mMark );
-      codePrint( QString("VPC1_ALLOC_RESULT") );
+      prog->addCode( VBC1_ALLOC_RESULT, call->mMark );
+      codePrint( QString("VBC1_ALLOC_RESULT") );
       }
     else if( !funType->mResult->isVoid() ) {
       //Другие типы не допустимы
@@ -1568,86 +1500,24 @@ void SrVpuCompiler::gvvCall(SrProgramm *prog, SrValueCall *call, bool keepValue,
       return;
       }
 
-    //Маска объектов среди параметров
-    int paramObjectMask = 0;
-    int resultObjectMask = 0;
-    //Формируем маску для результата
-    if( funType->mResult->isObject() )
-      resultObjectMask = 2;
     for( int i = 0; i < call->mParamCount; i++ ) {
       //Подготовить очередной параметр
       gValue( prog, call->mParam[i], true, false );
-      //Формируем маску для параметров-объектов
-      paramObjectMask <<= 1;
-      resultObjectMask <<= 1;
-      if( call->mParam[i]->mType->isObject() )
-        paramObjectMask |= 1;
       //Проверим соответствие параметров
       if( !funType->mParamList.at(i).mType->isMatchParam(call->mParam[i]->mType, call->mParam[i]->mConst && call->mParam[i]->mConstInt == 0 ) )
         errorInLine( QObject::tr("Error. Type mismatch in parametr %1").arg(funType->mParamList.at(i).mName), call->mMark );
       }
 
     //Теперь вызов
-    prog->addCodeParam8( VPC2_CALL, call->mParamCount, call->mMark );
-    codePrint( QString("VPC2_CALL [%1]").arg(call->mParamCount) );
+    prog->addCodeParam8( VBC2_CALL, call->mParamCount, call->mMark );
+    codePrint( QString("VBC2_CALL [%1]").arg(call->mParamCount) );
 
     //Теперь убираем все параметры
     if( keepValue ) {
-
-      //Если среди параметров есть объекты, то очистить их
-      if( paramObjectMask ) {
-        if( paramObjectMask & 0xff000000 ) {
-          //32 бита
-          prog->addCodeParam32( VPC5_OBJ_CLEAR_MAP, paramObjectMask, call->mMark );
-          codePrint( QString("VPC5_OBJ_CLEAR_MAP %1").arg(paramObjectMask,0,2) );
-          }
-        else if( paramObjectMask & 0xff0000 ) {
-          //24 бита
-          prog->addCodeParam24( VPC4_OBJ_CLEAR_MAP, paramObjectMask, call->mMark );
-          codePrint( QString("VPC4_OBJ_CLEAR_MAP %1").arg(paramObjectMask,0,2) );
-          }
-        else if( paramObjectMask & 0xff00 ) {
-          //16 бит
-          prog->addCodeParam16( VPC3_OBJ_CLEAR_MAP, paramObjectMask, call->mMark );
-          codePrint( QString("VPC3_OBJ_CLEAR_MAP %1").arg(paramObjectMask,0,2) );
-          }
-        else {
-          //8 бит
-          prog->addCodeParam8( VPC2_OBJ_CLEAR_MAP, paramObjectMask, call->mMark );
-          codePrint( QString("VPC2_OBJ_CLEAR_MAP %1").arg(paramObjectMask,0,2) );
-          }
-        }
-
       //Параметры и адрес вызова
       gStack( prog, call->mParamCount + 1, call->mMark );
       }
     else {
-      paramObjectMask |= resultObjectMask;
-
-      //Если среди параметров и результата есть объекты, то очистить их
-      if( paramObjectMask ) {
-        if( paramObjectMask & 0xff000000 ) {
-          //32 бита
-          prog->addCodeParam32( VPC5_OBJ_CLEAR_MAP, paramObjectMask, call->mMark );
-          codePrint( QString("VPC5_OBJ_CLEAR_MAP %1").arg(paramObjectMask,0,2) );
-          }
-        else if( paramObjectMask & 0xff0000 ) {
-          //24 бита
-          prog->addCodeParam24( VPC4_OBJ_CLEAR_MAP, paramObjectMask, call->mMark );
-          codePrint( QString("VPC4_OBJ_CLEAR_MAP %1").arg(paramObjectMask,0,2) );
-          }
-        else if( paramObjectMask & 0xff00 ) {
-          //16 бит
-          prog->addCodeParam16( VPC3_OBJ_CLEAR_MAP, paramObjectMask, call->mMark );
-          codePrint( QString("VPC3_OBJ_CLEAR_MAP %1").arg(paramObjectMask,0,2) );
-          }
-        else {
-          //8 бит
-          prog->addCodeParam8( VPC2_OBJ_CLEAR_MAP, paramObjectMask, call->mMark );
-          codePrint( QString("VPC2_OBJ_CLEAR_MAP %1").arg(paramObjectMask,0,2) );
-          }
-        }
-
       //Параметры, адрес вызова и результат, если есть
       gStack( prog, call->mParamCount + 1 + resultCount, call->mMark );
       }

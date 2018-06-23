@@ -1,3 +1,17 @@
+#
+#  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+#  Подпроект  "Пико-компилятор"
+#  Автор
+#    Alexander Sibilev
+#  Интернет
+#    www.rc.saliLab.ru - домашний сайт проекта
+#    www.saliLab.ru
+#    www.saliLab.com
+#
+#  Описание
+#    Виртуальная машина для исполнения байт-кода. Проект предназначен
+#    для проверки на предмет ошибок компиляции
+#
 QT -= gui
 
 CONFIG += c++11 console
@@ -29,5 +43,7 @@ HEADERS += \
 SOURCES += \
     SrVMachine/SrVMachine.cpp \
     SrVMachine/SrVmMain.cpp
+
+DISTFILES +=
 
 

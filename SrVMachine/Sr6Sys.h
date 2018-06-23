@@ -1,18 +1,19 @@
 /*
-  Project     "Script language reduced c++ (rc++)"
-  SubProject  "Virtual machine"
-  Author
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Виртуальная машина"
+  Автор
     Alexander Sibilev
-  Internet
-    www.rc.saliLab.ru - project home site
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
     www.saliLab.ru
     www.saliLab.com
 
-  Description
-    Special functions
+  Описание
+    Стандартные внешние функции-драйверы, обработка которых
+    реализована в классе SrVMachine
 */
-#ifndef VPUSYS_H
-#define VPUSYS_H
+#ifndef SR6SYS_H
+#define SR6SYS_H
 
 #define VPU_VERSION6      6
 
@@ -78,4 +79,4 @@ svWaitTick( int time ) {
 #endif
 
 
-#endif // VPUSYS_H
+#endif // SR6SYS_H

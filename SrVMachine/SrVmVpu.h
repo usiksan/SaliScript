@@ -1,17 +1,16 @@
 /*
-  Project     "Script language reduced c++ (rc++)"
-  SubProject  "Virtual machine"
-  Author
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Виртуальная машина"
+  Автор
     Alexander Sibilev
-  Internet
-    www.rc.saliLab.ru - project home site
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
     www.saliLab.ru
     www.saliLab.com
 
-  Description
-    Virtual machine processor
+  Описание
+    Виртуальный процессор виртуальной машины
 */
-
 #ifndef SRVMVPU
 #define SRVMVPU
 

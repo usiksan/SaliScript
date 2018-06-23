@@ -1,3 +1,18 @@
+#
+#  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+#  Подпроект  "Пико-компилятор"
+#  Автор
+#    Alexander Sibilev
+#  Интернет
+#    www.rc.saliLab.ru - домашний сайт проекта
+#    www.saliLab.ru
+#    www.saliLab.com
+#
+#  Описание
+#    Пико компилятор скриптового языка rc++ и генератор байт-кода
+#
+#
+
 QT -= gui
 
 CONFIG += c++11 console
@@ -51,5 +66,8 @@ SOURCES += \
     SrCompiler/SrVariableList.cpp \
     SrCompiler/SrVpuCompiler1.cpp \
     SrCompiler/SrVpuCompiler2.cpp \
-    SrHost/SrProgramm.cpp
+    SrHost/SrProgramm.cpp \
+    SrCompiler/SrSource.cpp \
+    SrCompiler/SrSourceFile.cpp \
+    SrCompiler/SrCompilerMain.cpp
 

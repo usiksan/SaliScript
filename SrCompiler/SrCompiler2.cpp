@@ -1,69 +1,21 @@
 ﻿/*
-Проект "Компилятор"
-Содержание
-  Реализация класса TCompiler часть 2 (входной поток низкого уровня)
-  Функции:
-            void     DoFile( CPChar fname, bool current );
-            TPSource CreateSource( CPChar fname, bool current );
-            void     InLine();
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Пико-компилятор"
+  Автор
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
 
+  Описание
+    Пико компилятор скриптового языка rc++
+
+    Реализация класса TCompiler часть 2 (входной поток низкого уровня)
 */
 #include "SrCompiler.h"
 
 using namespace SrCompiler6;
-
-//============================================================================
-// TSource
-SrSource::~SrSource() {
-  if( mInputStream ) delete mInputStream;
-  }
-
-QString
-SrSource::ReadLine() {
-  if( mInputStream ) {
-    mLineCount++;
-    return mInputStream->readLine();
-    }
-  return QString();
-  }
-
-bool
-SrSource::Eof() {
-  if( mInputStream )
-    return mInputStream->atEnd();
-  return true;
-  }
-
-
-
-//============================================================================
-// TSource
-SrFileSource::SrFileSource(QFile *file, int fileId) :
-  SrSource( fileId ),
-  mFile(file)
-  {
-  mInputStream = new QTextStream(mFile);
-  }
-
-SrFileSource::~SrFileSource() {
-  if( mFile ) delete mFile;
-  }
-
-
-
-
-//============================================================================
-// TTextSource
-SrStringSource::SrStringSource(const QString &src, int fileId) :
-  SrSource(fileId),
-  mSource(src)
-  {
-  mInputStream = new QTextStream( &mSource, QIODevice::ReadOnly );
-  }
-
-
-
-
 
 /*
 Функция "Начать файл"
@@ -143,7 +95,7 @@ SrCompiler::CreateSource( const QString &fname, bool current ) {
   QFile *is = new QFile( file );
   if( is->open( QIODevice::ReadOnly ) ) {
     //Файл открылся, создать читатель файла
-    return new SrFileSource( is, AddFile(file) );
+    return new SrSourceFile( is, AddFile(file) );
     }
   return 0;
   }

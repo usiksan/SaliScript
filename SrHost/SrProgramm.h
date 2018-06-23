@@ -186,7 +186,7 @@ class SrProgramm
 
     //Операции извлечения
     QByteArray getCode() { return mCode; }
-    SrVmCode*  getVpuCode() const { return static_cast<SrVmCode*>(mCode.data()); }
+    SrVmCode*  getVpuCode() const { return (SrVmCode*)(mCode.data()); }
     int        getCode( int addr ) { return mCode[addr]; }
     int        getLine( int addr ) { return mLines[addr]; }
     int        getFile( int addr ) { return mFiles[addr]; }
@@ -238,21 +238,7 @@ class SrProgramm
   };
 
 
-typedef QSharedPointer<SrProgramm> SvProgrammPtr;
-
-
-
-//Состояние виртуальной машины
-struct SvVpuState {
-    int   mIp;     //!< указатель инструкций
-    int   mSp;     //!< указатель стека
-    int   mBp;     //!< указатель базы в стеке локальных переменных для текущей функции (указывает на фрейм возврата из функции)
-    int   mTp;     //!< указатель базы текущего объекта для функции-члена (this)
-    int   mTm;     //!< маска обрабатываемых исключений
-    int   mBaseSp; //!< Начало стека для данного процессора
-    int   mThrow;  //!< Текущее значение исключения
-    int   mIsRun;  //!< Показывает состояние работы машины (работает или пауза)
-  };
+typedef QSharedPointer<SrProgramm> SrProgrammPtr;
 
 
 #endif // SVPROGRAMM_H

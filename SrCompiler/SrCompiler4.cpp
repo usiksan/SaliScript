@@ -1,75 +1,21 @@
 /*
-Проект "Компилятор"
-Содержание
-  Реализация класса TCompiler часть 1 (макропроцессор)
-  Конструктор
-    TCompiler();
-  Функции:
-            void     Blank();
-            void     White();
-            bool     Match( CPChar ptr ); //Если совпадает, то съедает
-            bool     Match( char ch );    //Если совпадает, то съедает
-            bool     ScanName();
-            bool     ScanNameImp( PChar &ptr );
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Пико-компилятор"
+  Автор
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
 
-            void     Compile( CPChar fname ); //Точка входа в компиляцию
-            void     DoPreprocess();
-            void     DoInclude();
-            void     DoExpand();
-            void     DoDefine();
-            void     DoAsm();
-            void     IfLine();
-            void     AddMacroChar( char ch );
-            int      FindMacro( CPChar name );
+  Описание
+    Пико компилятор скриптового языка rc++
+
+    Реализация класса TCompiler часть 4 (препроцессор)
 */
 #include "SrCompiler.h"
 
 using namespace SrCompiler6;
-
-/*
-Функция "Сканирование. Точка входа в компиляцию"
-Описание
-  Открываем файл, далее пока не конец файла выполняем компиляцию
-*/
-void
-SrCompiler::Compile( const QString &fname ) {
-  DoFile( fname, true );
-  NextToken();
-  mFileId    = mToken.mFileId;
-  mLineIndex = mToken.mLine;
-  while( !mEof ) {
-    if( mToken == tkwTypedef ) {
-      Error( QObject::tr("Keyword typedef not supported.") );
-      NextToken();
-      }
-    if( mToken == tkwExtern ) {
-      Error( QObject::tr("Keyword extern not supported.") );
-      NextToken();
-      }
-    else if( mToken == tkwStatic ) {
-      Error( QObject::tr("Keyword static not supported.") );
-      NextToken();
-      }
-    else if( mToken == tkwCblock ) {
-      NextToken();
-      DoCBlock();
-      continue;
-      }
-    else if( mToken == tkwImport ) {
-      NextToken();
-      DoImport();
-      }
-    else if( mToken == tkwStruct ) {
-      NextToken();
-      DoStructure();
-      continue;
-      }
-
-    DoDeclareGlobal();
-    }
-  }
-
-
 
 
 
@@ -422,6 +368,8 @@ SrCompiler::DoExpand() {
       if( mMacroTable.contains( mName ) ) {
         //Макро имя найдено, подставить макрорасширение
         mMacroLine.append( mMacroTable.value(mName)->mExpander );
+        //Добавить место, в котором потребовалось данное макрорасширение
+        mMacroTable.value(mName)->mReferneceList.append( mark() );
         }
       else {
         //Макро не найдено, вернуть имя

@@ -1,22 +1,31 @@
 ﻿/*
-  Проект "SaliDs"
-    Визуальное программирование микроконтроллеров
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Пико-компилятор"
   Автор
-    Сибилев А.С.
-  Описание
-    Генератор для VPU
-*/
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
 
-#ifndef TVPUCOMPILER_H
-#define TVPUCOMPILER_H
+  Описание
+    Пико генератор байт-кода скриптового языка rc++
+*/
+#ifndef SRVPUCOMPILER_H
+#define SRVPUCOMPILER_H
 
 #include "SrCompiler.h"
-//#include "Vpu/SvVpuCore.h"
 #include "SrHost/SrProgramm.h"
+
 #include <QMap>
 
 namespace SrCompiler6 {
 
+  /*!
+     \brief The SrVpuCompiler class Данный класс представляет собой генератор
+     байт-кода для скриптового языка rc++, который разбирается базовым классом
+     SrCompiler
+   */
   class SrVpuCompiler : public SrCompiler
     {
       QTextStream   *mList;     //!< Поток листинга
@@ -24,15 +33,22 @@ namespace SrCompiler6 {
       SrVpuCompiler();
       ~SrVpuCompiler();
 
-      //! Построить программу
+      /*!
+         \brief make Построить программу. Компиляция и генерация кода
+         \param prjPath Путь к каталогу со скриптами
+         \param mainScript Имя файла главного скрипта
+         \return Указатель со сгенерированной программой
+       */
       SrProgrammPtr make(const QString prjPath, const QString &mainScript );
+
+    protected:
+
+      void addVariable(SrProgramm *prog, const QString prefix, SrVariable *var, int startAddress);
 
       void pass(SrProgramm *prog);
 
       void gOperator( SrProgramm *prog, SrOperator *op );
       void gOperatorReturn( SrProgramm *prog, SrOperatorReturn *svReturn );
-      void gOperatorCatch( SrProgramm *prog, SrOperatorCatch *svCatch );
-      void gOperatorThrow( SrProgramm *prog, SrOperatorThrow *svThrow );
       void gOperatorBlock( SrProgramm *prog, SrOperatorBlock *svBlock );
       void gOperatorExpression(SrProgramm *prog, SrOperatorExpression *svExpression );
       void gOperatorIf( SrProgramm *prog, SrOperatorIf *svIf );
@@ -42,11 +58,11 @@ namespace SrCompiler6 {
       void gOperatorDoWhile( SrProgramm *prog, SrOperatorDoWhile *svDoWhile );
       void gOperatorFor( SrProgramm *prog, SrOperatorFor *svFor );
       void gOperatorContextEnter(SrProgramm *prog, SrOperatorContext *context );
-      void gOperatorContextExit( SrProgramm *prog, SrOperatorContext *context );
-      void gOperatorTreeContextExit( SrProgramm *prog, SrOperator *op );
 
       void gValue( SrProgramm *prog, SrValue *val, bool keepValue, bool address );
-      void gPushConst(SrProgramm *prog, int val , const SrMark &mark );
+      void gValueCatchFun(SrProgramm *prog, SrValueCatchFun *svCatch );
+      void gValueThrowFun( SrProgramm *prog, SrValueThrowFun *svThrow );
+      void gPushConst(SrProgramm *prog, int val , const SrMark &mark , const QString label = QString() );
       void gStack( SrProgramm *prog, int offset, const SrMark &mark );
       void gLoad( SrProgramm *prog, SrValue *val );
 
@@ -64,7 +80,7 @@ namespace SrCompiler6 {
       void gvvPredDec( SrProgramm *prog, SrValuePredDec *dec, bool keepValue, bool address );
       void gvvPostInc( SrProgramm *prog, SrValuePostInc *inc, bool keepValue, bool address );
       void gvvPostDec(SrProgramm *prog, SrValuePostDec *dec, bool keepValue, bool address );
-      void gvvUnary( SrProgramm *prog, SrValueUnary *unary, bool keepValue, bool address, SrVpuCode code, const QString codeList );
+      void gvvUnary( SrProgramm *prog, SrValueUnary *unary, bool keepValue, bool address, SrVmCode code, const QString codeList );
 
       void gvvNot(SrProgramm *prog, SrValueBitNot *vnot, bool keepValue, bool address );
       void gvvLogNot(SrProgramm *prog, SrValueLogNot *logNot, bool keepValue, bool address );
@@ -72,9 +88,9 @@ namespace SrCompiler6 {
 
       void gvvStore(SrProgramm *prog, SrValueStore *store, bool keepValue, bool address );
       void gvvArrayCell(SrProgramm *prog, SrValueArrayCell *array, bool keepValue, bool address );
-      void gvvBinary( SrProgramm *prog, SrValueBinary *binary, bool keepValue, bool address, SrVpuCode code, const QString codeList );
-      void gvvBinaryStore( SrProgramm *prog, SrValueBinary *binary, bool keepValue, bool address, SrVpuCode code, const QString codeList );
-      void gvvBinaryLong( SrProgramm *prog, SrValueBinaryLong *binary, bool keepValue, bool address, SrVpuCode code, const QString codeList );
+      void gvvBinary( SrProgramm *prog, SrValueBinary *binary, bool keepValue, bool address, SrVmCode code, const QString codeList );
+      void gvvBinaryStore( SrProgramm *prog, SrValueBinary *binary, bool keepValue, bool address, SrVmCode code, const QString codeList );
+      void gvvBinaryLong( SrProgramm *prog, SrValueBinaryLong *binary, bool keepValue, bool address, SrVmCode code, const QString codeList );
       void gvvLogAnd( SrProgramm *prog, SrValueLogAnd *binary, bool keepValue, bool address );
       void gvvLogOr( SrProgramm *prog, SrValueLogOr *binary, bool keepValue, bool address );
       void gvvComma( SrProgramm *prog, SrValueBinaryLong *binary, bool keepValue, bool address );
@@ -86,4 +102,4 @@ namespace SrCompiler6 {
 }
 
 
-#endif // TVPUCOMPILER_H
+#endif // SRVPUCOMPILER_H

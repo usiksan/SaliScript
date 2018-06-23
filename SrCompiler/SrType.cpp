@@ -60,8 +60,8 @@ bool SrType::canAssign(SrType *src)
   if( src == this ) return true;
 
   //В остальных случаях проверим указатель
-  if( src && mClass == TTYPE_POINTER && src->mClass == TTYPE_POINTER ) {
-    if( mBaseType->mClass == TTYPE_STRUCT && src->mBaseType->mClass == TTYPE_STRUCT ) {
+  if( src && mClass == CLASS_POINTER && src->mClass == CLASS_POINTER ) {
+    if( mBaseType->mClass == CLASS_STRUCT && src->mBaseType->mClass == CLASS_STRUCT ) {
       //Подняться по базовым классам
       SrStruct *thisClass = mBaseType->toStruct();
       SrStruct *srcClass  = src->mBaseType->toStruct();
@@ -109,16 +109,6 @@ SrType *SrType::getTypePointer()
 
 
 
-//Получить указатель на свойство
-SrType *SrType::getTypePropPointer()
-  {
-  if( mTypeList )
-    return mTypeList->getTypePropPointer( this );
-  return 0;
-  }
-
-
-
 
 
 
@@ -149,13 +139,6 @@ bool SrType::isMatchParam(SrType *src, bool srcNull )
       for( SrType *base = src->mBaseType; base; base = base->mBaseType )
         if( base == mBaseType ) return true;
       }
-
-    //Указателю на объект можно присвоить указатель на дочерний объект
-    else if( mBaseType->isObject() && src->mBaseType->isObject() ) {
-      //Ищем среди родительских объектов источника данный объект
-      for( SrType *base = src->mBaseType; base; base = base->mBaseType )
-        if( base == mBaseType ) return true;
-      }
     }
   return false;
   }
@@ -166,25 +149,25 @@ bool SrType::isMatchParam(SrType *src, bool srcNull )
 QString SrType::buildSignature()
   {
   switch( mClass ) {
-    case TTYPE_VOID   :
+    case CLASS_VOID   :
       mSignature = QString("void");
       break;
-    case TTYPE_INT    :   //Целое 32 бит
+    case CLASS_INT    :   //Целое 32 бит
       mSignature = QString("int");
       break;
-    case TTYPE_STRUCT   :   //Структура
+    case CLASS_STRUCT   :   //Структура
       mSignature = QString(":") + mName;
       break;
-    case TTYPE_CSTRING   :   //Константная строка
+    case CLASS_CSTRING   :   //Константная строка
       mSignature = QString("cstring");
       break;
-    case TTYPE_CBLOCK   :   //Блок константных данных (картинка, звук и т.п.)
+    case CLASS_CBLOCK   :   //Блок константных данных (картинка, звук и т.п.)
       mSignature = QString("cblock");
       break;
-    case TTYPE_ARRAY    :
+    case CLASS_ARRAY    :
       mSignature = QString("[]");
       break;
-    case TTYPE_POINTER  :   //Указатель на что-нибудь
+    case CLASS_POINTER  :   //Указатель на что-нибудь
       mSignature = QString("*");
       break;
     default :

@@ -11,8 +11,7 @@ using namespace SrCompiler6;
 
 //Конструктор обычного класса
 SrStruct::SrStruct(const QString name) :
-  SrType( name, TTYPE_STRUCT, 2, 0 ),
-  mVTable(0),         //Адрес таблицы виртуальных методов
+  SrType( name, CLASS_STRUCT, 0, 0 ),
   mDefined(false),    //Структура определена
   mBaseStruct(0),      //Базовый тип
   mMemberList(tsrMember)
@@ -38,6 +37,8 @@ void SrStruct::setBase(SrStruct *base)
   mBaseStruct = base;
   //Скопировать список членов
   mMemberList.addList( base->mMemberList );
+  //Скопировать размер
+  mSize = base->mSize;
   }
 
 

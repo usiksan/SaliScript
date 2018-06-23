@@ -1,13 +1,17 @@
 /*
-            Virtual Processor Unit  (VPU5)
-  Author
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Виртуальная машина"
+  Автор
     Alexander Sibilev
-  Internet
-     www.saliLab.ru
-     www.saliLab.com
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
 
-  Description
-    Контроллер, исполняющий VPU программу
+  Описание
+    Виртуальная машина для исполнения байт-кода.
+    Виртуальная машина содержит в себе память программ, память данных
+    и набор виртуальных процессоров.
 */
 #include "SrVMachine/SrVMachine.h"
 #include "SrVMachine/Sr6Sys.h"
@@ -281,20 +285,12 @@ void SrVMachine::debugRunUntil(int vpu, int start, int stop)
 #define PARAM16         value2( vpu, vpu->mIp + 1 )
 #define PARAM24         value3( vpu, vpu->mIp + 1 )
 #define PARAM32         value4( vpu, vpu->mIp + 1 )
-#ifndef NO_FLOAT
-#define FMEM1( idx )    memSet( vpu, idx, *(int*)(&f1) )
-#define FVAL1( idx )    *(int*)(&f1) = memGet( vpu, idx )
-#define FVAL2( idx )    *(int*)(&f2) = memGet( vpu, idx )
-#endif
 
 
 void SrVMachine::executeCore(SrVmVpu *vpu)
   {
   int tmp;
   int count = 0;
-#ifndef NO_FLOAT
-  float f1,f2;
-#endif
   while( vpu->mIp ) {
     if( count++ > 10000 )
       break;
@@ -374,6 +370,12 @@ void SrVMachine::executeCore(SrVmVpu *vpu)
       case VBC2_PUSH_LOCAL :      //stack[--sp] = global[bp+offset]
         MEM(--(vpu->mSp), VAL(vpu->mBp + PARAM8) );
         vpu->mIp += 2;
+        break;
+
+        //Разместить код исключения в стек
+      case VBC1_PUSH_THROW :      //stack[--sp] = mThrow
+        MEM(--(vpu->mSp), vpu->mThrow );
+        vpu->mIp++;
         break;
 
 
@@ -463,132 +465,6 @@ void SrVMachine::executeCore(SrVmVpu *vpu)
         vpu->mIp += 3;
         break;
 
-      //float operations
-#ifdef NO_FLOAT
-      case VBC1_FADD :            //global[sp+1] = global[sp+1] + global[sp]; sp++;
-      case VBC1_FSUB :            //global[sp+1] = global[sp+1] - global[sp]; sp++;
-      case VBC1_FEQU :            //global[sp+1] = global[sp+1] == global[sp]; sp++;
-      case VBC1_FNOT_EQU :        //global[sp+1] = global[sp+1] != global[sp]; sp++;
-      case VBC1_FLESS :           //global[sp+1] = global[sp+1] < global[sp]; sp++;
-      case VBC1_FLESS_EQU :       //global[sp+1] = global[sp+1] <= global[sp]; sp++;
-      case VBC1_FGREAT :          //global[sp+1] = global[sp+1] > global[sp]; sp++;
-      case VBC1_FGREAT_EQU :      //global[sp+1] = global[sp+1] >= global[sp]; sp++;
-      case VBC1_FMUL :            //global[sp+1] = global[sp+1] * global[sp]; sp++;
-      case VBC1_FDIV :            //global[sp+1] = global[sp+1] / global[sp]; sp++;
-        vpu->mSp++;
-        vpu->mIp++;
-        break;
-
-      case VBC1_FNEG :            //global[sp] = -global[sp]
-      case VBC1_FLOAT_TO_INT :    //global[sp] = (int)global[sp]
-      case VBC1_INT_TO_FLOAT :    //global[sp] = (float)global[sp]
-        vpu->mIp++;
-        break;
-#else
-      case VBC1_FADD :            //global[sp+1] = global[sp+1] + global[sp]; sp++;
-        FVAL1(vpu->mSp+1);
-        FVAL2(vpu->mSp);
-        f1 += f2;
-        FMEM1(vpu->mSp+1);
-        vpu->mSp++;
-        vpu->mIp++;
-        break;
-
-      case VBC1_FSUB :            //global[sp+1] = global[sp+1] - global[sp]; sp++;
-        FVAL1(vpu->mSp+1);
-        FVAL2(vpu->mSp);
-        f1 -= f2;
-        FMEM1(vpu->mSp+1);
-        vpu->mSp++;
-        vpu->mIp++;
-        break;
-
-      case VBC1_FEQU :            //global[sp+1] = global[sp+1] == global[sp]; sp++;
-        FVAL1(vpu->mSp+1);
-        FVAL2(vpu->mSp);
-        MEM(vpu->mSp+1, f1 == f2 );
-        vpu->mSp++;
-        vpu->mIp++;
-        break;
-
-      case VBC1_FNOT_EQU :        //global[sp+1] = global[sp+1] != global[sp]; sp++;
-        FVAL1(vpu->mSp+1);
-        FVAL2(vpu->mSp);
-        MEM(vpu->mSp+1, f1 != f2 );
-        vpu->mSp++;
-        vpu->mIp++;
-        break;
-
-      case VBC1_FLESS :           //global[sp+1] = global[sp+1] < global[sp]; sp++;
-        FVAL1(vpu->mSp+1);
-        FVAL2(vpu->mSp);
-        MEM(vpu->mSp+1, f1 < f2 );
-        vpu->mSp++;
-        vpu->mIp++;
-        break;
-
-      case VBC1_FLESS_EQU :       //global[sp+1] = global[sp+1] <= global[sp]; sp++;
-        FVAL1(vpu->mSp+1);
-        FVAL2(vpu->mSp);
-        MEM(vpu->mSp+1, f1 <= f2 );
-        vpu->mSp++;
-        vpu->mIp++;
-        break;
-
-      case VBC1_FGREAT :          //global[sp+1] = global[sp+1] > global[sp]; sp++;
-        FVAL1(vpu->mSp+1);
-        FVAL2(vpu->mSp);
-        MEM(vpu->mSp+1, f1 > f2 );
-        vpu->mSp++;
-        vpu->mIp++;
-        break;
-
-      case VBC1_FGREAT_EQU :      //global[sp+1] = global[sp+1] >= global[sp]; sp++;
-        FVAL1(vpu->mSp+1);
-        FVAL2(vpu->mSp);
-        MEM(vpu->mSp+1, f1 >= f2 );
-        vpu->mSp++;
-        vpu->mIp++;
-        break;
-
-      case VBC1_FMUL :            //global[sp+1] = global[sp+1] * global[sp]; sp++;
-        FVAL1(vpu->mSp+1);
-        FVAL2(vpu->mSp);
-        f1 *= f2;
-        FMEM1(vpu->mSp+1);
-        vpu->mSp++;
-        vpu->mIp++;
-        break;
-
-      case VBC1_FDIV :            //global[sp+1] = global[sp+1] / global[sp]; sp++;
-        FVAL1(vpu->mSp+1);
-        FVAL2(vpu->mSp);
-        if( f2 != 0 ) f1 /= f2;
-        FMEM1(vpu->mSp+1);
-        vpu->mSp++;
-        vpu->mIp++;
-        break;
-
-      case VBC1_FNEG :            //global[sp] = -global[sp]
-        FVAL1(vpu->mSp);
-        f1 = -f1;
-        FMEM1(vpu->mSp);
-        vpu->mIp++;
-        break;
-
-      //conversion operations
-      case VBC1_FLOAT_TO_INT :    //global[sp] = (int)global[sp]
-        FVAL1(vpu->mSp);
-        MEM(vpu->mSp, static_cast<int>(f1) );
-        vpu->mIp++;
-        break;
-
-      case VBC1_INT_TO_FLOAT :    //global[sp] = (float)global[sp]
-        f1 = static_cast<float>(VAL(vpu->mSp));
-        FMEM1(vpu->mSp);
-        vpu->mIp++;
-        break;
-#endif
 
 
       //Integer operations
@@ -929,28 +805,27 @@ void SrVMachine::executeCore(SrVmVpu *vpu)
         vpu->mIp++;
         break;
 
-        //Обработка исключений
-        //Объявить, что в данной функции останавливаются заданные исключения
+      //Обработка исключений
+      //Объявить, что в данной функции останавливаются заданные исключения
+      case VBC1_CATCH :
+        vpu->mTm = VAL(vpu->mSp++);
+        vpu->mIp++;
+        break;
+
       case VBC5_CATCH :           //tm = param;
         vpu->mTm = PARAM32;
         vpu->mIp += 5;
         break;
 
-        //Возбудить исключение
+      //Возбудить исключение
+      case VBC1_THROW :
+        doThrow( vpu, VAL(vpu->mSp++) );
+        break;
+
       case VBC5_THROW :           //Делать:
                                   // Возврат из функции
                                   // Пока на корневая функция или маска исключения функции не совпадет с исключением
-        tmp = PARAM32;
-        if( tmp )
-          vpu->mThrow = tmp;
-        while( vpu->mBp != vpu->mBaseSp ) {
-          vpu->mSp = vpu->mBp + 3;
-          vpu->mIp = mMemory[vpu->mBp];
-          vpu->mTm = mMemory[vpu->mBp+1];
-          vpu->mBp = mMemory[vpu->mBp+2];
-          if( vpu->mTm & vpu->mThrow )
-            break;
-          }
+        doThrow( vpu, PARAM32 );
         break;
 
         //Инструкции, порождаемые специальными функциями
@@ -1064,6 +939,24 @@ void SrVMachine::call(SrVmVpu *vpu, int addrOffset)
   else
     //внутренние функции
     callInternal( vpu, tmp, vpu->mIp + 2 );
+  }
+
+
+
+
+//Обработка исключения
+void SrVMachine::doThrow(SrVmVpu *vpu, int mask)
+  {
+  if( mask )
+    vpu->mThrow = mask;
+  while( vpu->mBp != vpu->mBaseSp ) {
+    vpu->mSp = vpu->mBp + 3;
+    vpu->mIp = mMemory[vpu->mBp];
+    vpu->mTm = mMemory[vpu->mBp+1];
+    vpu->mBp = mMemory[vpu->mBp+2];
+    if( vpu->mTm & vpu->mThrow )
+      break;
+    }
   }
 
 

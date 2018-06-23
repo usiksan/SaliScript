@@ -51,7 +51,7 @@ SrType *SrTypeList::getTypePointer(SrType *base)
   SrType *ptr = new SrType();
   ptr->mName     = QString("*%1").arg(base->mName);
   ptr->mBaseType = base;
-  ptr->mClass    = TTYPE_POINTER;
+  ptr->mClass    = CLASS_POINTER;
   ptr->mNumElem  = 0;
   ptr->mSize     = 1;
   return addType( ptr );
@@ -69,7 +69,7 @@ SrType *SrTypeList::getTypeArray( SrType *base, int numElem )
   SrType *arr = new SrType();
   arr->mName     = QString("%1[%2]").arg(base->mName).arg(numElem);
   arr->mBaseType = base;
-  arr->mClass    = TTYPE_ARRAY;
+  arr->mClass    = CLASS_ARRAY;
   arr->mNumElem  = numElem;
   arr->mSize     = base->mSize * numElem;
   return addType( arr );

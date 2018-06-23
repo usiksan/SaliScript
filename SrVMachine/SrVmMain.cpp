@@ -20,7 +20,6 @@ class Machine : public SrVMachine {
     // SrVMachine interface
   public:
     virtual void memFail(SrVmVpu *vpu, int index) override;
-    virtual void objFail(SrVmVpu *vpu, int index) override;
     virtual void progFail(SrVmVpu *vpu, int address, int len) override;
   };
 
@@ -28,9 +27,6 @@ void Machine::memFail(SrVmVpu *vpu, int index)
 {
 }
 
-void Machine::objFail(SrVmVpu *vpu, int index)
-{
-}
 
 void Machine::progFail(SrVmVpu *vpu, int address, int len)
 {

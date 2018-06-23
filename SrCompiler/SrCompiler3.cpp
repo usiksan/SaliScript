@@ -1,13 +1,17 @@
 ﻿/*
-Проект "Компилятор"
-Содержание
-  Реализация класса TCompiler часть 1 (макропроцессор)
-  Конструктор
-    TCompiler();
-  Функции:
-            void     Error( int errId, CPChar err, CPChar param1, CPChar param2, CPChar param3 );
-            void     ErrorKillLine( int errId, CPChar err, CPChar param1, CPChar param2, CPChar param3 );
-            void     ErrorEndSt( int errId, CPChar err, CPChar param1, CPChar param2, CPChar param3 );
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Пико-компилятор"
+  Автор
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
+
+  Описание
+    Пико компилятор скриптового языка rc++
+
+    Реализация класса TCompiler часть 3 (поток ошибок)
 */
 #include "SrCompiler.h"
 
@@ -97,7 +101,7 @@ QString
 SrCompiler::errorList() {
   QString dest;
 
-  foreach( const SvError &err, mErrorList ) {
+  foreach( const SrError &err, mErrorList ) {
     //Вывести сообщение о имени файла и номере ошибки
     dest.append( err.mError ).append( QObject::tr("\nIn file '%1' line %2:\n").arg(err.mFile).arg(err.mLine) );
     }

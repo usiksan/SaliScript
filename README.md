@@ -1,4 +1,5 @@
 # rc
 
 Script language reduced c++ - rc++ designed for creating equipment control programs. Its only advantage over standard C++ is the miniature compiler, which allows you to embed the compiler directly into the working program and compile the script before the launch. And this, in turn, makes it possible to quickly carry out changes in the program, including directly on the equipment. Having full control over the compiler, as well as over the runtime environment allows you to organize step-by-step debugging of scripts, including remotely.
+
 The script language is compiled into byte-code that is executed by the virtual machine. The super-compact size of this virtual machine makes it easy to integrate into microcontrollers. Such integration allows to execute scripts on microcontrollers of different architecture and different power. At the same time, loading a new script into the microcontroller becomes easy and allows using standard interfaces, which radically simplifies updating or adjusting control programs for various equipment.

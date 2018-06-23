@@ -1,88 +1,23 @@
 ﻿/*
-Проект "Компилятор"
-Содержание
-  Реализация класса TCompiler часть 5
-  Функции:
-            bool     ScanDigit();     //Проверить наличие числа и сканировать если есть
-            bool     NextToken();     //Получить следующий токен
-            void     NeedSemicolon(); //Проверить следующий токен на точку с запятой
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Пико-компилятор"
+  Автор
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
+
+  Описание
+    Пико компилятор скриптового языка rc++
+
+    Реализация класса TCompiler часть 6 (сканер)
 */
 #include "SrCompiler.h"
 
 using namespace SrCompiler6;
 
-void
-SrCompiler::InitKeyWords() {
-  mKeyWords.clear();
-  mKeyWords.insert( QString("_at_"),             tkwAt );
-  mKeyWords.insert( QString("break"),            tkwBreak );
-  mKeyWords.insert( QString("case"),             tkwCase );
-  mKeyWords.insert( QString("bool"),             tkwBool );
-  mKeyWords.insert( QString("catch"),            tkwCatch );
-  mKeyWords.insert( QString("cblock"),           tkwCblock );
-  mKeyWords.insert( QString("char"),             tkwChar );
-  mKeyWords.insert( QString("class"),            tkwClass );
-  mKeyWords.insert( QString("const"),            tkwConst );
-  mKeyWords.insert( QString("const_cast"),       tkwConstCast );
-  mKeyWords.insert( QString("continue"),         tkwContinue );
-  mKeyWords.insert( QString("cstring"),          tkwCString );
-  mKeyWords.insert( QString("default"),          tkwDefault );
-  mKeyWords.insert( QString("delete"),           tkwDelete );
-  mKeyWords.insert( QString("do"),               tkwDo );
-  mKeyWords.insert( QString("double"),           tkwDouble );
-  mKeyWords.insert( QString("dynamic_cast"),     tkwDynamicCast );
-  mKeyWords.insert( QString("else"),             tkwElse );
-  mKeyWords.insert( QString("enum"),             tkwEnum );
-  mKeyWords.insert( QString("explicit"),         tkwExplicit );
-  mKeyWords.insert( QString("export"),           tkwExport );
-  mKeyWords.insert( QString("extern"),           tkwExtern );
-  mKeyWords.insert( QString("false"),            tkwFalse );
-  mKeyWords.insert( QString("float"),            tkwFloat );
-  mKeyWords.insert( QString("for"),              tkwFor );
-  mKeyWords.insert( QString("friend"),           tkwFriend );
-  mKeyWords.insert( QString("function"),         tkwFunction );
-  mKeyWords.insert( QString("goto"),             tkwGoto );
-  mKeyWords.insert( QString("if"),               tkwIf );
-  mKeyWords.insert( QString("import"),           tkwImport );
-  mKeyWords.insert( QString("inline"),           tkwInline );
-  mKeyWords.insert( QString("int"),              tkwInt );
-  mKeyWords.insert( QString("long"),             tkwLong );
-  mKeyWords.insert( QString("mutable"),          tkwMutable );
-  mKeyWords.insert( QString("namespace"),        tkwNamespace );
-  mKeyWords.insert( QString("new"),              tkwNew );
-  mKeyWords.insert( QString("operator"),         tkwOperator );
-  mKeyWords.insert( QString("private"),          tkwPrivate );
-  mKeyWords.insert( QString("property"),         tkwProperty );
-  mKeyWords.insert( QString("protected"),        tkwProtected );
-  mKeyWords.insert( QString("public"),           tkwPublic );
-  mKeyWords.insert( QString("register"),         tkwRegister );
-  mKeyWords.insert( QString("reinterpret_cast"), tkwReinterpretCast );
-  mKeyWords.insert( QString("return"),           tkwReturn );
-  mKeyWords.insert( QString("short"),            tkwShort );
-  mKeyWords.insert( QString("signed"),           tkwSigned );
-  mKeyWords.insert( QString("sizeof"),           tkwSizeof );
-  mKeyWords.insert( QString("static"),           tkwStatic );
-  mKeyWords.insert( QString("static_cast"),      tkwStaticCast );
-  mKeyWords.insert( QString("struct"),           tkwStruct );
-  mKeyWords.insert( QString("switch"),           tkwSwitch );
-  mKeyWords.insert( QString("template"),         tkwTemplate );
-  mKeyWords.insert( QString("this"),             tkwThis );
-  mKeyWords.insert( QString("throw"),            tkwThrow );
-  mKeyWords.insert( QString("true"),             tkwTrue );
-  mKeyWords.insert( QString("try"),              tkwTry );
-  mKeyWords.insert( QString("typedef"),          tkwTypedef );
-  mKeyWords.insert( QString("typeid"),           tkwTypeid );
-  mKeyWords.insert( QString("typename"),         tkwTypename );
-  mKeyWords.insert( QString("union"),            tkwUnion );
-  mKeyWords.insert( QString("unsigned"),         tkwUnsigned );
-  mKeyWords.insert( QString("using"),            tkwUsing );
-  mKeyWords.insert( QString("vint"),             tkwVint );
-  mKeyWords.insert( QString("virtual"),          tkwVirtual );
-  mKeyWords.insert( QString("void"),             tkwVoid );
-  mKeyWords.insert( QString("volatile"),         tkwVolatile );
-  mKeyWords.insert( QString("wchar_t"),          tkwWchar_t );
-  mKeyWords.insert( QString("while"),            tkwWhile );
-  }
+
 
 quint32
 ConvertDigit( char ch ) {
@@ -92,6 +27,9 @@ ConvertDigit( char ch ) {
   return 0;
   }
 
+
+
+
 bool
 IsHex( QChar qch ) {
   char ch = qch.toLower().toLatin1();
@@ -99,6 +37,9 @@ IsHex( QChar qch ) {
   if( ch >= 'a' && ch <= 'f' ) return true;
   return false;
   }
+
+
+
 
 bool
 SrCompiler::ScanDigit() {
@@ -168,6 +109,10 @@ SrCompiler::ScanDigit() {
     }
   return false;
   }
+
+
+
+
 
 
 bool
@@ -374,6 +319,9 @@ SrCompiler::NextToken() {
   mToken.mLine   = mSourceStack.top()->Line();
   return true;
   }
+
+
+
 
 void
 SrCompiler::NeedSemicolon() {

@@ -1,15 +1,15 @@
 /*
-  Project     "Script language reduced c++ (rc++)"
-  SubProject  "Virtual machine"
-  Author
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Пико-компилятор"
+  Автор
     Alexander Sibilev
-  Internet
-    www.rc.saliLab.ru - project home site
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
     www.saliLab.ru
     www.saliLab.com
 
-  Description
-    reduced c++ (rc++) pico compiler
+  Описание
+    Пико компилятор скриптового языка rc++
 */
 #ifndef SRCOMPILER_H
 #define SRCOMPILER_H
@@ -33,11 +33,17 @@
 
 namespace SrCompiler6
   {
-  //Определение типов для внутреннего использования компилятором
-  typedef unsigned short SvChar;
 
 
-  //Коды Token сканера
+  /*!
+    \enum tXXX Коды Token сканера
+    \brief Сканер простматривает входную программу и выдает ее как последовательность
+    токенов. Синтаксическому анализатору требуется разбирать программу представленную в токенах.
+
+    Для всех ключевых слов C++ предусмотрены токены, а также для трех дополнительных ключевых
+    слов характерных для скрипта. Они помечены знаками !!!. Токены представлены также для
+    знаков и конструкций из нескольких знаков.
+   */
   enum {
     ttEof,         //Конец потока
 
@@ -186,33 +192,36 @@ namespace SrCompiler6
 
     ttLast };
 
-  //Основные типы данных
+
+  /*!
+    \enum classOfType классы типов данных
+    \brief каждый из типов данных принадлежит к одному из приведенных классов
+   */
   enum {
-    TTYPE_VOID         = 0x000001,
-    TTYPE_INT          = 0x000002,   //Целое 32 бит
-    TTYPE_FLOAT        = 0x000004,   //Floating point 32 bit wide
-    TTYPE_FUNCTION     = 0x000008,   //Функция
-    TTYPE_STRUCT       = 0x000010,   //Структура
-    TTYPE_CSTRING      = 0x000020,   //Константная строка
-    TTYPE_CBLOCK       = 0x000040,   //Блок константных данных (картинка, звук и т.п.)
-    TTYPE_POINTER      = 0x000080,   //Указатель на что-нибудь
-    TTYPE_ARRAY        = 0x000100,   //Array of items
-    TTYPE_LAST };
-
-
-
-  struct SrType;
-  typedef SrType *SrTypePtr;
+    CLASS_VOID         = 0x000001,
+    CLASS_INT          = 0x000002,   //! Целое 32 бит
+    CLASS_FUNCTION     = 0x000008,   //! Функция
+    CLASS_STRUCT       = 0x000010,   //! Структура
+    CLASS_CSTRING      = 0x000020,   //! Константная строка
+    CLASS_CBLOCK       = 0x000040,   //! Блок константных данных (картинка, звук и т.п.)
+    CLASS_POINTER      = 0x000080,   //! Указатель на что-нибудь
+    CLASS_ARRAY        = 0x000100,   //! Массив элементов
+    CLASS_LAST };
 
 
 
 
 
-  //Вид переменной
+
+  /*!
+     \brief The SrSort enum Вид размещения переменной.
+     Переменная может быть размещена в глобальном пространстве,
+     в локальном пространстве (в стеке) и быть членом какой-либо структуры.
+   */
   enum SrSort {
-    tsrGlobal,
-    tsrLocal,
-    tsrMember
+    tsrGlobal, //! Переменная размещена в глобальном пространстве
+    tsrLocal,  //! Переменная размещена в локальном пространстве
+    tsrMember  //! Переменная является членом структуры
     };
 
 
@@ -222,10 +231,19 @@ namespace SrCompiler6
 
 
   //Ссылка на элемент помощи
+  /*!
+     \brief The SrHelp struct Помощь по объекту.
+
+     При своей работе компилятор собирает по исходному коду коментарии
+     расположенные в непосредственной близости от определения функций,
+     переменных и макросов. Эти коментарии составляют быструю помощь по
+     элементу и используются системой проектирования IDE для написания
+     и отладки программ rc++.
+   */
   struct SrHelp {
-      QString         mBrief;         //Короткое описание
-      QString         mReference;     //Ссылка на документацию
-      SrMark          mDefinePos;     //Позиция определения
+      QString         mBrief;         //! Короткое описание
+      QString         mReference;     //! Ссылка на документацию
+      SrMark          mDefinePos;     //! Позиция определения
 
       //Конструктор пустой помощи
       SrHelp();
@@ -239,10 +257,19 @@ namespace SrCompiler6
 
 
 
+  /*!
+     \brief The SrMacro struct Макрорасширение для макроопределений вместе
+     с дополнительной информацией
+
+     Данная структура хранит макрорасширение для макроса, а также дополнительную информацию.
+     Метка помощи предназначена для показа IDE. Список использованных мест
+     также предназначен для IDE. На основе этого списка может быть осуществлена автозамена
+     объекта, а также локализованы места его использования
+   */
   struct SrMacro {
-      SrHelp     mHelp;
-      QString    mExpander;      //Macro expanding string
-      SrMarkList mReferneceList; //Using ref points list for this macro
+      SrHelp     mHelp;          //! Помощь по макросу
+      QString    mExpander;      //! Строка с макрорасширением
+      SrMarkList mReferneceList; //! Список мест, в которых используется макрос
     };
 
   typedef SrMacro *SrMacroPtr;
@@ -253,6 +280,10 @@ namespace SrCompiler6
   typedef SrValue *SrValuePtr;
   typedef QList<SrValuePtr> SrValuePtrList;
 
+  /*!
+     \brief The SrValueList struct Список значений SrValue, которые представляют
+     собой ветки дерева разбора выражений.
+   */
   struct SrValueList {
       SrValuePtrList mList;
 
@@ -272,18 +303,24 @@ namespace SrCompiler6
 
 
 
-  //Переменная
+  struct SrType;
+  typedef SrType *SrTypePtr;
+
+
+  /*!
+     \brief The SrVariable struct Переменная в скрипте
+   */
   struct SrVariable {
-      SrHelp           mHelp;               //Помощь по переменной
-      QString          mName;               //Имя переменной
-      SrType          *mType;               //Тип переменной
-      SrSort           mSort;               //Сорт (область) переменной: глобальная, локальная, член
-      int              mAddress;            //Адрес начала относительный
-      int              mArraySize;          //Размер массива (для массивов)
-      SrMark           mMarkDefine;         //Место определения
-      QString          mRemark;             //Описание переменной
-      SrValue         *mInit;               //Инициализационное значение
-      SrMarkList       mReferenceList;      //Using ref points list for this variable
+      SrHelp           mHelp;               //! Помощь по переменной
+      QString          mName;               //! Имя переменной
+      SrType          *mType;               //! Тип переменной
+      SrSort           mSort;               //! Сорт (область) переменной: глобальная, локальная, член
+      int              mAddress;            //! Адрес начала относительный
+      int              mArraySize;          //! Размер массива (для массивов)
+      SrMark           mMarkDefine;         //! Место определения
+      QString          mRemark;             //! Описание переменной
+      SrValue         *mInit;               //! Инициализационное значение
+      SrMarkList       mReferenceList;      //! Список используемых переменной мест
 
 
       SrVariable();
@@ -306,11 +343,17 @@ namespace SrCompiler6
   typedef QList<SrVariablePtr> SrVariablePtrList;
   typedef QHash<QString,SrVariablePtr> SrVariablePtrHash;
 
+
+
   //Список переменных
+  /*!
+     \brief The SrVariableList struct Список переменных. Содержит собственно список переменных,
+     хэш-таблицу для быстрого поиска переменных и сорт размещения переменных
+   */
   struct SrVariableList {
-      SrVariablePtrList mList; //Последовательный список переменных
-      SrVariablePtrHash mHash; //Хэш-таблица быстрого поиска переменных
-      SrSort            mSort; //Вид таблицы переменных
+      SrVariablePtrList mList; //! Последовательный список переменных
+      SrVariablePtrHash mHash; //! Хэш-таблица быстрого поиска переменных
+      SrSort            mSort; //! Вид таблицы переменных
 
       SrVariableList( SrSort sort );
       ~SrVariableList();
@@ -339,26 +382,29 @@ namespace SrCompiler6
 
 
 
-  struct SrStruct;
   struct SrOperatorBlock;
+
+  /*!
+     \brief The SrFunction struct Описывает функцию в глобальном контексте
+   */
   struct SrFunction {
-      SrHelp           mHelp;               //Помощь по функции
-      QString          mName;               //Имя функции (возможны безымянные функции)
-      bool             mDefined;            //Флаг, выставляется, когда тело функции уже определено
-      bool             mDeclared;           //Флаг, выставляется, когда функция объявлена (например в классе)
-                                            //в глобальном контексте все функции объявлены по умолчанию
-      int              mAddress;            //Адрес начала кода
-      int              mImportIndex;        //Индекс импортной функции
-      int              mParamSize;          //Размер области параметров
-      SrMark           mMarkDefine;         //Место определения
-      SrMark           mMarkDeclare;        //Место первого объявления
-      QString          mRemark;             //Описание переменной
-      SrVariableList   mParams;             //Список параметров функции
-      SrType          *mResultType;         //Тип результата
-      SrType          *mType;               //Тип данной функции
-      SrOperatorBlock *mBody;               //Тело функции
-      int              mLocalAmount;        //Место под локальные переменные
-      SrMarkList       mReferenceList;      //Using reference list for this function
+      SrHelp           mHelp;               //! Помощь по функции
+      QString          mName;               //! Имя функции
+      bool             mDefined;            //! Флаг, выставляется, когда тело функции уже определено
+      bool             mDeclared;           //! Флаг, выставляется, когда функция объявлена (например в классе)
+                                            //! в глобальном контексте все функции объявлены по умолчанию
+      int              mAddress;            //! Адрес начала кода
+      int              mImportIndex;        //! Индекс импортной функции
+      int              mParamSize;          //! Размер области параметров
+      SrMark           mMarkDefine;         //! Место определения
+      SrMark           mMarkDeclare;        //! Место первого объявления
+      QString          mRemark;             //! Описание переменной
+      SrVariableList   mParams;             //! Список параметров функции
+      SrType          *mResultType;         //! Тип результата
+      SrType          *mType;               //! Тип данной функции
+      SrOperatorBlock *mBody;               //! Тело функции
+      int              mLocalAmount;        //! Место под локальные переменные
+      SrMarkList       mReferenceList;      //! Список мест использования функции
 
       SrFunction();
       SrFunction( const QString &name, SrType *result, const SrMark &mark );
@@ -388,6 +434,10 @@ namespace SrCompiler6
   typedef QHash<QString,SrFunctionPtr> SrFunctionPtrHash;
 
 
+  /*!
+     \brief The SrFunctionList struct Список функций. Содержи собственно список функций,
+     а также хэш-таблицу для быстрого доступа к функции
+   */
   struct SrFunctionList {
       SrFunctionPtrList mList; //Список функций контекста
       SrFunctionPtrHash mHash; //Хэш-функций
@@ -403,9 +453,6 @@ namespace SrCompiler6
 
       //Заменить функцию в списке
       SrFunction* addFunctionDefinition( SrFunctionPtr fun );
-
-      //Скопировать функции-члены
-      void        addMembers(const SrFunctionList &src , SrStruct *svClass );
 
       //Проверить наличие имени среди функций
       bool        isPresent( const QString name ) const { return mHash.contains(name); }
@@ -432,16 +479,31 @@ namespace SrCompiler6
   class SrFunctionType;
   class SrTypeList;
 
-  //Основной и производный тип TCompiler4
+  /*!
+     \brief The SrType struct Основной и производный тип
+
+     Все объекты скрипта имеют какой-либо тип. При инициализации
+     компилятор создает и регистрирует набор базовых типов. Из этих базовых
+     типов может создаваться новый тип.
+
+     Имя типа - это то имя, которым тип представлен в программе.
+
+     Сигнатура типа формируется из сигнатуры базового типа путем добавления модификаторов.
+     Сигнатура нужна для определения одинаковых типов, но имеющих разные имена. Это актуально
+     для typedef-ов (в настоящее время не используются) и для функций. Функции одинаковые по
+     параметрам и по результату будут иметь одинаковую сигнатуру.
+   */
   struct SrType {
-      QString            mName;           //Первое имя типа
-      QString            mSignature;      //Сигнатура типа
-      int                mClass;          //Основной тип (класс)
-      int                mNumElem;        //Количество элементов массива
-      int                mSize;           //Размер объекта данного типа
-      SrType            *mBaseType;       //Базовый тип для производных типов
-      SrHelp             mHelp;           //Помощь по типу
-      SrTypeList        *mTypeList;       //Список всех типов для генерации новых типов из данного
+      QString            mName;           //! Первое имя типа
+      QString            mSignature;      //! Сигнатура типа
+      int                mClass;          //! Основной тип (класс)
+      int                mNumElem;        //! Количество элементов массива
+      int                mSize;           //! Размер объекта данного типа
+      SrType            *mBaseType;       //! Базовый тип для производных типов
+      SrHelp             mHelp;           //! Помощь по типу
+      SrTypeList        *mTypeList;       //! Список всех типов для генерации новых типов из данного
+                                          //! Этот список содержится в компиляторе и предоставляется
+                                          //! единый на весь компилятор.
 
       //Конструктор по умолчанию
       SrType();
@@ -480,14 +542,13 @@ namespace SrCompiler6
       //Получить тип массив
       SrType         *getTypeArray(int numElem);
 
-      bool            isInt()     const { return mClass == TTYPE_INT; }
-      bool            isVoid()    const { return mClass == TTYPE_VOID; }
-      bool            isArray()   const { return mClass == TTYPE_ARRAY; }
-      bool            isPointer() const { return mClass == TTYPE_POINTER; }
-      bool            isFloat()   const { return mClass == TTYPE_FLOAT; }
-      bool            isCBlock()  const { return mClass == TTYPE_CBLOCK; }
-      bool            isCString() const { return mClass == TTYPE_CSTRING; }
-      bool            isStruct()  const { return mClass == TTYPE_STRUCT; }
+      bool            isInt()     const { return mClass == CLASS_INT; }
+      bool            isVoid()    const { return mClass == CLASS_VOID; }
+      bool            isArray()   const { return mClass == CLASS_ARRAY; }
+      bool            isPointer() const { return mClass == CLASS_POINTER; }
+      bool            isCBlock()  const { return mClass == CLASS_CBLOCK; }
+      bool            isCString() const { return mClass == CLASS_CSTRING; }
+      bool            isStruct()  const { return mClass == CLASS_STRUCT; }
 
       //Проверить соответствие параметра
       bool            isMatchParam(SrType *src , bool srcNull);
@@ -502,8 +563,13 @@ namespace SrCompiler6
 
   typedef QList<SrTypePtr> SvTypePtrList;
   typedef QHash<QString,SrTypePtr> SvTypePtrHash;
-  //typedef QHash<SvTypePtr,QString>
 
+  /*!
+     \brief The SrTypeList class Список типов. Содержит список всех типов, а также
+     две хэш-таблицы для быстрого доступа к типам. Одна из таблиц производит
+     выборку по именам типов, а другая - по сигнатурам.
+
+   */
   class SrTypeList {
       SvTypePtrHash mHash; //Типы с именами
       SvTypePtrHash mSign; //Типы с сигнатурами
@@ -547,10 +613,13 @@ namespace SrCompiler6
 
 
 
-  //Формальный параметр функции
+
+  /*!
+     \brief The SrFunParam struct Формальный параметр функции в описании типа функции
+   */
   struct SrFunParam {
-      QString          mName;               //Формальное имя параметра
-      SrType          *mType;               //Тип параметра
+      QString          mName;               //! Формальное имя параметра
+      SrType          *mType;               //! Тип параметра
 
       SrFunParam() : mName(), mType(0) {}
 
@@ -564,13 +633,16 @@ namespace SrCompiler6
 
 
 
-  //Тип-функция
+  /*!
+     \brief The SrFunctionType struct Тип описывающий функцию. В дополнение к базовому типу
+     в типе-функции присутствует список формальных параметров и результат.
+   */
   struct SrFunctionType : public SrType {
       SrParamList      mParamList;      //Список параметров
       SrType          *mResult;         //Тип результата
       int              mParamSize;      //Размер области параметров
 
-      SrFunctionType() : mParamList(), mResult(0), mParamSize(0) { mClass = TTYPE_FUNCTION; }
+      SrFunctionType() : mParamList(), mResult(0), mParamSize(0) { mClass = CLASS_FUNCTION; }
       ~SrFunctionType();
 
       //Построить сигнатуру
@@ -583,13 +655,16 @@ namespace SrCompiler6
 
 
   //Тип-класс
-  //Тип-внешний объект
+  /*!
+     \brief The SrStruct struct Тип описывающий структуру. В дополнение к базовому типу
+     в типе-структуре присутствует список членов и указатель на наследованную структуру.
+   */
   struct SrStruct : public SrType {
-      int                mVTable;         //Адрес таблицы виртуальных методов
-      //bool              mExtern;
-      bool               mDefined;        //Структура определена
-      SrStruct          *mBaseStruct;     //Базовый тип
-      SrVariableList     mMemberList;     //Список членов
+      bool               mDefined;        //! Структура определена
+      SrStruct          *mBaseStruct;     //! Базовая структура, от которой наследовалась данная
+      SrVariableList     mMemberList;     //! Список всех членов. При создании структуры в этот
+                                          //! спислк копируется список членов из наследовуемой
+                                          //! структуры
 
       //Конструктор обычного класса
       SrStruct( const QString name );
@@ -617,13 +692,21 @@ namespace SrCompiler6
 
 
 
-  //Источник исходного кода
+  /*!
+     \brief The SrSource class Источник исходного кода.
+
+     При компиляции из отдельной программы скрипт, как правило, читается
+     из файла. Поэтому по умолчанию при обнаружении ссылки на какой-либо
+     файл компилятор открывает его с диска. Однако, при использовании
+     IDE может быть полезным получать содержимое файла не с диска, а
+     прямо из редактора. В этом случае соответствующие функции компилятора должны
+     быть переопределены.
+   */
   class SrSource {
     protected:
-      int          mLineCount;   //Счетчик строк исходного файла
-      int          mFileId;      //Идентификатор файла в общей таблице файлов
-      QTextStream *mInputStream; //Исходный код в виде файла
-      //QString mFileName;  //Имя исходного файла
+      int          mLineCount;   //! Счетчик строк исходного файла
+      int          mFileId;      //! Идентификатор файла в общей таблице файлов
+      QTextStream *mInputStream; //! Исходный код в виде потока
     public:
 
       SrSource( int fileId ) : mLineCount(0), mFileId(fileId), mInputStream(0) {}
@@ -641,27 +724,26 @@ namespace SrCompiler6
 
 
 
-  //Источник исходного кода - файл
-  class SrFileSource : public SrSource {
+  /*!
+     \brief The SrSourceFile class Источник исходного кода в виде файла на диске.
+   */
+  class SrSourceFile : public SrSource {
       QFile       *mFile;
     public:
-      SrFileSource( QFile *file, int fileId );
-      ~SrFileSource();
-    };
-
-
-
-  //Источник исходного кода - строка текста
-  class SrStringSource : public SrSource {
-      QString mSource;
-    public:
-      SrStringSource( const QString &src, int fileId );
+      SrSourceFile( QFile *file, int fileId );
+      ~SrSourceFile();
     };
 
 
 
 
 
+  /*!
+     \brief The SrStatement enum Коды идентификации операторов
+
+     Компилятор может выполнять некоторую оптимизацию в зависимости от
+     порядка следования операторов.
+   */
   enum SrStatement {
     tstNone,
     tstLocal,
@@ -675,23 +757,25 @@ namespace SrCompiler6
     tstFor,
     tstSwitch,
     tstCase,
-    tstCatch,
-    tstThrow,
     tstBlock,
-    tstBinding,
     tstDefault };
 
 
+  /*!
+     \brief The SrValueCode enum Коды идентификации операций в дереве разбора выражений
+   */
   enum SrValueCode {
     svvVariable,        //Переменная (глобальная, локальная, параметр)
     svvFunction,        //Функция (глобальная)
-    svvWaitFun,         //Специальная функция wait
+    svvWaitFun,         //Специальная функция srWait
+    svvThrowFun,        //Специальная функция srThrow
+    svvCatchFun,        //Специальная функция srCatch
+    svvExceptionFun,    //Специальная функция srException
     svvMemberVariable,  //Член от произвольной структуры
     svvConstInt,        //Константа int
-    svvConstFloat,      //Константа float
-    svvConstString,
-    svvPointer,
-    svvAddress,
+    svvConstString,     //! Константная строка
+    svvPointer,         //! Берет значение по указателю
+    svvAddress,         //! Адрес какого-либо объекта
     svvPredInc,
     svvPredDec,
     svvPostInc,
@@ -700,7 +784,7 @@ namespace SrCompiler6
     svvLogNot,
     svvNeg,
     svvStore,
-    svvArrayCell,      //Операция индекса массива
+    svvArrayCell,         //Операция индекса массива
     svvMul,
     svvMulStore,
     svvDiv,
@@ -738,12 +822,17 @@ namespace SrCompiler6
 
 
 
-  //Базовый элемент промежуточного кода
+  /*!
+     \brief The SrValue struct Ветка и лист в дереве разбора выражений
+
+     Все выражения представлены экземпляром структуры SrValue. В зависимости
+     от фактической наследованной структуры SrValueXXX выражение представляется
+     в виде дерева.
+   */
   struct SrValue {
       SrType      *mType;        //Тип значения, полученного в результате
       SrMark       mMark;        //Место в файле для данного значения
       int          mConstInt;    //Вычисленный результат
-      float        mConstFloat;
       bool         mConst;       //Флаг показывает константный результат
 
       SrValue( const SrMark &mark );
@@ -760,7 +849,6 @@ namespace SrCompiler6
       //Получить целую константу
       int     toConstInt() const { return mConstInt; }
 
-      float   toConstFloat() const { return mConstFloat; }
 
       //Получить строку листинга
       virtual QString     listing() = 0;
@@ -778,9 +866,12 @@ namespace SrCompiler6
 
 
 
-  //Переменная (глобальная, локальная, параметр)
+  /*!
+     \brief The SrValueVariable struct Переменная (глобальная, локальная, параметр)
+   */
   struct SrValueVariable : SrValue {
       SrVariable *mVariable;
+      int         mAddonAddress;
 
       SrValueVariable( SrVariable *var, const SrMark &mark );
 
@@ -797,7 +888,9 @@ namespace SrCompiler6
 
 
 
-  //Функция (глобальная)
+  /*!
+     \brief The SrValueFunction struct Взятие адреса функции (глобальной)
+   */
   struct SrValueFunction : SrValue {
       SrFunction *mFunction;
 
@@ -818,21 +911,74 @@ namespace SrCompiler6
 
 
 
-  //Специальная функция wait
+  /*!
+     \brief The SrValueWaitFun struct Специальная функция srWait
+   */
   struct SrValueWaitFun : SrValue {
       SrValueWaitFun( SrType *type, const SrMark &mark ) : SrValue(mark) { mType = type; }
 
       //Получить строку листинга
-      virtual QString     listing() override { return QString(" Wait() "); }
+      virtual QString     listing() override { return QString(" srWait() "); }
 
       //Получить код операции
       virtual SrValueCode code() const override { return svvWaitFun; }
     };
 
 
+  /*!
+     \brief The SrValueThrowFun struct Специальная функция srThrow
+   */
+  struct SrValueThrowFun : SrValue {
+      SrValue *mThrowCode;
+
+      SrValueThrowFun( SrValue *throwCode, SrType *type, const SrMark &mark ) : SrValue(mark), mThrowCode(throwCode) { mType = type; }
+      ~SrValueThrowFun() { delete mThrowCode; }
+
+      //Получить строку листинга
+      virtual QString     listing() override { return QString(" srThrow(%1) ").arg( mThrowCode->listing() ); }
+
+      //Получить код операции
+      virtual SrValueCode code() const override { return svvThrowFun; }
+    };
 
 
-  //Член от произвольной структуры структуры
+  /*!
+     \brief The SrValueCatchFun struct Специальная функция srCatch
+   */
+  struct SrValueCatchFun : SrValue {
+      SrValue *mCatchMask;
+
+      SrValueCatchFun( SrValue *catchMask, SrType *type, const SrMark &mark ) : SrValue(mark), mCatchMask(catchMask) { mType = type; }
+      ~SrValueCatchFun() { delete mCatchMask; }
+
+      //Получить строку листинга
+      virtual QString     listing() override { return QString(" srCatch(%1) ").arg( mCatchMask->listing() ); }
+
+      //Получить код операции
+      virtual SrValueCode code() const override { return svvCatchFun; }
+    };
+
+
+
+  /*!
+     \brief The SrValueExceptionFun struct Специальная функция srException
+   */
+  struct SrValueExceptionFun : SrValue {
+      SrValueExceptionFun( SrType *type, const SrMark &mark ) : SrValue(mark) { mType = type; }
+
+      //Получить строку листинга
+      virtual QString     listing() override { return QString(" srException() "); }
+
+      //Получить код операции
+      virtual SrValueCode code() const override { return svvExceptionFun; }
+    };
+
+
+
+
+  /*!
+     \brief The SrValueMemberVariable struct Член от произвольной структуры
+   */
   struct SrValueMemberVariable : SrValueVariable {
       SrValue *mStruct; //Выражение вычисления структуры
 
@@ -852,7 +998,9 @@ namespace SrCompiler6
 
 
 
-  //Константа целая
+  /*!
+     \brief The SrValueConstInt struct Константа целая
+   */
   struct SrValueConstInt : SrValue {
       int     mIValue;        //Целое значение или индекс строки
 
@@ -870,7 +1018,9 @@ namespace SrCompiler6
 
 
 
-  //Постоянная строка
+  /*!
+     \brief The SrValueConstString struct Постоянная строка
+   */
   struct SrValueConstString : SrValue {
       int mIndex; //Индекс строки в таблице строк
 
@@ -887,7 +1037,9 @@ namespace SrCompiler6
 
 
 
-  //Унарная операция
+  /*!
+     \brief The SrValueUnary struct Унарная операция
+   */
   struct SrValueUnary : public SrValue {
       SrValue *mOperand;
 
@@ -914,7 +1066,9 @@ namespace SrCompiler6
 
 
 
-  //Разименовать указатель
+  /*!
+     \brief The SrValuePointer struct Разименовать указатель
+   */
   struct SrValuePointer : public SrValueUnary {
       SrValuePointer( SrValue *oper, const SrMark &mark ) :
         SrValueUnary( oper, mark ) { }
@@ -940,7 +1094,9 @@ namespace SrCompiler6
 
 
 
-  //Взять адрес
+  /*!
+     \brief The SrValueAddress struct Взять адрес
+   */
   struct SrValueAddress : public SrValueUnary {
       SrValueAddress( SrValue *oper, const SrMark &mark ) :
         SrValueUnary( oper, mark ) {}
@@ -964,7 +1120,9 @@ namespace SrCompiler6
 
 
 
-  //Прединкремент
+  /*!
+     \brief The SrValuePredInc struct Прединкремент
+   */
   struct SrValuePredInc : public SrValueUnary {
       SrValuePredInc( SrValue *oper, const SrMark &mark ) :
         SrValueUnary( oper, mark ) {}
@@ -977,7 +1135,9 @@ namespace SrCompiler6
     };
 
 
-  //Преддекремент
+  /*!
+     \brief The SrValuePredDec struct Преддекремент
+   */
   struct SrValuePredDec : public SrValueUnary {
       SrValuePredDec( SrValue *oper, const SrMark &mark ) :
         SrValueUnary( oper, mark ) {}
@@ -990,7 +1150,9 @@ namespace SrCompiler6
     };
 
 
-  //Постинкремент
+  /*!
+     \brief The SrValuePostInc struct Постинкремент
+   */
   struct SrValuePostInc : public SrValueUnary {
       SrValuePostInc( SrValue *oper, const SrMark &mark ) :
         SrValueUnary( oper, mark ) {}
@@ -1003,7 +1165,9 @@ namespace SrCompiler6
     };
 
 
-  //Постдекремент
+  /*!
+     \brief The SrValuePostDec struct Постдекремент
+   */
   struct SrValuePostDec : public SrValueUnary {
       SrValuePostDec( SrValue *oper, const SrMark &mark ) :
         SrValueUnary( oper, mark ) {}
@@ -1016,7 +1180,9 @@ namespace SrCompiler6
     };
 
 
-  //Битовое отрицание
+  /*!
+     \brief The SrValueBitNot struct Битовое отрицание
+   */
   struct SrValueBitNot : public SrValueUnary {
       SrValueBitNot( SrValue *oper, const SrMark &mark ) :
         SrValueUnary( oper, mark ) {}
@@ -1032,7 +1198,9 @@ namespace SrCompiler6
     };
 
 
-  //Логическое отрицание
+  /*!
+     \brief The SrValueLogNot struct Логическое отрицание
+   */
   struct SrValueLogNot : public SrValueUnary {
       SrValueLogNot( SrValue *oper, const SrMark &mark ) :
         SrValueUnary( oper, mark ) {}
@@ -1048,7 +1216,9 @@ namespace SrCompiler6
     };
 
 
-  //Изменение знака
+  /*!
+     \brief The SrValueNeg struct Изменение знака
+   */
   struct SrValueNeg : public SrValueUnary {
       SrValueNeg( SrValue *oper, const SrMark &mark ) :
         SrValueUnary( oper, mark ) {}
@@ -1069,7 +1239,9 @@ namespace SrCompiler6
 
 
 
-  //Бинарная операция
+  /*!
+     \brief The SrValueBinary struct Бинарная операция
+   */
   struct SrValueBinary : public SrValue {
       SrValue *mOperand1;
       SrValue *mOperand2;
@@ -1098,7 +1270,9 @@ namespace SrCompiler6
     };
 
 
-  //Операция сохранения
+  /*!
+     \brief The SrValueStore struct Операция сохранения
+   */
   struct SrValueStore : public SrValueBinary {
       SrValueStore( SrValue *oper1, const SrMark &mark ) :
         SrValueBinary( oper1, mark, 0 ) {}
@@ -1111,7 +1285,9 @@ namespace SrCompiler6
     };
 
 
-  //Операция индекса массива
+  /*!
+     \brief The SrValueArrayCell struct Операция индекса массива
+   */
   struct SrValueArrayCell : public SrValueBinary {
       SrValueArrayCell( SrValue *array, const SrMark &mark, SrValue *index = 0 ) :
         SrValueBinary( array, mark, index ) { }
@@ -1137,7 +1313,9 @@ namespace SrCompiler6
     };
 
 
-  //Умножение
+  /*!
+     \brief The SrValueMul struct Умножение
+   */
   struct SrValueMul : public SrValueBinary {
       SrValueMul( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1153,7 +1331,9 @@ namespace SrCompiler6
     };
 
 
-  //Умножение и сохранение
+  /*!
+     \brief The SrValueMulStore struct Умножение и сохранение
+   */
   struct SrValueMulStore : public SrValueBinary {
       SrValueMulStore( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1166,7 +1346,9 @@ namespace SrCompiler6
     };
 
 
-  //Деление
+  /*!
+     \brief The SrValueDiv struct Деление
+   */
   struct SrValueDiv : public SrValueBinary {
       SrValueDiv( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1182,7 +1364,9 @@ namespace SrCompiler6
     };
 
 
-  //Деление и сохранение
+  /*!
+     \brief The SrValueDivStore struct Деление и сохранение
+   */
   struct SrValueDivStore : public SrValueBinary {
       SrValueDivStore( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1194,6 +1378,11 @@ namespace SrCompiler6
       virtual SrValueCode code() const override { return svvDivStore; }
     };
 
+
+
+  /*!
+     \brief The SrValueMod struct Остаток от деления
+   */
   struct SrValueMod : public SrValueBinary {
       SrValueMod( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1208,6 +1397,11 @@ namespace SrCompiler6
       virtual int    constOperation( int val1, int val2 ) override { return val2 != 0 ? val1 % val2 : 0; }
     };
 
+
+
+  /*!
+     \brief The SrValueModStore struct Остаток от деления и сохранение
+   */
   struct SrValueModStore : public SrValueBinary {
       SrValueModStore( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1219,6 +1413,11 @@ namespace SrCompiler6
       virtual SrValueCode code() const override { return svvModStore; }
     };
 
+
+
+  /*!
+     \brief The SrValueAdd struct Сложение
+   */
   struct SrValueAdd : public SrValueBinary {
       SrValueAdd( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1233,6 +1432,11 @@ namespace SrCompiler6
       virtual int    constOperation( int val1, int val2 ) override { return val1 + val2; }
     };
 
+
+
+  /*!
+     \brief The SrValueAddStore struct Сложение и сохранение
+   */
   struct SrValueAddStore : public SrValueBinary {
       SrValueAddStore( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1244,6 +1448,10 @@ namespace SrCompiler6
       virtual SrValueCode code() const override { return svvAddStore; }
     };
 
+
+  /*!
+     \brief The SrValueSub struct Вычитание
+   */
   struct SrValueSub : public SrValueBinary {
       SrValueSub( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1258,6 +1466,11 @@ namespace SrCompiler6
       virtual int    constOperation( int val1, int val2 ) override { return val1 - val2; }
     };
 
+
+
+  /*!
+     \brief The SrValueSubStore struct Вычитание и сохранение
+   */
   struct SrValueSubStore : public SrValueBinary {
       SrValueSubStore( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1269,6 +1482,10 @@ namespace SrCompiler6
       virtual SrValueCode code() const override { return svvSubStore; }
     };
 
+
+  /*!
+     \brief The SrValueLShift struct Сдвиг влево
+   */
   struct SrValueLShift : public SrValueBinary {
       SrValueLShift( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1283,6 +1500,11 @@ namespace SrCompiler6
       virtual int    constOperation( int val1, int val2 ) override { return val1 << val2; }
     };
 
+
+
+  /*!
+     \brief The SrValueLShiftStore struct Сдвиг влево и сохранение
+   */
   struct SrValueLShiftStore : public SrValueBinary {
       SrValueLShiftStore( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1294,6 +1516,10 @@ namespace SrCompiler6
       virtual SrValueCode code() const override { return svvLShiftStore; }
     };
 
+
+  /*!
+     \brief The SrValueRShift struct Сдвиг вправо
+   */
   struct SrValueRShift : public SrValueBinary {
       SrValueRShift( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1308,6 +1534,10 @@ namespace SrCompiler6
       virtual int    constOperation( int val1, int val2 ) override { return val1 >> val2; }
     };
 
+
+  /*!
+     \brief The SrValueRShiftStore struct Сдвиг вправо и сохранение
+   */
   struct SrValueRShiftStore : public SrValueBinary {
       SrValueRShiftStore( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1319,6 +1549,10 @@ namespace SrCompiler6
       virtual SrValueCode code() const override { return svvRShiftStore; }
     };
 
+
+  /*!
+     \brief The SrValueOrStore struct Бинарное ИЛИ и сохранение
+   */
   struct SrValueOrStore : public SrValueBinary {
       SrValueOrStore( SrValue *oper1, const SrMark &mark ) :
         SrValueBinary( oper1, mark, 0 ) {}
@@ -1330,6 +1564,9 @@ namespace SrCompiler6
       virtual SrValueCode code() const override { return svvOrStore;  }
     };
 
+  /*!
+     \brief The SrValueAndStore struct Бинарное И и сохранение
+   */
   struct SrValueAndStore : public SrValueBinary {
       SrValueAndStore( SrValue *oper1, const SrMark &mark ) :
         SrValueBinary( oper1, mark, 0 ) {}
@@ -1341,6 +1578,10 @@ namespace SrCompiler6
       virtual SrValueCode code() const override { return svvAndStore; }
     };
 
+
+  /*!
+     \brief The SrValueXorStore struct Бинарное ХОР и сохранение
+   */
   struct SrValueXorStore : public SrValueBinary {
       SrValueXorStore( SrValue *oper1, const SrMark &mark ) :
         SrValueBinary( oper1, mark, 0 ) {}
@@ -1352,6 +1593,11 @@ namespace SrCompiler6
       virtual SrValueCode code() const override { return svvXorStore; }
     };
 
+
+
+  /*!
+     \brief The SrValueEqu struct Равенство
+   */
   struct SrValueEqu : public SrValueBinary {
       SrValueEqu( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1366,6 +1612,11 @@ namespace SrCompiler6
       virtual int    constOperation( int val1, int val2 ) override { return val1 == val2; }
     };
 
+
+
+  /*!
+     \brief The SrValueNotEqu struct Неравенство
+   */
   struct SrValueNotEqu : public SrValueBinary {
       SrValueNotEqu( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1380,6 +1631,10 @@ namespace SrCompiler6
       virtual int    constOperation( int val1, int val2 ) override { return val1 != val2; }
     };
 
+
+  /*!
+     \brief The SrValueLessEqu struct Меньше или равно
+   */
   struct SrValueLessEqu : public SrValueBinary {
       SrValueLessEqu( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1394,6 +1649,10 @@ namespace SrCompiler6
       virtual int    constOperation( int val1, int val2 ) override { return val1 <= val2; }
     };
 
+
+  /*!
+     \brief The SrValueLess struct Меньше
+   */
   struct SrValueLess : public SrValueBinary {
       SrValueLess( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1408,6 +1667,10 @@ namespace SrCompiler6
       virtual int    constOperation( int val1, int val2 ) { return val1 < val2; }
     };
 
+
+  /*!
+     \brief The SrValueGreat struct Больше
+   */
   struct SrValueGreat : public SrValueBinary {
       SrValueGreat( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1422,6 +1685,10 @@ namespace SrCompiler6
       virtual int    constOperation( int val1, int val2 ) { return val1 > val2; }
     };
 
+
+  /*!
+     \brief The SrValueGreatEqu struct Больше или равно
+   */
   struct SrValueGreatEqu : public SrValueBinary {
       SrValueGreatEqu( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
         SrValueBinary( oper1, mark, oper2 ) {}
@@ -1438,7 +1705,9 @@ namespace SrCompiler6
 
 
 
-  //Бинарная операция для ленивых логических операций
+  /*!
+     \brief The SrValueBinaryLong struct Бинарная операция для ленивых логических операций
+   */
   struct SrValueBinaryLong : public SrValue {
       SrValuePtr mOperand[SV_OPER_MAX];   //Операнды
       int        mOperCount;              //Количество операндов
@@ -1464,7 +1733,10 @@ namespace SrCompiler6
     };
 
 
-  //Логическое И
+
+  /*!
+     \brief The SrValueLogAnd struct Логическое И
+   */
   struct SrValueLogAnd : public SrValueBinaryLong {
       int    mExitLabel;
       SrValueLogAnd( SrValue *oper1, SrType *type, const SrMark &mark ) :
@@ -1478,7 +1750,10 @@ namespace SrCompiler6
     };
 
 
-  //Логическое ИЛИ
+
+  /*!
+     \brief The SrValueLogOr struct Логическое ИЛИ
+   */
   struct SrValueLogOr : public SrValueBinaryLong {
       int    mExitLabel;
       SrValueLogOr( SrValue *oper1, SrType *type, const SrMark &mark ) :
@@ -1492,7 +1767,10 @@ namespace SrCompiler6
     };
 
 
-  //Бинарное ИЛИ
+
+  /*!
+     \brief The SrValueOr struct Бинарное ИЛИ
+   */
   struct SrValueOr : public SrValueBinaryLong {
       SrValueOr( SrValue *oper1, SrType *type, const SrMark &mark ) :
         SrValueBinaryLong( oper1, type, mark ) {}
@@ -1508,7 +1786,10 @@ namespace SrCompiler6
     };
 
 
-  //Бинарное И
+
+  /*!
+     \brief The SrValueAnd struct Бинарное И
+   */
   struct SrValueAnd : public SrValueBinaryLong {
       SrValueAnd( SrValue *oper1, SrType *type, const SrMark &mark ) :
         SrValueBinaryLong( oper1, type, mark ) {}
@@ -1525,7 +1806,10 @@ namespace SrCompiler6
     };
 
 
-  //Бинарное Исключающее ИЛИ
+
+  /*!
+     \brief The SrValueXor struct Бинарное Исключающее ИЛИ
+   */
   struct SrValueXor : public SrValueBinaryLong {
       SrValueXor( SrValue *oper1, SrType *type, const SrMark &mark ) :
         SrValueBinaryLong( oper1, type, mark ) {}
@@ -1541,7 +1825,10 @@ namespace SrCompiler6
     };
 
 
-  //Операция ,
+
+  /*!
+     \brief The SrValueComma struct Операция ,
+   */
   struct SrValueComma : public SrValueBinaryLong {
       SrValueComma( SrValue *oper1, const SrMark &mark ) :
         SrValueBinaryLong( oper1, 0, mark ) { mType = oper1->mType; }
@@ -1558,7 +1845,10 @@ namespace SrCompiler6
 
 
 
-  //Тройная условная операция
+
+  /*!
+     \brief The SrValueCondition struct Тройная условная операция
+   */
   struct SrValueCondition : public SrValue {
       SrValue *mCondition;
       SrValue *mTrue;
@@ -1584,7 +1874,10 @@ namespace SrCompiler6
 
 
 
-  //Вызов функции
+
+  /*!
+     \brief The SrValueCall struct Вызов функции
+   */
   struct SrValueCall : public SrValue {
       SrValue    *mFunction;
       SrValuePtr  mParam[SV_FUN_PARAM_MAX];  //Параметры функции
@@ -1620,11 +1913,16 @@ namespace SrCompiler6
 
 
 
-  //Оператор
+
+  /*!
+     \brief The SrOperator struct Базовая конструкция оператора. Все
+     операторы выполняются последовательно, т.е. имеют один вход и один выход.
+     Внутри некоторых операторов может быть блок других операторов.
+   */
   struct SrOperator {
-      SrMark      mMark;   //Маркер начала оператора
-      QString     mRemark; //Исходная строка в начале оператора
-      SrOperator *mParent; //Родительский оператор
+      SrMark      mMark;   //! Маркер начала оператора
+      QString     mRemark; //! Исходная строка в начале оператора
+      SrOperator *mParent; //! Родительский оператор
 
       SrOperator( const SrMark &src, const QString remark ) : mMark(src), mRemark(remark), mParent(0) {}
       virtual ~SrOperator() {}
@@ -1642,7 +1940,9 @@ namespace SrCompiler6
 
 
 
-  //Оператор возврата из функции
+  /*!
+     \brief The SrOperatorReturn struct Оператор возврата из функции
+   */
   struct SrOperatorReturn : public SrOperator {
       SrValue    *mResult;   //Значение возвращаемого результата
       SrFunction *mFunction; //Функция, из которой осуществляется возврат
@@ -1659,38 +1959,13 @@ namespace SrCompiler6
     };
 
 
-  //Оператор установки маски исключения
-  struct SvOperatorCatch : public SrOperator {
-      int mMask;
-
-      SvOperatorCatch( const SrMark &src, const QString remark ) : SrOperator( src, remark ) {}
-
-      //Сформировать листинг
-      virtual QString listing( int level ) override { return padding(level) + QString("catch %1\n").arg(mMask,0,16); }
-
-      //Получить тип операции
-      virtual SrStatement statement() const override { return tstCatch; }
-
-    };
 
 
-  //Оператор генерации исключения
-  struct SvOperatorThrow : public SrOperator {
-      int mMask;
-
-      SvOperatorThrow( const SrMark &src, const QString remark ) : SrOperator( src, remark ) {}
-
-      //Сформировать листинг
-      virtual QString listing( int level ) override { return padding(level) + QString("throw %1\n").arg(mMask,0,16); }
-
-      //Получить тип операции
-      virtual SrStatement statement() const override { return tstThrow; }
-
-    };
-
-
-
-
+  /*!
+     \brief The SrOperatorContext struct Базовый оператор для операторов,
+     имеющих внутри себя собственный котекст. Примером такого оператора является
+     for, который позволяет определять переменные прямо внутри условия.
+   */
   struct SrOperatorContext : public SrOperator {
       SrOperatorContext *mParentContext; //Родительский контекст
       SrVariableList     mVarLocal; //Локальные переменные контекста
@@ -1713,7 +1988,9 @@ namespace SrCompiler6
   typedef SrOperator *SrOperatorPtr;
   typedef QList<SrOperatorPtr> SrOperatorList;
 
-  //Блоковый оператор - последовательность других операторов
+  /*!
+     \brief The SrOperatorBlock struct Блоковый оператор - последовательность других операторов
+   */
   struct SrOperatorBlock : public SrOperatorContext {
       SrMark         mEnd;      //Место завершения блока в исходном файле
       SrOperatorList mList;     //Список операторов блока
@@ -1729,7 +2006,12 @@ namespace SrCompiler6
       virtual SrStatement statement() const override { return tstBlock; }
     };
 
-  //Оператор-выражение
+
+
+
+  /*!
+     \brief The SrOperatorExpression struct Оператор-выражение
+   */
   struct SrOperatorExpression : public SrOperator {
       SrValue *mExpression;
 
@@ -1745,13 +2027,17 @@ namespace SrCompiler6
 
     };
 
-  //Условный оператор
+
+
+  /*!
+     \brief The SrOperatorIf struct Условный оператор
+   */
   struct SrOperatorIf : public SrOperator {
-      SrValue    *mCondition;
-      SrOperator *mTrue;
-      SrOperator *mFalse;
-      int         mFalseAddress;
-      int         mExitAddress;
+      SrValue    *mCondition;     //! Выражение вычисления условия
+      SrOperator *mTrue;          //! Оператор, который выполняется если условие истино
+      SrOperator *mFalse;         //! Оператор, который выполняется если условие ложно
+      int         mFalseAddress;  //! Метка для перехода на оператор mFalse
+      int         mExitAddress;   //! Метка для выхода из условия (обход ветки mFalse)
 
       SrOperatorIf( const SrMark &mark, const QString remark ) :
         SrOperator(mark, remark), mCondition(0), mTrue(0), mFalse(0), mFalseAddress(0), mExitAddress(0) {}
@@ -1766,7 +2052,13 @@ namespace SrCompiler6
 
     };
 
-  //Базовый оператор цикла
+
+
+
+
+  /*!
+     \brief The SrOperatorLoop struct Базовый оператор цикла
+   */
   struct SrOperatorLoop : public SrOperatorContext {
       SrValue    *mCondition;
       SrOperator *mBody;
@@ -1783,7 +2075,12 @@ namespace SrCompiler6
 
     };
 
-  //Оператор прекращения цикла
+
+
+
+  /*!
+     \brief The SrOperatorBreak struct Оператор прекращения цикла
+   */
   struct SrOperatorBreak : public SrOperator {
       SrOperatorLoop *mLoop;
 
@@ -1798,7 +2095,12 @@ namespace SrCompiler6
 
     };
 
-  //Оператор прекращения цикла
+
+
+
+  /*!
+     \brief The SrOperatorContinue struct Оператор перехода к условию цикла
+   */
   struct SrOperatorContinue : public SrOperator {
       SrOperatorLoop *mLoop;
 
@@ -1814,7 +2116,11 @@ namespace SrCompiler6
     };
 
 
-  //Оператор цикла while
+
+
+  /*!
+     \brief The SrOperatorWhile struct Оператор цикла while
+   */
   struct SrOperatorWhile : public SrOperatorLoop {
 
       SrOperatorWhile( const SrMark &mark, const QString remark, SrOperatorContext *parent ) :
@@ -1825,7 +2131,12 @@ namespace SrCompiler6
 
     };
 
-  //Оператор цикла do while
+
+
+
+  /*!
+     \brief The SrOperatorDoWhile struct Оператор цикла do while
+   */
   struct SrOperatorDoWhile : public SrOperatorLoop {
 
       SrOperatorDoWhile( const SrMark &mark, const QString remark, SrOperatorContext *parent ) :
@@ -1836,7 +2147,12 @@ namespace SrCompiler6
 
     };
 
-  //Оператор цикла for
+
+
+
+  /*!
+     \brief The SrOperatorFor struct Оператор цикла for
+   */
   struct SrOperatorFor : public SrOperatorLoop {
       SrValue    *mInit;
       SrValue    *mAction;
@@ -1858,7 +2174,9 @@ namespace SrCompiler6
 
 
 
-  //Одна лексическая единица
+  /*!
+     \brief The SrToken struct Одна лексическая единица (выход работы сканера)
+   */
   struct SrToken {
       int       mId       : 16; //Тип конструкции
       unsigned  mUnsigned : 1;  //Истина для установленного флага беззнакового числа
@@ -1896,229 +2214,243 @@ namespace SrCompiler6
 
 
 
-//Компилятор собственной персоной
-class SrCompiler {
-  public:
-    //Раздел источников данных компиляции
-    SvSourceStack            mSourceStack;    //Стек источников данных
-    QMap<int,QString>        mFileTable;      //Список используемых файлов
-    int                      mFileIdCount;    //Счетчик для генерации идентификаторов файлов
-    int                      mFileId;         //ID обрабатываемого файла
-    int                      mLineIndex;      //Индекс обрабатываемой строки
+  /*!
+     \brief The SrCompiler class Компилятор собственной персоной
 
-    //Раздел обработки исходного кода
-    QString                  mLine;           //Обрабатываемая строка
-    QList<int>               mLineInt;        //Соответствие позиций макрорасширенной строки позициям исходной строки
-    int                      mPtr;            //Главный указатель кода (индекс в mLine)
-    bool                     mEof;            //Главный флаг завершения кода
-    QString                  mInLine;         //Место для хранения входной строки
-    QString                  mMacroLine;      //Входная строка после макрорасширений
-    QString                  mPrevRemark;     //Блок предварительных комментариев
-    QString                  mAfterRemark;    //Блок последующих комментариев
-    bool                     mCRemark;        //Флаг выдачи С кода в качестве коментария
-    int                      mIfLevel;        //Текущий уровень условной компиляции
-    int                      mSkipLevel;      //Уровень пропускаемой условной компиляции
-    QString                  mName;           //Для сканирования имен
-    SrMacroPtrTable          mMacroTable;     //Таблица макроимен
+     Выполняет разбор исходного текста скрипта и формирует различные таблицы, на основе которых
+     осуществляется генерация байт-кода.
+   */
+  class SrCompiler {
+    public:
+      //Раздел источников данных компиляции
+      SvSourceStack            mSourceStack;    //Стек источников данных
+      QMap<int,QString>        mFileTable;      //Список используемых файлов
+      int                      mFileIdCount;    //Счетчик для генерации идентификаторов файлов
+      int                      mFileId;         //ID обрабатываемого файла
+      int                      mLineIndex;      //Индекс обрабатываемой строки
 
-    int                      mVariant;        //Вариант контроллера
-    int                      mVersion;        //Версия ПО контроллера
-    int                      mGlobalAddress;  //Очередной свободный адрес глобальной переменной
-    QStringList              mStringTable;    //Таблица строк
-    SvByteArrayTable         mByteArrayTable; //Таблица байтовых массивов
-    SrTypeList               mTypeList;       //Таблица типов
-    SrVariableList           mVarGlobal;      //Список глобальных переменных
-    SrFunctionList           mFunGlobal;      //Список глобальных функций
+      //Раздел обработки исходного кода
+      QString                  mLine;           //Обрабатываемая строка
+      QList<int>               mLineInt;        //Соответствие позиций макрорасширенной строки позициям исходной строки
+      int                      mPtr;            //Главный указатель кода (индекс в mLine)
+      bool                     mEof;            //Главный флаг завершения кода
+      QString                  mInLine;         //Место для хранения входной строки
+      QString                  mMacroLine;      //Входная строка после макрорасширений
+      QString                  mPrevRemark;     //Блок предварительных комментариев
+      QString                  mAfterRemark;    //Блок последующих комментариев
+      bool                     mCRemark;        //Флаг выдачи С кода в качестве коментария
+      int                      mIfLevel;        //Текущий уровень условной компиляции
+      int                      mSkipLevel;      //Уровень пропускаемой условной компиляции
+      QString                  mName;           //Для сканирования имен
+      SrMacroPtrTable          mMacroTable;     //Таблица макроимен
 
-    int                      mLastStatement;  //Идентификатор последнего обработанного оператора
-    SrFunction              *mActiveFunction; //Обрабатываемая функция
-    SrStruct                *mActiveStruct;   //Обрабатываемая структура
-    int                      mActiveImport;   //Обрабатывается import
-    SrOperatorContext       *mContext;        //Текущий контекст
-    SrOperatorLoop          *mLoop;           //Активный оператор цикла
+      int                      mVariant;        //Вариант контроллера
+      int                      mVersion;        //Версия ПО контроллера
+      int                      mGlobalAddress;  //Очередной свободный адрес глобальной переменной
+      QStringList              mStringTable;    //Таблица строк
+      SvByteArrayTable         mByteArrayTable; //Таблица байтовых массивов
+      SrTypeList               mTypeList;       //Таблица типов
+      SrVariableList           mVarGlobal;      //Список глобальных переменных
+      SrFunctionList           mFunGlobal;      //Список глобальных функций
 
-    //Раздел таблицы ключевых слов
-    QHash<QString,int>       mKeyWords;       //Список ключевых слов с токенами
+      int                      mLastStatement;  //Идентификатор последнего обработанного оператора
+      SrFunction              *mActiveFunction; //Обрабатываемая функция
+      SrStruct                *mActiveStruct;   //Обрабатываемая структура
+      int                      mActiveImport;   //Обрабатывается import
+      SrOperatorContext       *mContext;        //Текущий контекст
+      SrOperatorLoop          *mLoop;           //Активный оператор цикла
 
-    //Раздел типов
-    SrType                  *mTypeInt;        //Целое
-    SrType                  *mTypeIntPtr;     //Указатель на целое
-    SrType                  *mTypeVoid;       //void
-    SrType                  *mTypeVoidPtr;    //void ptr
-    SrType                  *mTypeCString;    //Константная строка
-    SrType                  *mTypeCStringPtr; //string ptr
-    SrType                  *mTypeCBlock;     //Константный блок
-    SrType                  *mTypeCBlockPtr;  //Указатель на константный блок
-    SrType                  *mTypeFail;       //Недействительный тип
+      //Раздел таблицы ключевых слов
+      QHash<QString,int>       mKeyWords;       //Список ключевых слов с токенами
 
-    //Раздел коментариев
-    QList<QString>           mRemarkTable;    //Таблица коментариев
+      //Раздел типов
+      SrType                  *mTypeInt;        //Целое
+      SrType                  *mTypeIntPtr;     //Указатель на целое
+      SrType                  *mTypeVoid;       //void
+      SrType                  *mTypeVoidPtr;    //void ptr
+      SrType                  *mTypeCString;    //Константная строка
+      SrType                  *mTypeCStringPtr; //string ptr
+      SrType                  *mTypeCBlock;     //Константный блок
+      SrType                  *mTypeCBlockPtr;  //Указатель на константный блок
+      SrType                  *mTypeFail;       //Недействительный тип
 
-    SrToken                  mToken;          //Текущий токен
+      //Раздел коментариев
+      QList<QString>           mRemarkTable;    //Таблица коментариев
 
-    //Распределение памяти
-    int                      mLocalAddress;   //Очередной свободный адрес локальной переменной
-    int                      mLocalMax;       //Максимальный адрес временных переменных внутри функции
+      SrToken                  mToken;          //Текущий токен
 
-    void                     InitKeyWords();
-    void                     ClearTables();
-
-  public:
-    QString                  errorList();     //Преобразовать список ошибок к строке
-    QStringList              mSystemPathList; //Путь к стандартным Include файлам
-    QString                  mProjectPath;    //Путь к файлам проекта
-  public:
-            //Компилятор часть 1 (конструктор и инициализация)
-    SrCompiler();
-    virtual ~SrCompiler();
-
-            void        Reset();
-
-            //Компилятор часть 2 (входной поток низкого уровня)
-            void         DoFile( const QString &fname, bool current );
-    virtual SrSource*    CreateSource( const QString &fname, bool current );
-            int          AddFile( const QString &fname );
-            bool         IsEoln() const { return mPtr >= mLine.size(); }
-            void         InLine();
-            SrMark       mark() const;
-            QString      curLine() const { return /*mLine.mid(mPtr); */ mLine; }
-
-            //Компилятор часть 3 (поток ошибок)
-            SvErrorList  mErrorList;
-    virtual void         Error( const QString &err );
-            void         ErrorInLine( const QString &err, int fileId, int lineId );
-            void         errorInLine( const QString &err, const SrMark &mark );
-            void         ErrorKillLine( const QString &err );
-            void         ErrorEndSt( const QString &err );
-            QString      Need( QChar ch ) { return QObject::tr("Error. Need '%1'.").arg(ch); }
-            QString      Need( const QString &str ) { return QObject::tr("Error. Need %1.").arg(str); }
-            void         ErrNeedLValue();    //Выдает ошибку с необходимостью LValue - значения
-            void         ErrIllegalOperation(); //Выдает ошибку с недопустимостью операции с данными типами
-            bool         needToken( int token, const QString need );
-
-            //Компилятор часть 4 (препроцессор)
-            void         Blank();
-            void         White();
-            bool         Match( const char *ptr ); //Если совпадает, то съедает
-            bool         Match( char ch );    //Если совпадает, то съедает
-            bool         ScanName();
-            bool         ScanNameImp( int &ptr );
-            bool         ScanInt();
-
-    virtual void         Compile( const QString &fname ); //Точка входа в компиляцию
-            void         DoPreprocess();
-            void         DoInclude();
-            void         DoExpand();
-            void         DoDefine();
-            void         IfLine();
-
-            //Компилятор часть 4А (условие в препроцессоре #if)
-            int          BConstCompare(); //Выполнить разбор константного сравнения и выдать его результат
-            int          BccB1();
-            int          BccB2();
-            int          BccB3();
-            int          BccB4();
-            int          BccB5();
-            int          BccB6();
-            int          BccB7();
-            int          BccB8();
-            int          BccB9();
-            int          BccB10();
-            int          BccB11();
-
-            //Компилятор часть 5 (сканер)
-            bool         ScanDigit();     //Проверить наличие числа и сканировать если есть
-            bool         NextToken();     //Получить следующий токен
-            void         NeedSemicolon(); //Проверить следующий токен на точку с запятой
+      //Распределение памяти
+      int                      mLocalAddress;   //Очередной свободный адрес локальной переменной
+      int                      mLocalMax;       //Максимальный адрес временных переменных внутри функции
 
 
-            //Компилятор часть 6 (таблицы)
-            //Коментарий
-            void         AddAsmRemark(const QString &sour);          //Добавить коментарий, ассемблерный код
-            //Таблица символов
-            bool         isGlobalSymbol( const QString &name );
+    public:
+      QString                  errorList();     //Преобразовать список ошибок к строке
+      QStringList              mSystemPathList; //Путь к стандартным Include файлам
+      QString                  mProjectPath;    //Путь к файлам проекта
 
-            //Компилятор часть 7 (разбор выражений)
-            SrType*      ConstExpression(int *intRes);
-            void         BExpression( SrValuePtr &val );
-            void         B0( SrValuePtr &res );
-            void         B1( SrValuePtr &val ); // Операция Условие
-            void         B2( SrValuePtr &val ); // ||
-            void         B3( SrValuePtr &val ); // &&
-            void         B4( SrValuePtr &val ); // |
-            void         B5( SrValuePtr &val ); // ^
-            void         B6( SrValuePtr &val ); // &
-            void         B7( SrValuePtr &val ); // == и !=
-            void         B8( SrValuePtr &val ); // <=  >=  <  >
-            void         B9( SrValuePtr &val ); // << и >>
-            void         B10( SrValuePtr &val ); // + и -
-            void         B11( SrValuePtr &val ); // *  /  %
-            void         B12( SrValuePtr &val ); // ++val --val ~val !val -val +val *val &val val++ val--
-            void         B13( SrValuePtr &val ); // [val] val()
-            void         B14( SrValuePtr &val ); // val. val->
-            void         B14Member( SrValuePtr &val );
-            void         B15(SrValuePtr &val ); // (val) val()
-            bool         BoWaitFunction(SrValuePtr &val );   //Реализация специальной функции Wait
+      SvErrorList              mErrorList;      //! Список ошибок компиляции
+    public:
+      //----------------------------------------------------
+      // Компилятор часть 1 (конструктор и инициализация)
+      SrCompiler();
+      virtual ~SrCompiler();
 
+              void         Reset();
 
-            //Компилятор часть 8 (синтаксический разбор)
-            void         DoCBlock();                        //Блок данных
-            void         DoImport();                        //Объявление импортируемого объекта
-            void         DoDeclareGlobal();                 //Объявление или определение переменных и функций
-            void         DoStructure();                     //Определение структуры
-            void         DoNewFunction(SrFunction *fun );   //Объявление/определение новой функции
-            void         DoParamList(SrFunction *fun );     //Декодирование списка параметров
-            void         DoParamAddress( SrFunction *fun ); //Назначить параметрам адреса
-            //Определение подтипа
-            void         DoSubType( SrType *type, SrVariablePtr &var, SrFunctionPtr &fun, int *addressCount );
-            bool         DoMemberSubType( SrVariable& );     //Определение подтипа для членов структур
-            SrType*      DoBaseType();                      //Определение основного типа
-            SrOperator*  DoStatement(SrOperator *parent);   //Оператор
-            void         ClearTemp( int savOffset );        //Очистить стек временных переменных
-            SrOperator*  DoLocal();                         //Оператор определения локальных переменных
-            SrOperatorBlock *DoCompound();                      //Оператор блок
-            SrOperator*  DoIf();                            //Оператор if
-            SrOperator*  DoWhile();                         //Оператор while
-            SrOperator*  DoDo();                            //Оператор do
-            SrOperator*  DoFor();                           //Оператор for
-            SrOperator*  DoSwitch();                        //Оператор switch
-            SrOperator*  DoCase();                          //Оператор case
-            SrOperator*  DoDefault();                       //Оператор default
-            SrOperator*  DoReturn();                        //Оператор return
-            SrOperator*  DoBreak();                         //Оператор break
-            SrOperator*  DoContinue();                      //Оператор continue
-            SrOperator*  DoExpression();                    //Оператор выражение
-            //void      DoTry();                           //Оператор блок с поиском исключений
-            SrOperator*  DoCatch();                         //Оператор блок обработки исключений
-            SrOperator*  DoThrow();                         //Оператор возбуждения исключений
+              void         InitKeyWords();
+              void         ClearTables();
 
-            //Компилятор часть 9 вычисление константных выражений
-            void         constValueCalc( SrValue *val );
-            void         constValueLongCalc( SrValueBinaryLong *val );
+              /*!
+                 \brief Compile Точка входа в компиляцию
+                 \param fname Имя компилируемого файла
+
+                 Выполняет компиляцию проекта начиная с головного файла.
+                 При необходимости подключает и загружает другие файлы.
+                 В результате строится дерево разбора в структурах компилятора и
+                 формируется список ошибок.
+               */
+              void         Compile( const QString &fname );
+
+    protected:
+              //Распределение переменных
+              int          AllocLocal( SrType *type );
+              int          AllocGlobal( SrType *type );
+
+              QString      macroExpansion( const QString mac, const QString def );
 
 
-            //Компилятор часть S (сцены)
-            void         DoScene();                         //Сцена
-            void         DoSceneBody( SvSmlScene *scene );  //Разобрать тело сцены
-            void         ClearSceneList();                  //Очистить список сцен и создать по умолчанию
-            void         DoSceneProperty();
-            void         DoSceneSettings();
-            void         DoSceneVint();
-            void         DoSceneSignal();
-            void         DoSceneFunction();
-            void         DoSceneName();
-            void         DoSetProperty( SvSmlProperty *prop );
-            void         DoSetAlias( SvSmlProperty *prop );
-            void         DoSceneParsing();
-            void         DoPropertyAllocation();
+              //----------------------------------------------------
+              // Компилятор часть 2 (входной поток низкого уровня)
+              void         DoFile( const QString &fname, bool current );
+      virtual SrSource*    CreateSource( const QString &fname, bool current );
+              int          AddFile( const QString &fname );
+              bool         IsEoln() const { return mPtr >= mLine.size(); }
+              void         InLine();
+              SrMark       mark() const;
+              QString      curLine() const { return mLine; }
 
 
-    virtual int          AllocLocal( SrType *type );
-            int          AllocGlobal( SrType *type );
+              //----------------------------------------------------
+              // Компилятор часть 3 (поток ошибок)
+      virtual void         Error( const QString &err );
+              void         ErrorInLine( const QString &err, int fileId, int lineId );
+              void         errorInLine( const QString &err, const SrMark &mark );
+              void         ErrorKillLine( const QString &err );
+              void         ErrorEndSt( const QString &err );
+              QString      Need( QChar ch ) { return QObject::tr("Error. Need '%1'.").arg(ch); }
+              QString      Need( const QString &str ) { return QObject::tr("Error. Need %1.").arg(str); }
+              void         ErrNeedLValue();    //Выдает ошибку с необходимостью LValue - значения
+              void         ErrIllegalOperation(); //Выдает ошибку с недопустимостью операции с данными типами
+              bool         needToken( int token, const QString need );
 
-            QString      Listing();
+              //----------------------------------------------------
+              // Компилятор часть 4 (препроцессор)
+              void         Blank();
+              void         White();
+              bool         Match( const char *ptr ); //Если совпадает, то съедает
+              bool         Match( char ch );    //Если совпадает, то съедает
+              bool         ScanName();
+              bool         ScanNameImp( int &ptr );
+              bool         ScanInt();
 
-  };
+              void         DoPreprocess();
+              void         DoInclude();
+              void         DoExpand();
+              void         DoDefine();
+              void         IfLine();
+
+              //----------------------------------------------------
+              // Компилятор часть 5 (условие в препроцессоре #if)
+              int          BConstCompare(); //Выполнить разбор константного сравнения и выдать его результат
+              int          BccB1();
+              int          BccB2();
+              int          BccB3();
+              int          BccB4();
+              int          BccB5();
+              int          BccB6();
+              int          BccB7();
+              int          BccB8();
+              int          BccB9();
+              int          BccB10();
+              int          BccB11();
+
+              //Компилятор часть 6 (сканер)
+              bool         ScanDigit();     //Проверить наличие числа и сканировать если есть
+              bool         NextToken();     //Получить следующий токен
+              void         NeedSemicolon(); //Проверить следующий токен на точку с запятой
+
+
+              //Компилятор часть 7 (таблицы)
+              //Коментарий
+              void         AddAsmRemark(const QString &sour);          //Добавить коментарий, ассемблерный код
+              //Таблица символов
+              bool         isGlobalSymbol( const QString &name );
+
+              //Компилятор часть 8 (разбор выражений)
+              SrType*      ConstExpression(int *intRes);
+              void         BExpression( SrValuePtr &val );
+              void         B0( SrValuePtr &res );
+              void         B1( SrValuePtr &val ); // Операция Условие
+              void         B2( SrValuePtr &val ); // ||
+              void         B3( SrValuePtr &val ); // &&
+              void         B4( SrValuePtr &val ); // |
+              void         B5( SrValuePtr &val ); // ^
+              void         B6( SrValuePtr &val ); // &
+              void         B7( SrValuePtr &val ); // == и !=
+              void         B8( SrValuePtr &val ); // <=  >=  <  >
+              void         B9( SrValuePtr &val ); // << и >>
+              void         B10( SrValuePtr &val ); // + и -
+              void         B11( SrValuePtr &val ); // *  /  %
+              void         B12( SrValuePtr &val ); // ++val --val ~val !val -val +val *val &val val++ val--
+              void         B13( SrValuePtr &val ); // [val] val()
+              void         B14( SrValuePtr &val ); // val. val->
+              void         B14Member( SrValuePtr &val );
+              void         B15(SrValuePtr &val ); // (val) val()
+              bool         BoWaitFunction(SrValuePtr &val );   //Реализация специальной функции srWait
+              bool         BoCatchFunction(SrValuePtr &val );   //Реализация специальной функции srCatch
+              bool         BoThrowFunction(SrValuePtr &val );   //Реализация специальной функции srThrow
+              bool         BoExceptionFunction(SrValuePtr &val ); //Реализация специальной функции srException
+
+
+              //Компилятор часть 9 (синтаксический разбор)
+              void         DoCBlock();                        //Блок данных
+              void         DoImport();                        //Объявление импортируемого объекта
+              void         DoDeclareGlobal();                 //Объявление или определение переменных и функций
+              void         DoStructure();                     //Определение структуры
+              void         DoNewFunction(SrFunction *fun );   //Объявление/определение новой функции
+              void         DoParamList(SrFunction *fun );     //Декодирование списка параметров
+              void         DoParamAddress( SrFunction *fun ); //Назначить параметрам адреса
+              //Определение подтипа
+              void         DoSubType( SrType *type, SrVariablePtr &var, SrFunctionPtr &fun, int *addressCount );
+              bool         DoMemberSubType( SrVariable& );     //Определение подтипа для членов структур
+              SrType*      DoBaseType();                      //Определение основного типа
+              SrOperator*  DoStatement(SrOperator *parent);   //Оператор
+              void         ClearTemp( int savOffset );        //Очистить стек временных переменных
+              SrOperator*  DoLocal();                         //Оператор определения локальных переменных
+              SrOperatorBlock *DoCompound();                      //Оператор блок
+              SrOperator*  DoIf();                            //Оператор if
+              SrOperator*  DoWhile();                         //Оператор while
+              SrOperator*  DoDo();                            //Оператор do
+              SrOperator*  DoFor();                           //Оператор for
+              SrOperator*  DoSwitch();                        //Оператор switch
+              SrOperator*  DoCase();                          //Оператор case
+              SrOperator*  DoDefault();                       //Оператор default
+              SrOperator*  DoReturn();                        //Оператор return
+              SrOperator*  DoBreak();                         //Оператор break
+              SrOperator*  DoContinue();                      //Оператор continue
+              SrOperator*  DoExpression();                    //Оператор выражение
+
+              //Компилятор часть A вычисление константных выражений
+              void         constValueCalc( SrValue *val );
+              void         constValueLongCalc( SrValueBinaryLong *val );
+
+
+
+              //Компилятор часть B листинг
+              QString      Listing();
+
+    };
 
 }
 

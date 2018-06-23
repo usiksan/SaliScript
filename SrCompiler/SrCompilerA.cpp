@@ -1,8 +1,17 @@
 ﻿/*
-Проект "Компилятор"
-Содержание
-  Реализация класса TCompiler часть 9
-  Функции:
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Пико-компилятор"
+  Автор
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
+
+  Описание
+    Пико компилятор скриптового языка rc++
+
+    Реализация класса TCompiler часть A (вычисление константных выражений)
 */
 #include "SrCompiler.h"
 
@@ -14,10 +23,13 @@ void SrCompiler::constValueCalc( SrValue *val )
   val->mType = mTypeInt;
   switch( val->code() ) {
 
-    case svvVariable :  //Переменная (глобальная, локальная, параметр, член от this)
-    case svvFunction :    //Функция (глобальная, член от this)
-    case svvWaitFun :   //Специальная функция wait
-    case svvMemberVariable :  //Член от произвольной структуры структуры
+    case svvVariable :       //Переменная (глобальная, локальная, параметр)
+    case svvFunction :       //Функция (глобальная)
+    case svvWaitFun :        //Специальная функция srWait
+    case svvThrowFun :       //Специальная функция srThrow
+    case svvCatchFun :       //Специальная функция srCatch
+    case svvExceptionFun :   //Специальная функция srException
+    case svvMemberVariable : //Член от произвольной структуры структуры
     case svvConstString :
     case svvPointer :
     case svvAddress :

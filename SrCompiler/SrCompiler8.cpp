@@ -1,25 +1,21 @@
 /*
-Проект "Компилятор"
-Содержание
-  Реализация класса TCompiler часть 3
-  Функции:
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Пико-компилятор"
+  Автор
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
+
+  Описание
+    Пико компилятор скриптового языка rc++
+
+    Реализация класса TCompiler часть 8 (разбор выражений)
 */
 #include "SrCompiler.h"
 
 using namespace SrCompiler6;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -501,7 +497,7 @@ SrCompiler::B13(SrValuePtr &val ) {
     else if( mToken == tsOpen ) {
       //Вызов функции ( <val <,val>... > )
       NextToken();
-      if( val->getClass() & TTYPE_FUNCTION  ) {
+      if( val->getClass() & CLASS_FUNCTION  ) {
         SrFunctionType *fun = val->mType->toFunction();
         //Для члена структуры получаем адрес вызова
         //Инициализировать загрузку параметров
@@ -548,7 +544,7 @@ SrCompiler::B13(SrValuePtr &val ) {
       B14Member( val );
       }
     else if( mToken == tsRef ) {
-      if( val->getType() && val->mType->mClass == TTYPE_POINTER && val->mType->mBaseType->mClass & (TTYPE_STRUCT | TTYPE_OBJECT) ) {
+      if( val->getType() && val->mType->mClass == CLASS_POINTER && val->mType->mBaseType->mClass & CLASS_STRUCT ) {
         val = new SrValuePointer( val, mark() );
         NextToken();
         //Операция доставания
@@ -574,18 +570,13 @@ B14 операция доставания члена
 */
 void SrCompiler::B14Member(SrValuePtr &val)
   {
-  if( val->getClass() & (TTYPE_STRUCT | TTYPE_OBJECT) ) {
+  if( val->getClass() & CLASS_STRUCT ) {
     SrStruct *cls = val->mType->toStruct();
     if( mToken == ttName ) {
       //Получено имя, проверим, является ли оно членом данной структуры
       SrVariable *var = cls->getMember(mToken.mString);
       if( var ) val = new SrValueMemberVariable( var, val, mark() );
-      else {
-        //Проверить среди функций
-        SrFunction *fun = cls->getFunction( mToken.mString );
-        if( fun ) val = new SvValueMemberFunction( fun, val, mark() );
-        else ErrorEndSt( QObject::tr("Error. \"%1\" not member of struct \"%2\"").arg(mToken.mString).arg( cls->mName ) );
-        }
+      else ErrorEndSt( QObject::tr("Error. \"%1\" not member of struct \"%2\"").arg(mToken.mString).arg( cls->mName ) );
       NextToken();
       }
     else ErrorEndSt( QObject::tr("Error. Need struct member.") );
@@ -615,18 +606,12 @@ SrCompiler::B15( SrValuePtr &val ) {
       break;
     case ttName : {
       //Проверить специальную функцию Wait
-      if( BoWaitFunction(val) )
+      if( BoWaitFunction(val) || BoCatchFunction(val) || BoThrowFunction(val) || BoExceptionFunction(val) )
         break;
       SrVariable *var = 0;
       SrFunction *fun = 0;
-      //Если активна функция-член, то пробуем искать член структуры
-      if( mActiveStruct ) {
-        var = mActiveStruct->getMember( mToken.mString );
-        fun = mActiveStruct->getFunction( mToken.mString );
-        }
-
       //Если не найдено, то ищем по иерархии блоков
-      if( var == 0 && fun == 0 && mContext )
+      if( mContext )
         var = mContext->getLocal( mToken.mString );
 
       //Если ничего не найдено и активна функция, то ищем по ее параметрам
@@ -639,66 +624,18 @@ SrCompiler::B15( SrValuePtr &val ) {
         fun = mFunGlobal.mHash.value( mToken.mString, 0 );
         }
 
-      //Если и теперь ничего найдено, то для сцены просто фиксируем имя
-      if( var == 0 && fun == 0 )
-        if( mActiveScene ) {
-          QString fullName = mToken.mString;
-          NextToken();
-          while( mToken == tsPoint ) {
-            NextToken();
-            if( mToken == ttName ) {
-              fullName.append( QChar('.') );
-              fullName.append( mToken.mString );
-              NextToken();
-              }
-            else {
-              //За точкой не следует имя
-              //Выдать ошибку
-              ErrorEndSt( QObject::tr("Error. After \'.\' must be name.") );
-              }
-            }
-          //В fullName находится ссылочный путь, разместить его в свойства
-          SvSmlProperty *prop = 0;
-          if( mActiveScene->mProperties.mHash.contains(fullName) )
-            //Присутствует в активной сцене в виде свойства
-            prop = mActiveScene->mProperties.mHash.value(fullName,0);
-          else {
-            //Ссылка вперед, проверить наличие типа
-            SrType *type = mTypeInt;
-            if( mToken == tsDColon ) {
-              //Идет указание типа
-              NextToken();
-              if( mToken != ttType ) {
-                //Выдать ошибку
-                Error( QObject::tr("Error. Need type name.") ); // Неопознанный тип
-                val = new SrValueConstInt( 0, mTypeInt, mark() );
-                return;
-                }
-              type = mToken.mType;
-              }
-            prop = mActiveScene->needAlias( fullName, type, mark() );
-            if( prop == 0 ) {
-              //Выдать ошибку
-              Error( QObject::tr("Error. Type mismatch in redeclaration %1.").arg(fullName) ); // Несовпадение типа при переопределении
-              val = new SrValueConstInt( 0, mTypeInt, mark() );
-              return;
-              }
-            }
-          val = new SvValueProperty( prop, mark() );
-          return;
-          }
-        else {
-          //Вообще ничего не найдено
-          //Выдать ошибку
-          Error( QObject::tr("Error. Undefined identifier \"%1\".").arg(mToken.mString) ); // Неопределенный идентификатор
-          //Заполнить val константой
-          val = new SrValueConstInt( 0, mTypeInt, mark() );
-          }
+      //Если и теперь ничего найдено, то фиксируем ошибку
+      if( var == 0 && fun == 0 ) {
+        //Вообще ничего не найдено
+        //Выдать ошибку
+        Error( QObject::tr("Error. Undefined identifier \"%1\".").arg(mToken.mString) ); // Неопределенный идентификатор
+        //Заполнить val константой
+        val = new SrValueConstInt( 0, mTypeInt, mark() );
+        }
       else {
         if( var ) val = new SrValueVariable( var, mark() );
         else      val = new SrValueFunction( fun, mark() );
         }
-
       }
       break;
     case ttInt :
@@ -730,7 +667,7 @@ SrCompiler::B15( SrValuePtr &val ) {
 
 bool
 SrCompiler::BoWaitFunction( SrValuePtr &val) {
-  if( mToken.mString == QString("Wait") ) {
+  if( mToken.mString == QString("srWait") ) {
     NextToken();
     if( mToken != tsOpen ) {
       ErrorEndSt( Need('(') );
@@ -743,6 +680,97 @@ SrCompiler::BoWaitFunction( SrValuePtr &val) {
       }
     //Генерировать
     val = new SrValueWaitFun( mTypeVoid, mark() );
+    return true;
+    }
+  return false;
+  }
+
+
+
+
+
+bool SrCompiler::BoCatchFunction(SrValuePtr &val)
+  {
+  if( mToken.mString == QString("srCatch") ) {
+    NextToken();
+    if( mToken != tsOpen ) {
+      ErrorEndSt( Need('(') );
+      return true;
+      }
+    NextToken();
+    SrValuePtr catchValue = nullptr;
+    B0( catchValue );
+    if( catchValue == nullptr ) {
+      ErrorEndSt( QObject::tr("Need catch mask") );
+      return true;
+      }
+    if( mToken != tsClose ) {
+      ErrorEndSt( Need(')') );
+      return true;
+      }
+    //Генерировать
+    val = new SrValueCatchFun( catchValue, mTypeVoid, mark() );
+    return true;
+    }
+  return false;
+  }
+
+
+
+
+
+
+
+
+bool SrCompiler::BoThrowFunction(SrValuePtr &val)
+  {
+  if( mToken.mString == QString("srThrow") ) {
+    NextToken();
+    if( mToken != tsOpen ) {
+      ErrorEndSt( Need('(') );
+      return true;
+      }
+    NextToken();
+    SrValuePtr throwValue = nullptr;
+    B0( throwValue );
+    if( throwValue == nullptr ) {
+      ErrorEndSt( QObject::tr("Need throw signal value") );
+      return true;
+      }
+    if( mToken != tsClose ) {
+      ErrorEndSt( Need(')') );
+      return true;
+      }
+    //Генерировать
+    val = new SrValueThrowFun( throwValue, mTypeVoid, mark() );
+    return true;
+    }
+  return false;
+  }
+
+
+
+
+
+
+
+
+
+bool SrCompiler::BoExceptionFunction(SrValuePtr &val)
+  {
+  if( mToken.mString == QString("srException") ) {
+    NextToken();
+    if( mToken != tsOpen ) {
+      ErrorEndSt( Need('(') );
+      return true;
+      }
+    NextToken();
+    if( mToken != tsClose ) {
+      ErrorEndSt( Need(')') );
+      return true;
+      }
+    //Генерировать
+    val = new SrValueExceptionFun( mTypeInt, mark() );
     return true;
     }
   return false;

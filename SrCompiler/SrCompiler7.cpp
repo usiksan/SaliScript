@@ -1,31 +1,23 @@
 ﻿/*
-Проект "Компилятор"
-Содержание
-  Реализация класса TCompiler часть 4 (таблица символов)
-  Функции:
-            //Коментарий
-            void     AddAsmRemark( CPChar sour, bool bAsm = false );          //Добавить коментарий, ассемблерный код
-            //Таблица символов
-            TSymbol* FindSymbol( CPChar name );
-            int      AddSymbol( TSymbol &sym );
-            void     DecLevel();
-            //Таблица псевдокода
-            void     AddTriac( TTriac &t, TOperand *op );
-            void     AddTriac( TOperation op, TOperandType opt1 = totInt, TUINT32 opv1 = 0 );
-            void     PostLabel( int label );
-            int      GetTriacPos() const { return mIndirectTable.GetNumber(); }
-            int      InsertTriac( int before, TTriac &t, TOperand *op );
-            void     MoveTriac( int from, int to, int count );
-            //Таблица типов
-            TType*   AllocType( TType *subType = 0 );
-            bool     CompareType( TType *type1, TType *type2 );
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Пико-компилятор"
+  Автор
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
+
+  Описание
+    Пико компилятор скриптового языка rc++
+
+    Реализация класса TCompiler часть 7 (таблицы)
 */
 #include "SrCompiler.h"
 
 using namespace SrCompiler6;
 
-//==============================================================================
-//---------------------- TRemarkTable ------------------------------------------
+
 void
 SrCompiler::AddAsmRemark( const QString &sour ) {
   //Создать триак с коментарием
@@ -33,6 +25,8 @@ SrCompiler::AddAsmRemark( const QString &sour ) {
   //Скопировать коментарий в таблицу коментариев
   mRemarkTable.append( sour );
   }
+
+
 
 
 
@@ -48,26 +42,3 @@ bool SrCompiler::isGlobalSymbol(const QString &name)
   //Проверить среди функций
   return mFunGlobal.isPresent(name);
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

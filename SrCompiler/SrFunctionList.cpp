@@ -94,15 +94,6 @@ SrFunction *SrFunctionList::addFunctionDefinition(SrFunctionPtr fun)
 
 
 
-//Скопировать функции-члены
-void SrFunctionList::addMembers(const SrFunctionList &src, SrStruct *svClass )
-  {
-  for( SrFunctionPtr fun : src.mList )
-    addFunction( new SrFunction( fun, svClass ), fun->mName );
-  }
-
-
-
 //Сформировать листинг описаний функций
 QString SrFunctionList::listingDeclaration()
   {

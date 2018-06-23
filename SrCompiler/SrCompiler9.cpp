@@ -1,8 +1,17 @@
 /*
-Проект "Компилятор"
-Содержание
-  Реализация класса TCompiler часть 5 (таблица символов)
-  Функции:
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Пико-компилятор"
+  Автор
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
+
+  Описание
+    Пико компилятор скриптового языка rc++
+
+    Реализация класса TCompiler часть 9 (синтаксический разбор)
 */
 #include "SrCompiler.h"
 
@@ -85,7 +94,7 @@ SrCompiler::DoStructure() {
       //Должен быть тип базовой структуры
       if( mToken == ttType ) {
         //Базовая структура обнаружена
-        if( mToken.mType->mClass != TTYPE_STRUCT )
+        if( mToken.mType->mClass != CLASS_STRUCT )
           Error( QObject::tr("Derivate must be from struct, but \"%1\" is not").arg( mToken.mString ) );
         else
           type->setBase( mToken.mType->toStruct() );
@@ -100,7 +109,7 @@ SrCompiler::DoStructure() {
         }
       }
     else if( mToken == ttType ) {
-      if( mToken.mType->mClass == TTYPE_STRUCT )
+      if( mToken.mType->mClass == CLASS_STRUCT )
         type = mToken.mType->toStruct();
       else
         Error( QObject::tr("Type mismatch in struct \"%1\" redefinig").arg(mToken.mType->mName) );
@@ -198,7 +207,6 @@ SrType *SrCompiler::DoBaseType()
   {
   if( mToken == ttType )     return mToken.mType;
   if( mToken == tkwInt )     return mTypeInt;
-  //if( mToken == tkwFloat )   return mTypeFail;
   if( mToken == tkwVoid )    return mTypeVoid;
   if( mToken == tkwCString ) return mTypeCString;
   if( mToken == tkwCblock )  return mTypeCBlock;
@@ -276,7 +284,7 @@ void SrCompiler::DoDeclareGlobal() {
         NextToken();
         }
       //Проверить допустимость типа
-      if( var->mType->mClass == TTYPE_VOID ) {
+      if( var->mType->mClass == CLASS_VOID ) {
         //для void допустимы только указатели или функции
         Error( QObject::tr("Error. Variable can not be a void type.") );
         return;
@@ -476,7 +484,7 @@ void SrCompiler::DoSubType(SrType *type, SrVariablePtr &var, SrFunctionPtr &fun,
   if( mToken == tsSOpen ) {
     NextToken();
     //Проверить допустимость элементов массива
-    if( type->mClass == TTYPE_VOID )
+    if( type->mClass == CLASS_VOID )
       Error( QObject::tr("Error. Array of void types not allowed.") );
 
     //Должно быть константное выражение размерности массива
@@ -560,8 +568,10 @@ SrCompiler::DoNewFunction( SrFunction *fun ) {
 
 
 
-SrOperatorBlock*
-SrCompiler::DoCompound() {
+
+
+
+SrOperatorBlock *SrCompiler::DoCompound() {
   NextToken();
   SrOperatorContext *savContext = mContext; //Сохранить предыдущий контекст
   SrOperatorBlock *block = new SrOperatorBlock( mark(), QString(), mContext );
@@ -591,53 +601,6 @@ SrCompiler::DoCompound() {
 
 
 
-//Обработка конструкции catch( mask );
-SrOperator*
-SrCompiler::DoCatch() {
-  //Убрать catch
-  NextToken();
-  //Должна быть открывающая скобка
-  if( mToken != tsOpen ) Error( Need('(') );
-  else NextToken(); //Убрать скобку
-  //Константное выражение с маской обслуживаемых исключений
-  SvOperatorCatch *svCatch = new SvOperatorCatch( mark(), curLine() );
-  if( ConstExpression( &(svCatch->mMask) ) == mTypeInt ) {
-    //Должна быть закрывающая скобка
-    if( mToken != tsClose ) Error( Need(')') );
-    else NextToken(); //Убрать скобку
-
-    //Должен быть ;
-    NeedSemicolon();
-    }
-  else Error( QObject::tr("Error. Need constant int expression for catch mask.") );
-  return svCatch;
-  }
-
-
-
-
-
-//Обработка конструкции throw( val );
-SrOperator*
-SrCompiler::DoThrow() {
-  //Убрать throw
-  NextToken();
-  //Должна быть открывающая скобка
-  if( mToken != tsOpen ) Error( Need('(') );
-  else NextToken(); //Убрать скобку
-  SvOperatorThrow *svThrow = new SvOperatorThrow( mark(), curLine() );
-  //Константное выражение с возбуждаемым исключением
-  if( ConstExpression( &(svThrow->mMask) ) == mTypeInt ) {
-    //Должна быть закрывающая скобка
-    if( mToken != tsClose ) Error( Need(')') );
-    else NextToken(); //Убрать скобку
-
-    //Должен быть ;
-    NeedSemicolon();
-    }
-  else Error( QObject::tr("Error. Need constant expression for throw val.") );
-  return svThrow;
-  }
 
 
 
@@ -649,9 +612,7 @@ SrCompiler::DoThrow() {
 
 
 
-
-SrOperator*
-SrCompiler::DoStatement( SrOperator *parent ) {
+SrOperator *SrCompiler::DoStatement( SrOperator *parent ) {
   SrOperator *op = 0;
   switch( mToken ) {
     case tkwStatic   :
@@ -668,8 +629,6 @@ SrCompiler::DoStatement( SrOperator *parent ) {
     case tkwInt      :
     case ttType      : DoLocal();    mLastStatement = tstLocal; break;
     case tsFOpen     : op = DoCompound(); break;
-    case tkwCatch    : op = DoCatch();    mLastStatement = tstExpression; break;
-    case tkwThrow    : op = DoThrow();    mLastStatement = tstExpression; break;
     case tkwIf       : op = DoIf();       mLastStatement = tstIf; break;
     case tkwWhile    : op = DoWhile();    mLastStatement = tstWhile; break;
     case tkwDo       : op = DoDo();       mLastStatement = tstDo; break;
@@ -691,8 +650,7 @@ SrCompiler::DoStatement( SrOperator *parent ) {
 
 
 
-SrOperator*
-SrCompiler::DoLocal() {   //Оператор определения локальных переменных
+SrOperator *SrCompiler::DoLocal() {   //Оператор определения локальных переменных
   //Разобрать тип
   SrType *baseType = DoBaseType();
   NextToken();
@@ -797,8 +755,7 @@ SrOperator *SrCompiler::DoWhile() {  //Оператор while
 
 
 
-SrOperator*
-SrCompiler::DoFor() {  //Оператор for
+SrOperator *SrCompiler::DoFor() {  //Оператор for
   NextToken(); //Убрать for
   if( mToken != tsOpen ) Error( QObject::tr("Error. Need \'(\'.") );
   else NextToken(); //Убрать скобку
@@ -840,7 +797,7 @@ SrCompiler::DoFor() {  //Оператор for
 
 
 
-SrOperator* SrCompiler::DoDo() {  //Оператор do
+SrOperator *SrCompiler::DoDo() {  //Оператор do
   NextToken(); //Убрать do
   SrOperatorDoWhile *svDoWhile = new SrOperatorDoWhile( mark(), curLine(), mContext );
 
@@ -874,8 +831,7 @@ SrOperator* SrCompiler::DoDo() {  //Оператор do
 
 
 
-SrOperator*
-SrCompiler::DoSwitch() {  //Оператор switch
+SrOperator *SrCompiler::DoSwitch() {  //Оператор switch
   ErrorEndSt( QObject::tr("Error. switch not supported.") );
   return 0;
   }
@@ -905,7 +861,7 @@ SrOperator *SrCompiler::DoDefault() { //Оператор default
 SrOperator *SrCompiler::DoReturn() {  //Оператор return
   SrOperatorReturn *svReturn = new SrOperatorReturn( mark(), curLine(), mActiveFunction );
   NextToken(); //Убрать return
-  if( mActiveFunction->mType->toFunction()->mResult->mClass != TTYPE_VOID ) {
+  if( mActiveFunction->mType->toFunction()->mResult->mClass != CLASS_VOID ) {
     //Возвращает какое-то значение
     if( mToken == tsSemicolon )
       Error( QObject::tr("Error. Need expression type %1.").arg( mActiveFunction->mType->toFunction()->mResult->mName ) );
