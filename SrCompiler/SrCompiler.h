@@ -280,6 +280,9 @@ namespace SrCompiler6
   typedef SrValue *SrValuePtr;
   typedef QList<SrValuePtr> SrValuePtrList;
 
+
+
+
   /*!
      \brief The SrValueList struct Список значений SrValue, которые представляют
      собой ветки дерева разбора выражений.
@@ -434,6 +437,9 @@ namespace SrCompiler6
   typedef QHash<QString,SrFunctionPtr> SrFunctionPtrHash;
 
 
+
+
+
   /*!
      \brief The SrFunctionList struct Список функций. Содержи собственно список функций,
      а также хэш-таблицу для быстрого доступа к функции
@@ -561,8 +567,15 @@ namespace SrCompiler6
 
     };
 
+
+
+
+
+
   typedef QList<SrTypePtr> SvTypePtrList;
   typedef QHash<QString,SrTypePtr> SvTypePtrHash;
+
+
 
   /*!
      \brief The SrTypeList class Список типов. Содержит список всех типов, а также
@@ -654,7 +667,6 @@ namespace SrCompiler6
 
 
 
-  //Тип-класс
   /*!
      \brief The SrStruct struct Тип описывающий структуру. В дополнение к базовому типу
      в типе-структуре присутствует список членов и указатель на наследованную структуру.
@@ -1120,6 +1132,8 @@ namespace SrCompiler6
 
 
 
+
+
   /*!
      \brief The SrValuePredInc struct Прединкремент
    */
@@ -1133,6 +1147,9 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const override { return svvPredInc; }
     };
+
+
+
 
 
   /*!
@@ -1150,6 +1167,9 @@ namespace SrCompiler6
     };
 
 
+
+
+
   /*!
      \brief The SrValuePostInc struct Постинкремент
    */
@@ -1165,6 +1185,9 @@ namespace SrCompiler6
     };
 
 
+
+
+
   /*!
      \brief The SrValuePostDec struct Постдекремент
    */
@@ -1178,6 +1201,9 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const override { return svvPostDec; }
     };
+
+
+
 
 
   /*!
@@ -1198,6 +1224,9 @@ namespace SrCompiler6
     };
 
 
+
+
+
   /*!
      \brief The SrValueLogNot struct Логическое отрицание
    */
@@ -1214,6 +1243,9 @@ namespace SrCompiler6
       //Результат константной операции
       virtual int    constOperation( int val ) override { return !val; }
     };
+
+
+
 
 
   /*!
@@ -1270,6 +1302,9 @@ namespace SrCompiler6
     };
 
 
+
+
+
   /*!
      \brief The SrValueStore struct Операция сохранения
    */
@@ -1283,6 +1318,9 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const override { return svvStore; }
     };
+
+
+
 
 
   /*!
@@ -1313,6 +1351,9 @@ namespace SrCompiler6
     };
 
 
+
+
+
   /*!
      \brief The SrValueMul struct Умножение
    */
@@ -1331,6 +1372,9 @@ namespace SrCompiler6
     };
 
 
+
+
+
   /*!
      \brief The SrValueMulStore struct Умножение и сохранение
    */
@@ -1344,6 +1388,9 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const override { return svvMulStore; }
     };
+
+
+
 
 
   /*!
@@ -1364,6 +1411,9 @@ namespace SrCompiler6
     };
 
 
+
+
+
   /*!
      \brief The SrValueDivStore struct Деление и сохранение
    */
@@ -1377,6 +1427,9 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const override { return svvDivStore; }
     };
+
+
+
 
 
 
@@ -1399,6 +1452,9 @@ namespace SrCompiler6
 
 
 
+
+
+
   /*!
      \brief The SrValueModStore struct Остаток от деления и сохранение
    */
@@ -1412,6 +1468,9 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const override { return svvModStore; }
     };
+
+
+
 
 
 
@@ -1434,6 +1493,9 @@ namespace SrCompiler6
 
 
 
+
+
+
   /*!
      \brief The SrValueAddStore struct Сложение и сохранение
    */
@@ -1447,6 +1509,9 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const override { return svvAddStore; }
     };
+
+
+
 
 
   /*!
@@ -1468,6 +1533,9 @@ namespace SrCompiler6
 
 
 
+
+
+
   /*!
      \brief The SrValueSubStore struct Вычитание и сохранение
    */
@@ -1481,6 +1549,9 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const override { return svvSubStore; }
     };
+
+
+
 
 
   /*!
@@ -1502,6 +1573,9 @@ namespace SrCompiler6
 
 
 
+
+
+
   /*!
      \brief The SrValueLShiftStore struct Сдвиг влево и сохранение
    */
@@ -1515,6 +1589,9 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const override { return svvLShiftStore; }
     };
+
+
+
 
 
   /*!
@@ -1535,6 +1612,9 @@ namespace SrCompiler6
     };
 
 
+
+
+
   /*!
      \brief The SrValueRShiftStore struct Сдвиг вправо и сохранение
    */
@@ -1548,6 +1628,9 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const override { return svvRShiftStore; }
     };
+
+
+
 
 
   /*!
@@ -1564,6 +1647,9 @@ namespace SrCompiler6
       virtual SrValueCode code() const override { return svvOrStore;  }
     };
 
+
+
+
   /*!
      \brief The SrValueAndStore struct Бинарное И и сохранение
    */
@@ -1579,6 +1665,9 @@ namespace SrCompiler6
     };
 
 
+
+
+
   /*!
      \brief The SrValueXorStore struct Бинарное ХОР и сохранение
    */
@@ -1592,6 +1681,8 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const override { return svvXorStore; }
     };
+
+
 
 
 
@@ -1614,6 +1705,8 @@ namespace SrCompiler6
 
 
 
+
+
   /*!
      \brief The SrValueNotEqu struct Неравенство
    */
@@ -1630,6 +1723,9 @@ namespace SrCompiler6
       //Результат константной операции
       virtual int    constOperation( int val1, int val2 ) override { return val1 != val2; }
     };
+
+
+
 
 
   /*!
@@ -1650,6 +1746,9 @@ namespace SrCompiler6
     };
 
 
+
+
+
   /*!
      \brief The SrValueLess struct Меньше
    */
@@ -1666,6 +1765,9 @@ namespace SrCompiler6
       //Результат константной операции
       virtual int    constOperation( int val1, int val2 ) { return val1 < val2; }
     };
+
+
+
 
 
   /*!
@@ -1686,6 +1788,9 @@ namespace SrCompiler6
     };
 
 
+
+
+
   /*!
      \brief The SrValueGreatEqu struct Больше или равно
    */
@@ -1702,6 +1807,9 @@ namespace SrCompiler6
       //Результат константной операции
       virtual int    constOperation( int val1, int val2 ) { return val1 >= val2; }
     };
+
+
+
 
 
 
@@ -1734,6 +1842,9 @@ namespace SrCompiler6
 
 
 
+
+
+
   /*!
      \brief The SrValueLogAnd struct Логическое И
    */
@@ -1748,6 +1859,9 @@ namespace SrCompiler6
       //Получить код операции
       virtual SrValueCode code() const { return svvLogAnd; }
     };
+
+
+
 
 
 
@@ -1768,6 +1882,9 @@ namespace SrCompiler6
 
 
 
+
+
+
   /*!
      \brief The SrValueOr struct Бинарное ИЛИ
    */
@@ -1784,6 +1901,9 @@ namespace SrCompiler6
       //Результат константной операции
       virtual int     constOperation( int val1, int val2 ) { return val1 | val2; }
     };
+
+
+
 
 
 
@@ -1807,6 +1927,9 @@ namespace SrCompiler6
 
 
 
+
+
+
   /*!
      \brief The SrValueXor struct Бинарное Исключающее ИЛИ
    */
@@ -1826,6 +1949,9 @@ namespace SrCompiler6
 
 
 
+
+
+
   /*!
      \brief The SrValueComma struct Операция ,
    */
@@ -1842,6 +1968,9 @@ namespace SrCompiler6
       //Получить тип операции
       virtual SrType *getType() override { if( mType == 0 && mOperand[mOperCount-1] ) mType = mOperand[mOperCount-1]->getType(); return mType; }
     };
+
+
+
 
 
 
@@ -1940,6 +2069,8 @@ namespace SrCompiler6
 
 
 
+
+
   /*!
      \brief The SrOperatorReturn struct Оператор возврата из функции
    */
@@ -1957,6 +2088,8 @@ namespace SrCompiler6
       virtual SrStatement statement() const override { return tstReturn; }
 
     };
+
+
 
 
 
@@ -1985,6 +2118,8 @@ namespace SrCompiler6
 
 
 
+
+
   typedef SrOperator *SrOperatorPtr;
   typedef QList<SrOperatorPtr> SrOperatorList;
 
@@ -2009,6 +2144,8 @@ namespace SrCompiler6
 
 
 
+
+
   /*!
      \brief The SrOperatorExpression struct Оператор-выражение
    */
@@ -2026,6 +2163,8 @@ namespace SrCompiler6
       virtual SrStatement statement() const override { return tstExpression; }
 
     };
+
+
 
 
 
@@ -2219,6 +2358,13 @@ namespace SrCompiler6
 
      Выполняет разбор исходного текста скрипта и формирует различные таблицы, на основе которых
      осуществляется генерация байт-кода.
+
+     Компилятор выполнен по технологии рекурсивного спуска. Изначальными корнями уходит
+     в SmallC Compiler лохматого года.
+
+     В качестве промежуточного кода с версии 6 используется дерево. Ранее были триады.
+     Дерево дает больше информации по откомпилированной программе. Оно позволяет
+     проще проводить оптимизацию, а также упростило синтактический разбор.
    */
   class SrCompiler {
     public:
@@ -2423,10 +2569,8 @@ namespace SrCompiler6
               void         DoParamAddress( SrFunction *fun ); //Назначить параметрам адреса
               //Определение подтипа
               void         DoSubType( SrType *type, SrVariablePtr &var, SrFunctionPtr &fun, int *addressCount );
-              bool         DoMemberSubType( SrVariable& );     //Определение подтипа для членов структур
               SrType*      DoBaseType();                      //Определение основного типа
               SrOperator*  DoStatement(SrOperator *parent);   //Оператор
-              void         ClearTemp( int savOffset );        //Очистить стек временных переменных
               SrOperator*  DoLocal();                         //Оператор определения локальных переменных
               SrOperatorBlock *DoCompound();                      //Оператор блок
               SrOperator*  DoIf();                            //Оператор if

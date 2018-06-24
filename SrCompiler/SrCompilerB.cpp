@@ -54,8 +54,6 @@ SrCompiler::Listing() {
               "//  functions bodies\n" );
   str.append( mFunGlobal.listingDefinition() );
 
-  //Раздел иерархии сцен
-
   //Теперь список ошибок
   if( mErrorList.count() ) {
     //Ошибки при компиляции

@@ -43,10 +43,13 @@ namespace SrCompiler6 {
 
     protected:
 
+      //Добавить переменную в таблицу переменных генерируемой программы
       void addVariable(SrProgramm *prog, const QString prefix, SrVariable *var, int startAddress);
 
+      //Один проход генерации
       void pass(SrProgramm *prog);
 
+      //Генерация операторов
       void gOperator( SrProgramm *prog, SrOperator *op );
       void gOperatorReturn( SrProgramm *prog, SrOperatorReturn *svReturn );
       void gOperatorBlock( SrProgramm *prog, SrOperatorBlock *svBlock );
@@ -59,6 +62,7 @@ namespace SrCompiler6 {
       void gOperatorFor( SrProgramm *prog, SrOperatorFor *svFor );
       void gOperatorContextEnter(SrProgramm *prog, SrOperatorContext *context );
 
+      //Генерация выражений
       void gValue( SrProgramm *prog, SrValue *val, bool keepValue, bool address );
       void gValueCatchFun(SrProgramm *prog, SrValueCatchFun *svCatch );
       void gValueThrowFun( SrProgramm *prog, SrValueThrowFun *svThrow );
@@ -66,9 +70,6 @@ namespace SrCompiler6 {
       void gStack( SrProgramm *prog, int offset, const SrMark &mark );
       void gLoad( SrProgramm *prog, SrValue *val );
 
-      void codePrint( const QString code );
-
-      //void gvvRemoveTop( SrProgramm *prog, int count = 1 );
       void gvvVariable( SrProgramm *prog, SrValueVariable *var, bool keepValue, bool address );
       void gvvFunction( SrProgramm *prog, SrValueFunction *fun, bool keepValue, bool address );
       void gvvConstInt( SrProgramm *prog, SrValueConstInt *cnst, bool keepValue, bool address );
@@ -96,6 +97,9 @@ namespace SrCompiler6 {
       void gvvComma( SrProgramm *prog, SrValueBinaryLong *binary, bool keepValue, bool address );
       void gvvCondition( SrProgramm *prog, SrValueCondition *condition, bool keepValue, bool address );
       void gvvCall( SrProgramm *prog, SrValueCall *call, bool keepValue, bool address );
+
+      //Вывод в листинг
+      void codePrint( const QString code );
 
     };
 
