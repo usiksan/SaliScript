@@ -491,9 +491,37 @@ void SrVpuCompiler::gvvMemberVariable(SrProgramm *prog, SrValueMemberVariable *v
       gValue( prog, var->mStruct, keepValue, true );
       if( keepValue ) {
         //Суммируем с адресом члена
-        gPushConst( prog, var->mVariable->mAddress + var->mAddonAddress, var->mMark, QString(".") + var->mVariable->mName );
-        prog->addCode( VBC1_ADD, var->mMark );
-        codePrint( QString("VBC1_ADD") );
+        switch( var->mVariable->mAddress + var->mAddonAddress ) {
+          case 0 :
+            break;
+          case 1 :
+            prog->addCode( VBC1_ADD_1, var->mMark );
+            codePrint( QString("VBC1_ADD_1") );
+            break;
+          case 2 :
+            prog->addCode( VBC1_ADD_2, var->mMark );
+            codePrint( QString("VBC1_ADD_2") );
+            break;
+          case 3 :
+            prog->addCode( VBC1_ADD_3, var->mMark );
+            codePrint( QString("VBC1_ADD_3") );
+            break;
+          case 4 :
+            prog->addCode( VBC1_ADD_4, var->mMark );
+            codePrint( QString("VBC1_ADD_4") );
+            break;
+          default :
+            if( var->mVariable->mAddress + var->mAddonAddress < 127 ) {
+              prog->addCodeParam8( VBC2_ADD_CONST, var->mVariable->mAddress + var->mAddonAddress, var->mMark );
+              codePrint( QString("VBC2_ADD_CONST [%1]").arg(QString(".") + var->mVariable->mName) );
+              }
+            else {
+              gPushConst( prog, var->mVariable->mAddress + var->mAddonAddress, var->mMark, QString(".") + var->mVariable->mName );
+              prog->addCode( VBC1_ADD, var->mMark );
+              codePrint( QString("VBC1_ADD") );
+              }
+            break;
+          }
         if( !address )
           //Нужно само значение по указателю
           gLoad( prog, var );
@@ -972,9 +1000,38 @@ void SrVpuCompiler::gvvArrayCell(SrProgramm *prog, SrValueArrayCell *array, bool
     //Получить адрес массива
     gValue( prog, array->mOperand1, keepValue, false );
     //Загрузить константное смещение и сложить
-    gPushConst( prog, array->mOperand2->mConstInt * array->mOperand1->mType->mBaseType->mSize, array->mMark, QString::number(array->mOperand2->mConstInt) );
-    prog->addCode( VBC1_ADD, array->mMark );
-    codePrint( QString("VBC1_ADD") );
+    int offset = array->mOperand2->mConstInt * array->mOperand1->mType->mBaseType->mSize;
+    switch( offset ) {
+      case 0 :
+        break;
+      case 1 :
+        prog->addCode( VBC1_ADD_1, array->mMark );
+        codePrint( QString("VBC1_ADD_1") );
+        break;
+      case 2 :
+        prog->addCode( VBC1_ADD_2, array->mMark );
+        codePrint( QString("VBC1_ADD_2") );
+        break;
+      case 3 :
+        prog->addCode( VBC1_ADD_3, array->mMark );
+        codePrint( QString("VBC1_ADD_3") );
+        break;
+      case 4 :
+        prog->addCode( VBC1_ADD_4, array->mMark );
+        codePrint( QString("VBC1_ADD_4") );
+        break;
+      default :
+        if( offset < 127 ) {
+          prog->addCodeParam8( VBC2_ADD_CONST, offset, array->mMark );
+          codePrint( QString("VBC2_ADD_CONST [%1]").arg(array->mOperand2->mConstInt) );
+          }
+        else {
+          gPushConst( prog, offset, array->mMark, QString::number(array->mOperand2->mConstInt) );
+          prog->addCode( VBC1_ADD, array->mMark );
+          codePrint( QString("VBC1_ADD") );
+          }
+        break;
+      }
     if( !address )
       gLoad( prog, array );
     }
@@ -1509,8 +1566,43 @@ void SrVpuCompiler::gvvCall(SrProgramm *prog, SrValueCall *call, bool keepValue,
       }
 
     //Теперь вызов
-    prog->addCodeParam8( VBC2_CALL, call->mParamCount, call->mMark );
-    codePrint( QString("VBC2_CALL [%1]").arg(call->mParamCount) );
+    switch( call->mParamCount ) {
+      case 0 :
+        prog->addCode( VBC1_CALL0, call->mMark );
+        codePrint( QString("VBC1_CALL0") );
+        break;
+      case 1 :
+        prog->addCode( VBC1_CALL1, call->mMark );
+        codePrint( QString("VBC1_CALL1") );
+        break;
+      case 2 :
+        prog->addCode( VBC1_CALL2, call->mMark );
+        codePrint( QString("VBC1_CALL2") );
+        break;
+      case 3 :
+        prog->addCode( VBC1_CALL3, call->mMark );
+        codePrint( QString("VBC1_CALL3") );
+        break;
+      case 4 :
+        prog->addCode( VBC1_CALL4, call->mMark );
+        codePrint( QString("VBC1_CALL4") );
+        break;
+      case 5 :
+        prog->addCode( VBC1_CALL5, call->mMark );
+        codePrint( QString("VBC1_CALL5") );
+        break;
+      case 6 :
+        prog->addCode( VBC1_CALL6, call->mMark );
+        codePrint( QString("VBC1_CALL6") );
+        break;
+      case 7 :
+        prog->addCode( VBC1_CALL7, call->mMark );
+        codePrint( QString("VBC1_CALL7") );
+        break;
+      default :
+        prog->addCodeParam8( VBC2_CALL, call->mParamCount, call->mMark );
+        codePrint( QString("VBC2_CALL [%1]").arg(call->mParamCount) );
+      }
 
     //Теперь убираем все параметры
     if( keepValue ) {

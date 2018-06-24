@@ -34,6 +34,11 @@ enum SrVmByteCode {
   VBC1_PUSH_0,          //stack[--sp] = 0
   VBC1_PUSH_1,          //stack[--sp] = 1
   VBC1_PUSH_2,          //stack[--sp] = 2
+  VBC1_ADD_1,           //stack[sp] += 1;
+  VBC1_ADD_2,           //stack[sp] += 2;
+  VBC1_ADD_3,           //stack[sp] += 3;
+  VBC1_ADD_4,           //stack[sp] += 4;
+  VBC2_ADD_CONST,       //stack[sp] += const8
   VBC2_PUSH_CONST,      //stack[--sp] = const8
   VBC3_PUSH_CONST,      //stack[--sp] = const16
   VBC4_PUSH_CONST,      //stack[--sp] = const24
