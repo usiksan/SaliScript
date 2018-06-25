@@ -842,7 +842,9 @@ namespace SrCompiler6
      в виде дерева.
    */
   struct SrValue {
+    protected:
       SrType      *mType;        //Тип значения, полученного в результате
+    public:
       SrMark       mMark;        //Место в файле для данного значения
       int          mConstInt;    //Вычисленный результат
       bool         mConst;       //Флаг показывает константный результат
@@ -871,9 +873,27 @@ namespace SrCompiler6
       //Получить тип операции
       virtual SrType*     getType() { return mType; }
 
+      /*!
+        \brief setType Установить новый тип для значения
+        \param tp Новый тип для значения
+      */
+              void        setType( SrType *tp ) { mType = tp; }
+
       //Получить класс типа результата
               int         getClass() { return getType() == 0 ? 0 : mType->mClass; }
   };
+
+
+
+  struct SrValueError : SrValue {
+      SrValueError( SrType *type, const SrMark &mark ) : SrValue( type, mark ) {}
+
+      //Получить строку листинга
+      virtual QString     listing() { return QString(";Error"); }
+
+      //Получить код операции
+      virtual SrValueCode code() const override { return svvLast; }
+    };
 
 
 
@@ -885,16 +905,13 @@ namespace SrCompiler6
       SrVariable *mVariable;
       int         mAddonAddress;
 
-      SrValueVariable( SrVariable *var, const SrMark &mark );
+      SrValueVariable(SrVariable *var, const SrMark &mark );
 
       //Получить строку листинга
       virtual QString     listing() { if( mVariable ) return QString(" <%1> ").arg(mVariable->printListing()); return QString("<ERR>"); }
 
       //Получить код операции
       virtual SrValueCode code() const override { return svvVariable; }
-
-      //Получить тип операции
-      virtual SrType     *getType() override;
     };
 
 
@@ -907,16 +924,13 @@ namespace SrCompiler6
       SrFunction *mFunction;
 
       SrValueFunction( SrFunction *fun, const SrMark &mark ) :
-        SrValue( mark ), mFunction(fun) { mType = fun->mType; }
+        SrValue( fun->mType, mark ), mFunction(fun) { }
 
       //Получить строку листинга
       virtual QString     listing() override { if( mFunction ) return QString(" <%1> ").arg( mFunction->listingDeclaration() ); return QString("<ERR>"); }
 
       //Получить код операции
       virtual SrValueCode code() const override { return svvFunction; }
-
-      //Получить тип операции
-      virtual SrType     *getType() override { if( mType == 0 && mFunction ) mType = mFunction->mType; return mType; }
     };
 
 
@@ -927,7 +941,7 @@ namespace SrCompiler6
      \brief The SrValueWaitFun struct Специальная функция srWait
    */
   struct SrValueWaitFun : SrValue {
-      SrValueWaitFun( SrType *type, const SrMark &mark ) : SrValue(mark) { mType = type; }
+      SrValueWaitFun( SrType *voidType, const SrMark &mark ) : SrValue( voidType, mark) { }
 
       //Получить строку листинга
       virtual QString     listing() override { return QString(" srWait() "); }
@@ -943,7 +957,7 @@ namespace SrCompiler6
   struct SrValueThrowFun : SrValue {
       SrValue *mThrowCode;
 
-      SrValueThrowFun( SrValue *throwCode, SrType *type, const SrMark &mark ) : SrValue(mark), mThrowCode(throwCode) { mType = type; }
+      SrValueThrowFun( SrValue *throwCode, SrType *voidType, const SrMark &mark ) : SrValue( voidType, mark), mThrowCode(throwCode) { }
       ~SrValueThrowFun() { delete mThrowCode; }
 
       //Получить строку листинга
@@ -960,7 +974,7 @@ namespace SrCompiler6
   struct SrValueCatchFun : SrValue {
       SrValue *mCatchMask;
 
-      SrValueCatchFun( SrValue *catchMask, SrType *type, const SrMark &mark ) : SrValue(mark), mCatchMask(catchMask) { mType = type; }
+      SrValueCatchFun( SrValue *catchMask, SrType *voidType, const SrMark &mark ) : SrValue( voidType, mark ), mCatchMask(catchMask) { }
       ~SrValueCatchFun() { delete mCatchMask; }
 
       //Получить строку листинга
@@ -976,7 +990,7 @@ namespace SrCompiler6
      \brief The SrValueExceptionFun struct Специальная функция srException
    */
   struct SrValueExceptionFun : SrValue {
-      SrValueExceptionFun( SrType *type, const SrMark &mark ) : SrValue(mark) { mType = type; }
+      SrValueExceptionFun( SrType *intType, const SrMark &mark ) : SrValue( intType, mark ) {}
 
       //Получить строку листинга
       virtual QString     listing() override { return QString(" srException() "); }
@@ -1014,17 +1028,13 @@ namespace SrCompiler6
      \brief The SrValueConstInt struct Константа целая
    */
   struct SrValueConstInt : SrValue {
-      int     mIValue;        //Целое значение или индекс строки
-
-      SrValueConstInt( int val, SrType *type, const SrMark &mark ) : SrValue(mark), mIValue(val) { mType = type; }
+      SrValueConstInt( int val, SrType *intType, const SrMark &mark ) : SrValue( intType, mark ) { mConst = true; mConstInt = val; }
 
       //Получить строку листинга
-      virtual QString     listing() override { return QString::number(mIValue); }
+      virtual QString     listing() override { return QString::number(mConstInt); }
 
       //Получить код операции
       virtual SrValueCode code() const override { return svvConstInt; }
-
-      void    setConst( SrType *type ) { mType = type; mConst = true; mConstInt = mIValue; }
     };
 
 
@@ -1036,7 +1046,7 @@ namespace SrCompiler6
   struct SrValueConstString : SrValue {
       int mIndex; //Индекс строки в таблице строк
 
-      SrValueConstString( int index, SrType *type, const SrMark &mark ) : SrValue(mark), mIndex(index) { mType = type; }
+      SrValueConstString( int index, SrType *strType, const SrMark &mark ) : SrValue( strType, mark ), mIndex(index) {}
 
       //Получить строку листинга
       virtual QString     listing() override { return QString("cstring[%1]").arg(mIndex); }
@@ -1056,7 +1066,7 @@ namespace SrCompiler6
       SrValue *mOperand;
 
       SrValueUnary( SrValue *oper, const SrMark &mark ) :
-        SrValue( mark ), mOperand(oper) {}
+        SrValue( oper->getType(), mark ), mOperand(oper) {}
       ~SrValueUnary() { if( mOperand ) delete mOperand; }
 
       //Получить строку листинга
@@ -1067,9 +1077,6 @@ namespace SrCompiler6
 
       //Результат константной операции
       virtual int         constOperation( int val ) { Q_UNUSED(val) return 0; }
-
-      //Получить тип операции
-      virtual SrType     *getType() override { if( mType == 0 && mOperand ) mType = mOperand->getType(); return mType; }
 
       //Вычислить константу
       void                checkConst() { mConst = mOperand && mOperand->mConst; if( mConst ) mConstInt = constOperation( mOperand->mConstInt ); }
@@ -1083,23 +1090,17 @@ namespace SrCompiler6
    */
   struct SrValuePointer : public SrValueUnary {
       SrValuePointer( SrValue *oper, const SrMark &mark ) :
-        SrValueUnary( oper, mark ) { }
+        SrValueUnary( oper, mark ) {
+          mType = mOperand->getType();
+          if( mType )
+            mType = mType->mBaseType;
+          }
 
       //Получить значение операции
       virtual QString     operation() const override { return QString(" *(%1) "); }
 
       //Получить код операции
       virtual SrValueCode code() const override { return svvPointer; }
-
-      //Получить тип операции
-      virtual SrType     *getType() override {
-        if( mType == 0 && mOperand ) {
-          mType = mOperand->getType();
-          if( mType )
-            mType = mType->mBaseType;
-          }
-        return mType;
-        }
 
     };
 
@@ -1111,23 +1112,17 @@ namespace SrCompiler6
    */
   struct SrValueAddress : public SrValueUnary {
       SrValueAddress( SrValue *oper, const SrMark &mark ) :
-        SrValueUnary( oper, mark ) {}
+        SrValueUnary( oper, mark ) {
+          mType = mOperand->getType();
+          if( mType )
+            mType = mType->getTypePointer();
+          }
 
       //Получить значение операции
       virtual QString     operation() const override { return QString(" &(%1) "); }
 
       //Получить код операции
       virtual SrValueCode code() const override { return svvAddress; }
-
-      //Получить тип операции
-      virtual SrType     *getType() override {
-        if( mType == 0 && mOperand ) {
-          mType = mOperand->getType();
-          if( mType )
-            mType = mType->getTypePointer();
-          }
-        return mType;
-        }
     };
 
 
@@ -1231,8 +1226,8 @@ namespace SrCompiler6
      \brief The SrValueLogNot struct Логическое отрицание
    */
   struct SrValueLogNot : public SrValueUnary {
-      SrValueLogNot( SrValue *oper, const SrMark &mark ) :
-        SrValueUnary( oper, mark ) {}
+      SrValueLogNot( SrValue *oper, SrType *intType, const SrMark &mark ) :
+        SrValueUnary( oper, mark ) { mType = intType; }
 
       //Получить значение операции
       virtual QString operation() const override { return QString(" !(%1) "); }
@@ -1279,7 +1274,7 @@ namespace SrCompiler6
       SrValue *mOperand2;
 
       SrValueBinary( SrValue *oper1, const SrMark &mark, SrValue *oper2 = nullptr ) :
-        SrValue( mark ), mOperand1(oper1), mOperand2(oper2) {}
+        SrValue( oper1->getType(), mark ), mOperand1(oper1), mOperand2(oper2) {}
       ~SrValueBinary() { if( mOperand1 ) delete mOperand1; if( mOperand2 ) delete mOperand2; }
 
 
@@ -1296,9 +1291,6 @@ namespace SrCompiler6
       void            checkConst() { mConst = mOperand1 && mOperand1->mConst && mOperand2 && mOperand2->mConst;
                                     if( mConst ) mConstInt = constOperation( mOperand1->mConstInt, mOperand2->mConstInt );
                                     }
-
-      //Получить тип операции
-      virtual SrType *getType() override { if( mType == 0 && mOperand1 ) mType = mOperand1->getType(); return mType; }
     };
 
 
@@ -1328,7 +1320,11 @@ namespace SrCompiler6
    */
   struct SrValueArrayCell : public SrValueBinary {
       SrValueArrayCell( SrValue *array, const SrMark &mark, SrValue *index = 0 ) :
-        SrValueBinary( array, mark, index ) { }
+        SrValueBinary( array, mark, index ) {
+          mType = mOperand1->getType();
+          if( mType )
+            mType = mType->mBaseType;
+          }
 
       //Получить значение операции
       virtual QString operation() const override { return QString(" (%1)[(%2)] "); }
@@ -1338,16 +1334,6 @@ namespace SrCompiler6
 
       //Результат константной операции
       virtual int    constOperation( int val1, int val2 ) override { return val1 + val2 * mType->mBaseType->mSize; }
-
-      //Получить тип операции
-      virtual SrType *getType() override {
-        if( mType == 0 && mOperand1 ) {
-          mType = mOperand1->getType();
-          if( mType )
-            mType = mType->mBaseType;
-          }
-        return mType;
-        }
     };
 
 
@@ -1690,8 +1676,8 @@ namespace SrCompiler6
      \brief The SrValueEqu struct Равенство
    */
   struct SrValueEqu : public SrValueBinary {
-      SrValueEqu( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
-        SrValueBinary( oper1, mark, oper2 ) {}
+      SrValueEqu( SrValue *oper1, SrType *intType, const SrMark &mark, SrValue *oper2 = 0 ) :
+        SrValueBinary( oper1, mark, oper2 ) { mType = intType; }
 
       //Получить значение операции
       virtual QString operation() const override { return QString(" (%1) == (%2) "); }
@@ -1711,8 +1697,8 @@ namespace SrCompiler6
      \brief The SrValueNotEqu struct Неравенство
    */
   struct SrValueNotEqu : public SrValueBinary {
-      SrValueNotEqu( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
-        SrValueBinary( oper1, mark, oper2 ) {}
+      SrValueNotEqu( SrValue *oper1, SrType *intType, const SrMark &mark, SrValue *oper2 = 0 ) :
+        SrValueBinary( oper1, mark, oper2 ) { mType = intType; }
 
       //Получить значение операции
       virtual QString operation() const override { return QString(" (%1) != (%2) "); }
@@ -1732,8 +1718,8 @@ namespace SrCompiler6
      \brief The SrValueLessEqu struct Меньше или равно
    */
   struct SrValueLessEqu : public SrValueBinary {
-      SrValueLessEqu( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
-        SrValueBinary( oper1, mark, oper2 ) {}
+      SrValueLessEqu( SrValue *oper1, SrType *intType, const SrMark &mark, SrValue *oper2 = 0 ) :
+        SrValueBinary( oper1, mark, oper2 ) { mType = intType; }
 
       //Получить значение операции
       virtual QString operation() const override { return QString(" (%1) <= (%2) "); }
@@ -1753,8 +1739,8 @@ namespace SrCompiler6
      \brief The SrValueLess struct Меньше
    */
   struct SrValueLess : public SrValueBinary {
-      SrValueLess( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
-        SrValueBinary( oper1, mark, oper2 ) {}
+      SrValueLess( SrValue *oper1, SrType *intType, const SrMark &mark, SrValue *oper2 = 0 ) :
+        SrValueBinary( oper1, mark, oper2 ) { mType = intType; }
 
       //Получить значение операции
       virtual QString operation() const { return QString(" (%1) < (%2) "); }
@@ -1774,8 +1760,8 @@ namespace SrCompiler6
      \brief The SrValueGreat struct Больше
    */
   struct SrValueGreat : public SrValueBinary {
-      SrValueGreat( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
-        SrValueBinary( oper1, mark, oper2 ) {}
+      SrValueGreat( SrValue *oper1, SrType *intType, const SrMark &mark, SrValue *oper2 = 0 ) :
+        SrValueBinary( oper1, mark, oper2 ) { mType = intType; }
 
       //Получить значение операции
       virtual QString operation() const { return QString(" (%1) > (%2) "); }
@@ -1795,8 +1781,8 @@ namespace SrCompiler6
      \brief The SrValueGreatEqu struct Больше или равно
    */
   struct SrValueGreatEqu : public SrValueBinary {
-      SrValueGreatEqu( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
-        SrValueBinary( oper1, mark, oper2 ) {}
+      SrValueGreatEqu( SrValue *oper1, SrType *intType, const SrMark &mark, SrValue *oper2 = 0 ) :
+        SrValueBinary( oper1, mark, oper2 ) { mType = intType; }
 
       //Получить значение операции
       virtual QString operation() const { return QString(" (%1) >= (%2) "); }
@@ -1820,7 +1806,7 @@ namespace SrCompiler6
       SrValuePtr mOperand[SV_OPER_MAX];   //Операнды
       int        mOperCount;              //Количество операндов
 
-      SrValueBinaryLong( SrValue *oper1, SrType *type, const SrMark &mark );
+      SrValueBinaryLong( SrValue *oper1, SrType *intType, const SrMark &mark );
 
       ~SrValueBinaryLong();
 
@@ -1850,8 +1836,8 @@ namespace SrCompiler6
    */
   struct SrValueLogAnd : public SrValueBinaryLong {
       int    mExitLabel;
-      SrValueLogAnd( SrValue *oper1, SrType *type, const SrMark &mark ) :
-        SrValueBinaryLong( oper1, type, mark ), mExitLabel(0) {}
+      SrValueLogAnd( SrValue *oper1, SrType *intType, const SrMark &mark ) :
+        SrValueBinaryLong( oper1, intType, mark ), mExitLabel(0) {}
 
       //Получить значение операции
       virtual QString operation() const { return QString(" && "); }
@@ -1870,8 +1856,8 @@ namespace SrCompiler6
    */
   struct SrValueLogOr : public SrValueBinaryLong {
       int    mExitLabel;
-      SrValueLogOr( SrValue *oper1, SrType *type, const SrMark &mark ) :
-        SrValueBinaryLong( oper1, type, mark ), mExitLabel(0) {}
+      SrValueLogOr( SrValue *oper1, SrType *intType, const SrMark &mark ) :
+        SrValueBinaryLong( oper1, intType, mark ), mExitLabel(0) {}
 
       //Получить значение операции
       virtual QString operation() const { return QString(" || "); }
@@ -1889,8 +1875,8 @@ namespace SrCompiler6
      \brief The SrValueOr struct Бинарное ИЛИ
    */
   struct SrValueOr : public SrValueBinaryLong {
-      SrValueOr( SrValue *oper1, SrType *type, const SrMark &mark ) :
-        SrValueBinaryLong( oper1, type, mark ) {}
+      SrValueOr( SrValue *oper1, SrType *intType, const SrMark &mark ) :
+        SrValueBinaryLong( oper1, intType, mark ) {}
 
       //Получить значение операции
       virtual QString operation() const { return QString(" | "); }
@@ -1911,8 +1897,8 @@ namespace SrCompiler6
      \brief The SrValueAnd struct Бинарное И
    */
   struct SrValueAnd : public SrValueBinaryLong {
-      SrValueAnd( SrValue *oper1, SrType *type, const SrMark &mark ) :
-        SrValueBinaryLong( oper1, type, mark ) {}
+      SrValueAnd( SrValue *oper1, SrType *intType, const SrMark &mark ) :
+        SrValueBinaryLong( oper1, intType, mark ) {}
 
       //Получить значение операции
       virtual QString operation() const { return QString(" & "); }
@@ -1934,8 +1920,8 @@ namespace SrCompiler6
      \brief The SrValueXor struct Бинарное Исключающее ИЛИ
    */
   struct SrValueXor : public SrValueBinaryLong {
-      SrValueXor( SrValue *oper1, SrType *type, const SrMark &mark ) :
-        SrValueBinaryLong( oper1, type, mark ) {}
+      SrValueXor( SrValue *oper1, SrType *intType, const SrMark &mark ) :
+        SrValueBinaryLong( oper1, intType, mark ) {}
 
       //Получить значение операции
       virtual QString operation() const { return QString(" ^ "); }
@@ -1957,7 +1943,7 @@ namespace SrCompiler6
    */
   struct SrValueComma : public SrValueBinaryLong {
       SrValueComma( SrValue *oper1, const SrMark &mark ) :
-        SrValueBinaryLong( oper1, 0, mark ) { mType = oper1->mType; }
+        SrValueBinaryLong( oper1, oper1->getType(), mark ) { }
 
       //Получить значение операции
       virtual QString operation() const { return QString(" , "); }
@@ -1966,7 +1952,7 @@ namespace SrCompiler6
       virtual SrValueCode code() const { return svvComma; }
 
       //Получить тип операции
-      virtual SrType *getType() override { if( mType == 0 && mOperand[mOperCount-1] ) mType = mOperand[mOperCount-1]->getType(); return mType; }
+      virtual SrType *getType() override { if( mOperand[mOperCount-1] ) return mOperand[mOperCount-1]->getType(); return mType; }
     };
 
 
@@ -1985,8 +1971,8 @@ namespace SrCompiler6
       int      mFalseAddress;
       int      mExitAddress;
 
-      SrValueCondition( SrValue *cond, const SrMark &mark ) :
-        SrValue(mark), mCondition(cond), mTrue(0), mFalse(0), mFalseAddress(0), mExitAddress(0) {}
+      SrValueCondition( SrValue *cond, SrType *intType, const SrMark &mark ) :
+        SrValue( intType, mark ), mCondition(cond), mTrue(0), mFalse(0), mFalseAddress(0), mExitAddress(0) {}
 
       ~SrValueCondition() { if( mCondition ) delete mCondition; if( mTrue ) delete mTrue; if( mFalse ) delete mFalse; }
 
@@ -1997,7 +1983,7 @@ namespace SrCompiler6
       virtual SrValueCode code() const { return svvCondition; }
 
       //Получить тип операции
-      virtual SrType *getType() override { if( mType == 0 && mTrue ) mType = mTrue->getType(); return mType; }
+      virtual SrType *getType() override { if( mTrue ) return mTrue->getType(); return mType; }
     };
 
 
@@ -2025,9 +2011,6 @@ namespace SrCompiler6
 
       //Получить код операции
       virtual SrValueCode code() const { return svvCall; }
-
-      //Получить тип операции
-      virtual SrType *getType() override;
     };
 
 

@@ -27,7 +27,7 @@ SrType* SrCompiler::ConstExpression(int *intRes) {
     SrType *res = mTypeFail;
     constValueCalc( val );
     if( val->isConst() ) {
-      res = val->mType;
+      res = val->getType();
       *intRes = val->mConstInt;
       }
     delete val;
@@ -117,11 +117,10 @@ void
 SrCompiler::B1( SrValuePtr &val ) {
   B2( val );
   if( mToken == tsQuestion ) {
-    SrValueCondition *cond = new SrValueCondition( val, mark() );
+    SrValueCondition *cond = new SrValueCondition( val, mTypeInt, mark() );
     val = cond;
     NextToken(); //Убрать ?
     B2(cond->mTrue);
-    val->mType = cond->mTrue->mType;
 
     if( mToken != tsColon ) {
       ErrorEndSt( QObject::tr("Need :") );
@@ -287,8 +286,8 @@ SrCompiler::B7(SrValuePtr &val ) {
   B8( val );
   while( 1 ) {
     SrValueBinary *oper = 0;
-    if( mToken == tsEqu )         oper = new SrValueEqu( val, mark() );
-    else if( mToken == tsNotEqu ) oper = new SrValueNotEqu( val, mark() );
+    if( mToken == tsEqu )         oper = new SrValueEqu( val, mTypeInt, mark() );
+    else if( mToken == tsNotEqu ) oper = new SrValueNotEqu( val, mTypeInt, mark() );
     else break;
     val = oper;
     NextToken();
@@ -313,10 +312,10 @@ SrCompiler::B8(SrValuePtr &val ) {
   while( 1 ) {
     SrValueBinary *oper = 0;
     switch( mToken ) {
-      case tsLessEqu : oper = new SrValueLessEqu( val, mark() ); break;
-      case tsGrowEqu : oper = new SrValueGreatEqu( val, mark() ); break;
-      case tsLess    : oper = new SrValueLess( val, mark() ); break;
-      case tsGrow    : oper = new SrValueGreat( val, mark() ); break;
+      case tsLessEqu : oper = new SrValueLessEqu( val, mTypeInt, mark() ); break;
+      case tsGrowEqu : oper = new SrValueGreatEqu( val, mTypeInt, mark() ); break;
+      case tsLess    : oper = new SrValueLess( val, mTypeInt, mark() ); break;
+      case tsGrow    : oper = new SrValueGreat( val, mTypeInt, mark() ); break;
       default : return;
       }
     val = oper;
@@ -433,7 +432,7 @@ SrCompiler::B12( SrValuePtr &val ) {
     case tsLNot :  // !
       NextToken();
       B12( val );
-      val = new SrValueLogNot( val, mark() );
+      val = new SrValueLogNot( val, mTypeInt, mark() );
       break;
     case tsPlus :  // +
       NextToken();
@@ -498,7 +497,7 @@ SrCompiler::B13(SrValuePtr &val ) {
       //Вызов функции ( <val <,val>... > )
       NextToken();
       if( val->getClass() & CLASS_FUNCTION  ) {
-        SrFunctionType *fun = val->mType->toFunction();
+        SrFunctionType *fun = val->getType()->toFunction();
         //Для члена структуры получаем адрес вызова
         //Инициализировать загрузку параметров
         //Вызов
@@ -544,7 +543,7 @@ SrCompiler::B13(SrValuePtr &val ) {
       B14Member( val );
       }
     else if( mToken == tsRef ) {
-      if( val->getType() && val->mType->mClass == CLASS_POINTER && val->mType->mBaseType->mClass & CLASS_STRUCT ) {
+      if( val->getType() && val->getClass() == CLASS_POINTER && val->getType()->mBaseType->mClass & CLASS_STRUCT ) {
         val = new SrValuePointer( val, mark() );
         NextToken();
         //Операция доставания
@@ -571,7 +570,7 @@ B14 операция доставания члена
 void SrCompiler::B14Member(SrValuePtr &val)
   {
   if( val->getClass() & CLASS_STRUCT ) {
-    SrStruct *cls = val->mType->toStruct();
+    SrStruct *cls = val->getType()->toStruct();
     if( mToken == ttName ) {
       //Получено имя, проверим, является ли оно членом данной структуры
       SrVariable *var = cls->getMember(mToken.mString);
@@ -653,6 +652,8 @@ SrCompiler::B15( SrValuePtr &val ) {
       mStringTable.append( mToken.mString );
       break;
     default :
+      //Установить заглушку
+      val = new SrValueError( mTypeVoid, mark() );
       ErrorEndSt( QObject::tr("Error. Undefined context.") );
       return;
     }

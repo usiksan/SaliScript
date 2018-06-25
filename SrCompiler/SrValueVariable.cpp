@@ -16,29 +16,21 @@ Description
 
 using namespace SrCompiler6;
 
-SrValueVariable::SrValueVariable( SrVariable *var, const SrMark &mark ) :
-  SrValue( var->mType, mark ),
+SrValueVariable::SrValueVariable(SrVariable *var, const SrMark &mark ) :
+  SrValue(nullptr, mark ),
   mVariable(var),
   mAddonAddress(0)
   {
+  if( mVariable->mType->isArray() )
+    //Для массивов по любому адрес
+    mType = mVariable->mType->mBaseType->getTypePointer();
+  else
+    //иначе просто тип
+    mType = mVariable->mType;
   }
 
 
 
-SrType *SrValueVariable::getType()
-  {
-  if( mType == 0 ) {
-    if( mVariable ) {
-      if( mVariable->mType->isArray() )
-        //Для массивов по любому адрес
-        mType = mVariable->mType->mBaseType->getTypePointer();
-      else
-        //иначе просто тип
-        mType = mVariable->mType;
-      }
-    }
-  return mType;
-  }
 
 
 

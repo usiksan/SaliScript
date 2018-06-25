@@ -18,11 +18,10 @@ using namespace SrCompiler6;
 
 
 SrValueCall::SrValueCall(SrValue *fun, SrType *result, const SrMark &mark) :
-  SrValue( mark ),
+  SrValue( result, mark ),
   mFunction(fun),
   mParamCount(0)
   {
-  mType = result;
   memset( mParam, 0, sizeof(mParam) );
   }
 
@@ -59,21 +58,6 @@ QString SrValueCall::listing()
 
 
 
-//Получить тип операции
-SrType *SrValueCall::getType()
-  {
-  //Получить тип функции
-  if( mType == 0 && mFunction ) {
-    SrType *funType = mFunction->getType();
-    if( funType ) {
-      SrFunctionType *type = funType->toFunction();
-      if( type )
-        //Результат операции - это результат функции
-        mType = type->mResult;
-      }
-    }
-  return mType;
-  }
 
 
 

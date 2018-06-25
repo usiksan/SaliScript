@@ -249,15 +249,9 @@ void SrVpuCompiler::gValue(SrProgramm *prog, SrValue *val, bool keepValue, bool 
 //Загрузить значение
 void SrVpuCompiler::gvvVariable(SrProgramm *prog, SrValueVariable *var, bool keepValue, bool address)
   {
-  if( var == 0 ) {
-    Error( QObject::tr("Error. gvvVariable") );
-    return;
-    }
-  if( var->mVariable == nullptr ) {
-    var->mType = mTypeInt;
-    errorInLine( QObject::tr("Error. Undefined variable"), var->mMark );
-    return;
-    }
+  Q_ASSERT( var != nullptr );
+
+  Q_ASSERT( var->mVariable != nullptr );
 
   if( var->mConst ) {
     if( keepValue ) {
@@ -331,14 +325,14 @@ void SrVpuCompiler::gvvVariable(SrProgramm *prog, SrValueVariable *var, bool kee
       //В стеке указатель
       //Для массива - оставляем тип массива
       if( var->mVariable->mType->isArray() )
-        var->mType = var->mVariable->mType;
+        var->setType( var->mVariable->mType );
       else
         //В остальных случаях - формируем указатель
-        var->mType = mTypeList.getTypePointer(var->mVariable->mType);
+        var->setType( mTypeList.getTypePointer(var->mVariable->mType) );
       }
     else
       //Тип переменной
-      var->mType = var->mVariable->mType;
+      var->setType( var->mVariable->mType );
 
     }
 
@@ -354,21 +348,15 @@ void SrVpuCompiler::gvvVariable(SrProgramm *prog, SrValueVariable *var, bool kee
 //Загрузить адрес функции
 void SrVpuCompiler::gvvFunction(SrProgramm *prog, SrValueFunction *fun, bool keepValue, bool address)
   {
-  if( fun == 0 ) {
-    Error( QObject::tr("Error. gvvFunction") );
-    return;
-    }
-  fun->mType = mTypeInt;
-  if( address ) {
+  Q_ASSERT( fun != nullptr );
+
+  if( !address ) {
     errorInLine( QObject::tr("Error. Need LValue"), fun->mMark );
     return;
     }
-  if( fun->mFunction == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined function"), fun->mMark );
-    return;
-    }
 
-  fun->mType = fun->mFunction->mType;
+  Q_ASSERT( fun->mFunction != nullptr );
+
 
   if( keepValue ) {
 
@@ -396,20 +384,15 @@ void SrVpuCompiler::gvvFunction(SrProgramm *prog, SrValueFunction *fun, bool kee
 
 void SrVpuCompiler::gvvConstInt(SrProgramm *prog, SrValueConstInt *cnst, bool keepValue, bool address)
   {
-  if( cnst == 0 ) {
-    Error( QObject::tr("Error. gvvConstInt") );
-    return;
-    }
-  cnst->mType = mTypeInt;
-  cnst->mConstInt = cnst->mIValue;
-  cnst->mConst = true;
+  Q_ASSERT( cnst != nullptr );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), cnst->mMark );
     return;
     }
   if( keepValue ) {
     //Загружаем константное значение
-    gPushConst( prog, cnst->mIValue, cnst->mMark );
+    gPushConst( prog, cnst->mConstInt, cnst->mMark );
     codePrintEoln( QString() );
     }
   }
@@ -421,16 +404,13 @@ void SrVpuCompiler::gvvConstInt(SrProgramm *prog, SrValueConstInt *cnst, bool ke
 
 void SrVpuCompiler::gvvConstString(SrProgramm *prog, SrValueConstString *cnst, bool keepValue, bool address)
   {
-  if( cnst == 0 ) {
-    Error( QObject::tr("Error. gvvConstString") );
-    return;
-    }
-  cnst->mType = mTypeCString;
-  cnst->mConstInt = cnst->mIndex;
+  Q_ASSERT( cnst != nullptr );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), cnst->mMark );
     return;
     }
+
   if( keepValue ) {
     //Загружаем константное значение
     gPushConst( prog, cnst->mIndex, cnst->mMark );
@@ -444,29 +424,23 @@ void SrVpuCompiler::gvvConstString(SrProgramm *prog, SrValueConstString *cnst, b
 
 void SrVpuCompiler::gvvPointer(SrProgramm *prog, SrValuePointer *ptr, bool keepValue, bool address)
   {
-  if( ptr == 0 ) {
-    Error( QObject::tr("Error. gvvPointer") );
-    return;
-    }
-  ptr->mType = mTypeInt;
-  if( ptr->mOperand == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined pointer to"), ptr->mMark );
-    return;
-    }
+  Q_ASSERT( ptr != nullptr );
+
+  Q_ASSERT( ptr->mOperand != nullptr );
 
   gValue( prog, ptr->mOperand, keepValue, false );
 
   //Разобраться с типами
-  ptr->mType = ptr->mOperand->mType;
+  ptr->setType(ptr->mOperand->getType());
   if( !address )
-    ptr->mType = ptr->mType->mBaseType;
+    ptr->setType( ptr->getType()->mBaseType );
 
   //Убедиться, что имеем дело с указателем
-  if( !ptr->mOperand->mType->isPointer() )
+  if( !ptr->mOperand->getType()->isPointer() )
     errorInLine( QObject::tr("Error. Pointer not allowed in this context"), ptr->mMark );
 
   if( keepValue ) {
-    if( !address && !ptr->mType->isStruct() ) {
+    if( !address && !ptr->getType()->isStruct() ) {
       //Нужно само значение по указателю
       gLoad( prog, ptr );
       codePrintEoln( QString("// *pointer") );
@@ -481,22 +455,19 @@ void SrVpuCompiler::gvvPointer(SrProgramm *prog, SrValuePointer *ptr, bool keepV
 
 void SrVpuCompiler::gvvMemberVariable(SrProgramm *prog, SrValueMemberVariable *var, bool keepValue, bool address)
   {
-  if( var == 0 ) {
-    Error( QObject::tr("Error. gvvMemberVariable") );
-    return;
-    }
-  //var->mType = mTypeInt;
-  if( var->mVariable == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined variable"), var->mMark );
-    return;
-    }
+  Q_ASSERT( var != nullptr );
+
+  Q_ASSERT( var->mVariable != nullptr );
+
+  //Проверить на массив
+  bool isArray = var->mVariable->mType->isArray() && keepValue;
 
   //Если структура имеет константный адрес, то сразу все вычисляем
   if( var->mStruct->isConst() ) {
     //Глобальная переменная
     if( keepValue ) {
       int addr = var->mStruct->mConstInt + var->mVariable->mAddress + var->mAddonAddress;
-      if( address ) {
+      if( address || isArray ) {
         //Нам нужен адрес переменной
         gPushConst( prog, addr, var->mMark );
         codePrintEoln( QString("//address .%1").arg(var->mVariable->mName) );
@@ -515,7 +486,7 @@ void SrVpuCompiler::gvvMemberVariable(SrProgramm *prog, SrValueMemberVariable *v
     if( structVar != nullptr ) {
       //Если есть непосредственный доступ к переменной, то выполнить
       structVar->mAddonAddress = var->mVariable->mAddress + var->mAddonAddress;
-      gValue( prog, var->mStruct, keepValue, address );
+      gValue( prog, var->mStruct, keepValue, address || isArray );
       }
     else {
       gValue( prog, var->mStruct, keepValue, true );
@@ -566,10 +537,10 @@ void SrVpuCompiler::gvvMemberVariable(SrProgramm *prog, SrValueMemberVariable *v
   //Разобраться с типами
   if( address )
     //Нужен адрес
-    var->mType = mTypeList.getTypePointer(var->mVariable->mType);
+    var->setType( mTypeList.getTypePointer(var->mVariable->mType) );
   else
     //Нужно значение
-    var->mType = var->mVariable->mType;
+    var->setType( var->mVariable->mType );
   }
 
 
@@ -579,11 +550,8 @@ void SrVpuCompiler::gvvMemberVariable(SrProgramm *prog, SrValueMemberVariable *v
 
 void SrVpuCompiler::gvvAddress(SrProgramm *prog, SrValueAddress *addr, bool keepValue, bool address)
   {
-  if( addr == 0 ) {
-    Error( QObject::tr("Error. gvvAddress") );
-    return;
-    }
-  addr->mType = mTypeInt;
+  Q_ASSERT( addr != nullptr );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), addr->mMark );
     return;
@@ -597,13 +565,13 @@ void SrVpuCompiler::gvvAddress(SrProgramm *prog, SrValueAddress *addr, bool keep
     }
   else {
     gValue( prog, addr->mOperand, keepValue, true );
-    addr->mType = addr->mOperand->mType;
+    addr->setType( addr->mOperand->getType() );
     addr->mConst = addr->mOperand->mConst;
     if( addr->mConst )
       addr->mConstInt = addr->mOperand->mConstInt;
 
     //Если поступил не указатель, то взятие адреса не удалось
-    if( !addr->mType->isPointer() )
+    if( !addr->getType()->isPointer() )
       errorInLine( QObject::tr("Error. Cant take address. Undefined context."), addr->mMark );
     }
   }
@@ -616,31 +584,26 @@ void SrVpuCompiler::gvvAddress(SrProgramm *prog, SrValueAddress *addr, bool keep
 
 void SrVpuCompiler::gvvPredInc(SrProgramm *prog, SrValuePredInc *inc, bool keepValue, bool address)
   {
-  if( inc == 0 ) {
-    Error( QObject::tr("Error. gvvPredInc") );
-    return;
-    }
-  inc->mType = mTypeInt;
+  Q_ASSERT( inc != nullptr );
+
+  Q_ASSERT( inc->mOperand != nullptr );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), inc->mMark );
-    return;
-    }
-  if( inc->mOperand == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined increment to"), inc->mMark );
     return;
     }
 
   //Получить адрес, по которому нужно выполнить инкремент
   gValue( prog, inc->mOperand, true, true );
 
-  if( inc->mOperand->mType->isPointer() )
-    inc->mType = inc->mOperand->mType->mBaseType;
+  if( inc->mOperand->getType()->isPointer() )
+    inc->setType( inc->mOperand->getType()->mBaseType );
   else {
     ErrorInLine( QObject::tr("Error. Undefined increment to"), inc->mMark.mFile, inc->mMark.mLine );
     }
 
 
-  if( inc->mType->isInt() ) {
+  if( inc->getType()->isInt() ) {
     //Для целых чисел инкремент на 1
     if( keepValue ) {
       prog->addCode( VBC1_PRED_INC, inc->mMark );
@@ -651,15 +614,15 @@ void SrVpuCompiler::gvvPredInc(SrProgramm *prog, SrValuePredInc *inc, bool keepV
       codePrintEoln( QString("VBC1_INC") );
       }
     }
-  else if( inc->mType->isPointer() ) {
+  else if( inc->getType()->isPointer() ) {
     //Для указателей инкремент на размер объекта
     if( keepValue ) {
-      prog->addCodeParam24( VBC4_PRED_INC, inc->mType->mBaseType->mSize, inc->mMark );
-      codePrintEoln( QString("VBC4_PRED_INC %1").arg(inc->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_PRED_INC, inc->getType()->mBaseType->mSize, inc->mMark );
+      codePrintEoln( QString("VBC4_PRED_INC %1").arg(inc->getType()->mBaseType->mSize) );
       }
     else {
-      prog->addCodeParam24( VBC4_INC, inc->mType->mBaseType->mSize, inc->mMark );
-      codePrintEoln( QString("VBC4_INC %1").arg(inc->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_INC, inc->getType()->mBaseType->mSize, inc->mMark );
+      codePrintEoln( QString("VBC4_INC %1").arg(inc->getType()->mBaseType->mSize) );
       }
     }
   else
@@ -674,31 +637,25 @@ void SrVpuCompiler::gvvPredInc(SrProgramm *prog, SrValuePredInc *inc, bool keepV
 
 void SrVpuCompiler::gvvPredDec(SrProgramm *prog, SrValuePredDec *dec, bool keepValue, bool address)
   {
-  if( dec == 0 ) {
-    Error( QObject::tr("Error. gvvPredInc") );
-    return;
-    }
-  dec->mType = mTypeInt;
+  Q_ASSERT( dec != nullptr );
+
+  Q_ASSERT( dec->mOperand != nullptr );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), dec->mMark );
-    return;
-    }
-  if( dec->mOperand == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined decrement to"), dec->mMark );
     return;
     }
 
   //Получить адрес, по которому нужно выполнить инкремент
   gValue( prog, dec->mOperand, true, true );
 
-  if( dec->mOperand->mType->isPointer() )
-    dec->mType = dec->mOperand->mType->mBaseType;
-  else {
+  if( dec->mOperand->getType()->isPointer() )
+    dec->setType( dec->mOperand->getType()->mBaseType );
+  else
     errorInLine( QObject::tr("Error. Undefined decrement to"), dec->mMark );
-    }
 
 
-  if( dec->mType->isInt() ) {
+  if( dec->getType()->isInt() ) {
     //Для целых чисел декремент на 1
     if( keepValue ) {
       prog->addCode( VBC1_PRED_DEC, dec->mMark );
@@ -709,15 +666,15 @@ void SrVpuCompiler::gvvPredDec(SrProgramm *prog, SrValuePredDec *dec, bool keepV
       codePrintEoln( QString("VBC1_DEC") );
       }
     }
-  else if( dec->mType->isPointer() ) {
+  else if( dec->getType()->isPointer() ) {
     //Для указателей инкремент на размер объекта
     if( keepValue ) {
-      prog->addCodeParam24( VBC4_PRED_DEC, dec->mType->mBaseType->mSize, dec->mMark );
-      codePrintEoln( QString("VBC4_PRED_DEC %1").arg(dec->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_PRED_DEC, dec->getType()->mBaseType->mSize, dec->mMark );
+      codePrintEoln( QString("VBC4_PRED_DEC %1").arg(dec->getType()->mBaseType->mSize) );
       }
     else {
-      prog->addCodeParam24( VBC4_DEC, dec->mType->mBaseType->mSize, dec->mMark );
-      codePrintEoln( QString("VBC4_DEC %1").arg(dec->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_DEC, dec->getType()->mBaseType->mSize, dec->mMark );
+      codePrintEoln( QString("VBC4_DEC %1").arg(dec->getType()->mBaseType->mSize) );
       }
     }
   else
@@ -730,30 +687,24 @@ void SrVpuCompiler::gvvPredDec(SrProgramm *prog, SrValuePredDec *dec, bool keepV
 
 void SrVpuCompiler::gvvPostInc(SrProgramm *prog, SrValuePostInc *inc, bool keepValue, bool address)
   {
-  if( inc == 0 ) {
-    Error( QObject::tr("Error. gvvPredInc") );
-    return;
-    }
-  inc->mType = mTypeInt;
+  Q_ASSERT( inc != nullptr );
+
+  Q_ASSERT( inc->mOperand != nullptr );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), inc->mMark );
-    return;
-    }
-  if( inc->mOperand == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined increment to"), inc->mMark );
     return;
     }
 
   //Получить адрес, по которому нужно выполнить инкремент
   gValue( prog, inc->mOperand, true, true );
 
-  if( inc->mOperand->mType->isPointer() )
-    inc->mType = inc->mOperand->mType->mBaseType;
-  else {
+  if( inc->mOperand->getType()->isPointer() )
+    inc->setType( inc->mOperand->getType()->mBaseType );
+  else
     errorInLine( QObject::tr("Error. Undefined increment to"), inc->mMark );
-    }
 
-  if( inc->mType->isInt() ) {
+  if( inc->getType()->isInt() ) {
     //Для целых чисел инкремент на 1
     if( keepValue ) {
       prog->addCode( VBC1_POST_INC, inc->mMark );
@@ -764,15 +715,15 @@ void SrVpuCompiler::gvvPostInc(SrProgramm *prog, SrValuePostInc *inc, bool keepV
       codePrintEoln( QString("VBC1_INC") );
       }
     }
-  else if( inc->mType->isPointer() ) {
+  else if( inc->getType()->isPointer() ) {
     //Для указателей инкремент на размер объекта
     if( keepValue ) {
-      prog->addCodeParam24( VBC4_POST_INC, inc->mType->mBaseType->mSize, inc->mMark );
-      codePrintEoln( QString("VBC4_POST_INC %1").arg(inc->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_POST_INC, inc->getType()->mBaseType->mSize, inc->mMark );
+      codePrintEoln( QString("VBC4_POST_INC %1").arg(inc->getType()->mBaseType->mSize) );
       }
     else {
-      prog->addCodeParam24( VBC4_INC, inc->mType->mBaseType->mSize, inc->mMark );
-      codePrintEoln( QString("VBC4_INC %1").arg(inc->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_INC, inc->getType()->mBaseType->mSize, inc->mMark );
+      codePrintEoln( QString("VBC4_INC %1").arg(inc->getType()->mBaseType->mSize) );
       }
     }
   else
@@ -784,31 +735,26 @@ void SrVpuCompiler::gvvPostInc(SrProgramm *prog, SrValuePostInc *inc, bool keepV
 
 void SrVpuCompiler::gvvPostDec(SrProgramm *prog, SrValuePostDec *dec, bool keepValue, bool address)
   {
-  if( dec == 0 ) {
-    Error( QObject::tr("Error. gvvPredInc") );
-    return;
-    }
-  dec->mType = mTypeInt;
+  Q_ASSERT( dec != nullptr );
+
+  Q_ASSERT( dec->mOperand != nullptr );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), dec->mMark );
     return;
     }
-  if( dec->mOperand == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined decrement to"), dec->mMark );
-    return;
-    }
+
 
   //Получить адрес, по которому нужно выполнить инкремент
   gValue( prog, dec->mOperand, true, true );
 
-  if( dec->mOperand->mType->isPointer() )
-    dec->mType = dec->mOperand->mType->mBaseType;
-  else {
+  if( dec->mOperand->getType()->isPointer() )
+    dec->setType( dec->mOperand->getType()->mBaseType );
+  else
     errorInLine( QObject::tr("Error. Undefined decrement to"), dec->mMark );
-    }
 
 
-  if( dec->mType->isInt() ) {
+  if( dec->getType()->isInt() ) {
     //Для целых чисел декремент на 1
     if( keepValue ) {
       prog->addCode( VBC1_POST_DEC, dec->mMark );
@@ -819,15 +765,15 @@ void SrVpuCompiler::gvvPostDec(SrProgramm *prog, SrValuePostDec *dec, bool keepV
       codePrintEoln( QString("VBC1_DEC") );
       }
     }
-  else if( dec->mType->isPointer() ) {
+  else if( dec->getType()->isPointer() ) {
     //Для указателей инкремент на размер объекта
     if( keepValue ) {
-      prog->addCodeParam24( VBC4_POST_DEC, dec->mType->mBaseType->mSize, dec->mMark );
-      codePrintEoln( QString("VBC4_POST_DEC %1").arg(dec->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_POST_DEC, dec->getType()->mBaseType->mSize, dec->mMark );
+      codePrintEoln( QString("VBC4_POST_DEC %1").arg(dec->getType()->mBaseType->mSize) );
       }
     else {
-      prog->addCodeParam24( VBC4_DEC, dec->mType->mBaseType->mSize, dec->mMark );
-      codePrintEoln( QString("VBC4_DEC %1").arg(dec->mType->mBaseType->mSize) );
+      prog->addCodeParam24( VBC4_DEC, dec->getType()->mBaseType->mSize, dec->mMark );
+      codePrintEoln( QString("VBC4_DEC %1").arg(dec->getType()->mBaseType->mSize) );
       }
     }
   else
@@ -842,17 +788,11 @@ void SrVpuCompiler::gvvPostDec(SrProgramm *prog, SrValuePostDec *dec, bool keepV
 
 void SrVpuCompiler::gvvNot(SrProgramm *prog, SrValueBitNot *vnot, bool keepValue, bool address)
   {
-  if( vnot == 0 ) {
-    Error( QObject::tr("Error. gvvNot") );
-    return;
-    }
-  vnot->mType = mTypeInt;
+  Q_ASSERT( vnot != nullptr );
+
+  Q_ASSERT( vnot->mOperand != nullptr );
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), vnot->mMark );
-    return;
-    }
-  if( vnot->mOperand == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined operand not to"), vnot->mMark );
     return;
     }
 
@@ -866,15 +806,12 @@ void SrVpuCompiler::gvvNot(SrProgramm *prog, SrValueBitNot *vnot, bool keepValue
     //Получить значение
     gValue( prog, vnot->mOperand, keepValue, false );
 
-    //Тип результата тот-же, что и у операнда
-    vnot->mType = vnot->mOperand->mType;
-
     //Разобраться с константой
     vnot->checkConst();
 
     //Если операнд не целого типа - то ошибка
-    if( !vnot->mType->isInt() )
-      errorInLine( QObject::tr("Error. Not allowed only with int"), vnot->mMark );
+    if( !vnot->mOperand->getType()->isInt() )
+      errorInLine( QObject::tr("Error. Allowed only with int"), vnot->mMark );
 
     if( keepValue ) {
       prog->addCode( VBC1_NOT, vnot->mMark );
@@ -889,18 +826,12 @@ void SrVpuCompiler::gvvNot(SrProgramm *prog, SrValueBitNot *vnot, bool keepValue
 
 void SrVpuCompiler::gvvLogNot(SrProgramm *prog, SrValueLogNot *logNot, bool keepValue, bool address)
   {
-  if( logNot == 0 ) {
-    Error( QObject::tr("Error. gvvLogNot") );
-    return;
-    }
-  //Тип результата - все время int
-  logNot->mType = mTypeInt;
+  Q_ASSERT( logNot != nullptr );
+
+  Q_ASSERT( logNot->mOperand != nullptr );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), logNot->mMark );
-    return;
-    }
-  if( logNot->mOperand == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined operand not to"), logNot->mMark );
     return;
     }
 
@@ -917,7 +848,7 @@ void SrVpuCompiler::gvvLogNot(SrProgramm *prog, SrValueLogNot *logNot, bool keep
     //Разобраться с константой
     logNot->checkConst();
 
-    if( !(logNot->mOperand->mType->isInt() || logNot->mOperand->mType->isPointer()) ) {
+    if( !(logNot->mOperand->getType()->isInt() || logNot->mOperand->getType()->isPointer()) ) {
       errorInLine( QObject::tr("Error. LogNot allowed only with int and pointer"), logNot->mMark );
       }
 
@@ -933,18 +864,12 @@ void SrVpuCompiler::gvvLogNot(SrProgramm *prog, SrValueLogNot *logNot, bool keep
 
 void SrVpuCompiler::gvvNeg(SrProgramm *prog, SrValueNeg *neg, bool keepValue, bool address)
   {
-  if( neg == 0 ) {
-    Error( QObject::tr("Error. gvvNeg") );
-    return;
-    }
-  //Тип результата - все время int
-  neg->mType = mTypeInt;
+  Q_ASSERT( neg != nullptr );
+
+  Q_ASSERT( neg->mOperand != nullptr );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), neg->mMark );
-    return;
-    }
-  if( neg->mOperand == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined operand neg to"), neg->mMark );
     return;
     }
 
@@ -962,7 +887,7 @@ void SrVpuCompiler::gvvNeg(SrProgramm *prog, SrValueNeg *neg, bool keepValue, bo
     neg->checkConst();
 
     //Если операнд не целого типа - то ошибка
-    if( !neg->mType->isInt() )
+    if( !neg->mOperand->getType()->isInt() )
       errorInLine( QObject::tr("Error. NEG allowed only with int"), neg->mMark );
 
     if( keepValue ) {
@@ -977,35 +902,31 @@ void SrVpuCompiler::gvvNeg(SrProgramm *prog, SrValueNeg *neg, bool keepValue, bo
 
 void SrVpuCompiler::gvvStore(SrProgramm *prog, SrValueStore *store, bool keepValue, bool address)
   {
-  if( store == 0 ) {
-     Error( QObject::tr("Error. gvvStore") );
-     return;
-     }
-   store->mType = mTypeInt;
-   if( address ) {
-     errorInLine( QObject::tr("Error. Need LValue"), store->mMark );
-     return;
-     }
-   if( store->mOperand1 == 0 || store->mOperand2 == 0 ) {
-     errorInLine( QObject::tr("Error. Undefined operand store to"), store->mMark );
-     return;
-     }
-  //Для той, куда сохраняем берем адрес
+  Q_ASSERT( store != nullptr );
+
+  Q_ASSERT( store->mOperand1 != nullptr && store->mOperand2 != nullptr );
+
+  if( address ) {
+    errorInLine( QObject::tr("Error. Need LValue"), store->mMark );
+    return;
+    }
+
+   //Для той, куда сохраняем берем адрес
   gValue( prog, store->mOperand1, true, true );
   //Теперь значение
   gValue( prog, store->mOperand2, true, false );
 
   //Тип результата соответствует типу операнда 2
-  store->mType = store->mOperand2->mType;
+  store->setType( store->mOperand2->getType() );
 
   //Проверить возможность сохранения
   //Сохранять можем только по указателю
-  if( !store->mOperand1->mType->isPointer() ) {
-    errorInLine( QObject::tr("Error. Need lvalue, but %1 is not").arg(store->mOperand1->mType->mName), store->mMark );
+  if( !store->mOperand1->getType()->isPointer() ) {
+    errorInLine( QObject::tr("Error. Need lvalue, but %1 is not").arg(store->mOperand1->getType()->mName), store->mMark );
     return;
     }
-  if( !store->mOperand1->mType->mBaseType->canAssign( store->mOperand2->mType ) ) {
-    errorInLine( QObject::tr("Error. Can't store %1 to %2").arg(store->mOperand2->mType->mName).arg(store->mOperand1->mType->mBaseType->mName), store->mMark );
+  if( !store->mOperand1->getType()->mBaseType->canAssign( store->mOperand2->getType() ) ) {
+    errorInLine( QObject::tr("Error. Can't store %1 to %2").arg(store->mOperand2->getType()->mName).arg(store->mOperand1->getType()->mBaseType->mName), store->mMark );
     return;
     }
   if( keepValue ) {
@@ -1026,15 +947,10 @@ void SrVpuCompiler::gvvStore(SrProgramm *prog, SrValueStore *store, bool keepVal
 
 void SrVpuCompiler::gvvArrayCell(SrProgramm *prog, SrValueArrayCell *array, bool keepValue, bool address)
   {
-  if( array == 0 ) {
-    Error( QObject::tr("Error. gvvArrayCell") );
-    return;
-    }
-  //array->mType = mTypeInt;
-  if( array->mOperand1 == nullptr || array->mOperand2 == nullptr ) {
-    errorInLine( QObject::tr("Error. Undefined operand array to"), array->mMark );
-    return;
-    }
+  Q_ASSERT( array != nullptr );
+
+  Q_ASSERT( array->mOperand1 != nullptr && array->mOperand2 != nullptr );
+
   if( array->mConst ) {
     if( keepValue ) {
       gPushConst( prog, array->mConstInt, array->mMark );
@@ -1049,7 +965,7 @@ void SrVpuCompiler::gvvArrayCell(SrProgramm *prog, SrValueArrayCell *array, bool
     //Получить адрес массива
     gValue( prog, array->mOperand1, keepValue, false );
     //Загрузить константное смещение и сложить
-    int offset = array->mOperand2->mConstInt * array->mOperand1->mType->mBaseType->mSize;
+    int offset = array->mOperand2->mConstInt * array->mOperand1->getType()->mBaseType->mSize;
     switch( offset ) {
       case 0 :
         break;
@@ -1092,33 +1008,30 @@ void SrVpuCompiler::gvvArrayCell(SrProgramm *prog, SrValueArrayCell *array, bool
     gValue( prog, array->mOperand1, keepValue, false );
     codePrintEoln( QString("//array address") );
     //Ячейку массива можем получать только у массива и указателя
-    if( !(array->mOperand1->mType->isArray() || array->mOperand1->mType->isPointer()) ) {
+    if( !(array->mOperand1->getType()->isArray() || array->mOperand1->getType()->isPointer()) ) {
       errorInLine( QObject::tr("Error. Index allowed only for arrays and pointers"), array->mMark );
       return;
-      }
-    else {
-      //Разобраться с типом
-      if( address )
-        array->mType = mTypeList.getTypePointer( array->mOperand1->mType->mBaseType );
-      else
-        array->mType = array->mOperand1->mType->mBaseType;
       }
 
     //Получить индекс
     gValue( prog, array->mOperand2, keepValue, false );
     codePrintEoln( QString("//array index") );
+    if( !array->mOperand2->getType()->isInt() ) {
+      errorInLine( QObject::tr("Error. Index must be integer"), array->mMark );
+      return;
+      }
 
     //Разобраться с константой
     if( address && array->mOperand1->mConst && array->mOperand2->mConst ) {
       //Оба операнда - константы
       array->mConst = true;
-      array->mConstInt = array->mOperand1->mConstInt + array->mOperand2->mConstInt * array->mOperand1->mType->mBaseType->mSize;
+      array->mConstInt = array->mOperand1->mConstInt + array->mOperand2->mConstInt * array->mOperand1->getType()->mBaseType->mSize;
       }
 
     if( keepValue ) {
-      if( array->mOperand1->mType->mBaseType->mSize > 1 ) {
+      if( array->mOperand1->getType()->mBaseType->mSize > 1 ) {
         //Умножить на размер ячейки
-        gPushConst( prog, array->mOperand1->mType->mBaseType->mSize, array->mMark );
+        gPushConst( prog, array->mOperand1->getType()->mBaseType->mSize, array->mMark );
         codePrintEoln( QString("//array cell size") );
         prog->addCode( VBC1_MUL, array->mMark );
         codePrintEoln( QString("VBC1_MUL //array cell offset") );
@@ -1131,6 +1044,12 @@ void SrVpuCompiler::gvvArrayCell(SrProgramm *prog, SrValueArrayCell *array, bool
         }
       }
     }
+
+  //Разобраться с типом
+  if( address )
+    array->setType( mTypeList.getTypePointer( array->mOperand1->getType()->mBaseType ) );
+  else
+    array->setType( array->mOperand1->getType()->mBaseType );
   }
 
 
@@ -1138,26 +1057,26 @@ void SrVpuCompiler::gvvArrayCell(SrProgramm *prog, SrValueArrayCell *array, bool
 
 void SrVpuCompiler::gvvBinaryStore(SrProgramm *prog, SrValueBinary *binary, bool keepValue, bool address, SrVmCode code, const QString codeList)
   {
-  if( binary == 0 ) {
-    Error( QObject::tr("Error. gvvBinaryStore") );
-    return;
-    }
-  binary->mType = mTypeInt;
-  if( binary->mOperand1 == 0 || binary->mOperand2 == 0 ) {
-    errorInLine( QObject::tr("Error. Undefined operand binaryStore to"), binary->mMark );
-    return;
-    }
+  Q_ASSERT( binary != nullptr );
+
+  Q_ASSERT( binary->mOperand1 != nullptr && binary->mOperand2 != nullptr );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), binary->mMark );
     return;
     }
+
   //Получить операнды в стеке и выполнить операцию
   gValue( prog, binary->mOperand1, true, true );
   //Тип результата соответсвует тому, куда указывает операнд 1
-  binary->mType = binary->mOperand1->mType->mBaseType;
+  if( !binary->mOperand1->getType()->isPointer() ) {
+    errorInLine( QObject::tr("Error. Need LValue"), binary->mMark );
+    return;
+    }
+  binary->setType( binary->mOperand1->getType()->mBaseType );
   //Сдублировать адрес
   prog->addCode( VBC1_PUSH_TOS, binary->mMark );
-  codePrint( QString("VBC1_PUSH_TOS") );
+  codePrintEoln( QString("VBC1_PUSH_TOS") );
 
   //Получить значение для операции
   gLoad( prog, binary );
@@ -1167,18 +1086,18 @@ void SrVpuCompiler::gvvBinaryStore(SrProgramm *prog, SrValueBinary *binary, bool
   gValue( prog, binary->mOperand2, true, false );
 
   //Проверить типы операндов
-  if( binary->mOperand1->mType->isPointer() && binary->mType->isInt() && binary->mOperand2->mType->isInt() ) {
+  if( binary->getType()->isInt() && binary->mOperand2->getType()->isInt() ) {
     //Операнды целые
 
     //Выполнить операцию
     prog->addCode( code, binary->mMark );
     codePrintEoln( codeList );
     }
-  else if( code == VBC1_ADD && binary->mOperand1->mType->isPointer() && binary->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
+  else if( code == VBC1_ADD && binary->getType()->isPointer() && binary->mOperand2->getType()->isInt() ) {
     //Операция сложения указателя с целым
-    if( binary->mType->mBaseType->mSize > 1 ) {
+    if( binary->getType()->mBaseType->mSize > 1 ) {
       //Умножить на размер элемента
-      gPushConst( prog, binary->mType->mBaseType->mSize, binary->mMark );
+      gPushConst( prog, binary->getType()->mBaseType->mSize, binary->mMark );
       codePrintEoln( QString("//element size") );
       prog->addCode( VBC1_MUL, binary->mMark );
       codePrintEoln( QString("VBC1_MUL //pointer offset") );
@@ -1187,11 +1106,11 @@ void SrVpuCompiler::gvvBinaryStore(SrProgramm *prog, SrValueBinary *binary, bool
     prog->addCode( code, binary->mMark );
     codePrintEoln( codeList );
     }
-  else if( code == VBC1_SUB && binary->mOperand1->mType->isPointer() && binary->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
+  else if( code == VBC1_SUB && binary->getType()->isPointer() && binary->mOperand2->getType()->isInt() ) {
     //Операция вычитания указателя с целым
-    if( binary->mType->mBaseType->mSize > 1 ) {
+    if( binary->getType()->mBaseType->mSize > 1 ) {
       //Умножить на размер элемента
-      gPushConst( prog, binary->mType->mBaseType->mSize, binary->mMark );
+      gPushConst( prog, binary->getType()->mBaseType->mSize, binary->mMark );
       codePrintEoln( QString("//element size") );
       prog->addCode( VBC1_MUL, binary->mMark );
       codePrintEoln( QString("VBC1_MUL //pointer offset") );
@@ -1222,22 +1141,20 @@ void SrVpuCompiler::gvvBinaryStore(SrProgramm *prog, SrValueBinary *binary, bool
 
 void SrVpuCompiler::gvvBinary(SrProgramm *prog, SrValueBinary *binary, bool keepValue, bool address, SrVmCode code, const QString codeList)
   {
-  if( binary == 0 ) {
-    Error( QObject::tr("Error. gvvBinary") );
-    return;
-    }
-  if( binary->mOperand1 == 0 || binary->mOperand2 == 0 ) {
-    binary->mType = mTypeInt;
-    errorInLine( QObject::tr("Error. Undefined operand binary to"), binary->mMark );
-    return;
-    }
+  Q_ASSERT( binary != nullptr );
+
+  Q_ASSERT( binary->mOperand1 != nullptr && binary->mOperand2 != nullptr );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), binary->mMark );
     return;
     }
+
   if( binary->mConst ) {
-    if( keepValue )
+    if( keepValue ) {
       gPushConst( prog, binary->mConstInt, binary->mMark );
+      codePrintEoln( QString() );
+      }
     }
   else {
     //Получить операнды в стеке и выполнить операцию
@@ -1248,10 +1165,10 @@ void SrVpuCompiler::gvvBinary(SrProgramm *prog, SrValueBinary *binary, bool keep
     binary->checkConst();
 
     //Тип результата соответствует первому операнду
-    binary->mType = binary->mOperand1->mType;
+    binary->setType( binary->mOperand1->getType() );
 
     //Разобраться с типами
-    if( binary->mOperand1->mType->isInt() && binary->mOperand2->mType->isInt() ) {
+    if( binary->mOperand1->getType()->isInt() && binary->mOperand2->getType()->isInt() ) {
       //Операнды целые
 
       //Выполнить операцию
@@ -1260,12 +1177,12 @@ void SrVpuCompiler::gvvBinary(SrProgramm *prog, SrValueBinary *binary, bool keep
         codePrintEoln( codeList );
         }
       }
-    else if( code == VBC1_ADD && binary->mOperand1->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
+    else if( code == VBC1_ADD && binary->mOperand1->getType()->isPointer() && binary->mOperand2->getType()->isInt() ) {
       //Операция сложения указателя с целым
       if( keepValue ) {
-        if( binary->mType->mBaseType->mSize > 1 ) {
+        if( binary->getType()->mBaseType->mSize > 1 ) {
           //Умножить на размер элемента
-          gPushConst( prog, binary->mType->mBaseType->mSize, binary->mMark );
+          gPushConst( prog, binary->getType()->mBaseType->mSize, binary->mMark );
           codePrintEoln( QString("//element size") );
           prog->addCode( VBC1_MUL, binary->mMark );
           codePrintEoln( QString("VBC1_MUL //pointer offset") );
@@ -1275,12 +1192,12 @@ void SrVpuCompiler::gvvBinary(SrProgramm *prog, SrValueBinary *binary, bool keep
         codePrintEoln( codeList );
         }
       }
-    else if( code == VBC1_SUB && binary->mOperand1->mType->isPointer() && binary->mOperand2->mType->isInt() ) {
+    else if( code == VBC1_SUB && binary->mOperand1->getType()->isPointer() && binary->mOperand2->getType()->isInt() ) {
       //Операция вычитания указателя с целым
       if( keepValue ) {
-        if( binary->mType->mBaseType->mSize > 1 ) {
+        if( binary->getType()->mBaseType->mSize > 1 ) {
           //Умножить на размер элемента
-          gPushConst( prog, binary->mType->mBaseType->mSize, binary->mMark );
+          gPushConst( prog, binary->getType()->mBaseType->mSize, binary->mMark );
           codePrintEoln( QString("//element size") );
           prog->addCode( VBC1_MUL, binary->mMark );
           codePrintEoln( QString("VBC1_MUL //pointer offset") );
@@ -1290,19 +1207,19 @@ void SrVpuCompiler::gvvBinary(SrProgramm *prog, SrValueBinary *binary, bool keep
         codePrintEoln( codeList );
         }
       }
-    else if( code == VBC1_SUB && binary->mOperand1->mType->isPointer() && binary->mOperand1->mType == binary->mOperand2->mType ) {
+    else if( code == VBC1_SUB && binary->mOperand1->getType()->isPointer() && binary->mOperand1->getType() == binary->mOperand2->getType() ) {
       //Операция вычитания двух указателей
 
       //Результат будет целым
-      binary->mType = mTypeInt;
+      binary->setType( mTypeInt );
 
       //Выполнить операцию
       prog->addCode( code, binary->mMark );
       codePrintEoln( codeList );
 
-      if( binary->mOperand1->mType->mBaseType->mSize > 1 ) {
+      if( binary->mOperand1->getType()->mBaseType->mSize > 1 ) {
         //Делить расстояние на размер элемента
-        gPushConst( prog, binary->mOperand1->mType->mBaseType->mSize, binary->mMark );
+        gPushConst( prog, binary->mOperand1->getType()->mBaseType->mSize, binary->mMark );
         codePrintEoln( QString("//element size") );
         prog->addCode( VBC1_DIV, binary->mMark );
         codePrintEoln( QString("VBC1_DIV //element count") );
@@ -1322,19 +1239,15 @@ void SrVpuCompiler::gvvBinary(SrProgramm *prog, SrValueBinary *binary, bool keep
 
 void SrVpuCompiler::gvvBinaryLong(SrProgramm *prog, SrValueBinaryLong *binary, bool keepValue, bool address, SrVmCode code, const QString codeList)
   {
-  if( binary == 0 ) {
-    Error( QObject::tr("Error. gvvBinaryLong") );
-    return;
-    }
-  if( binary->mOperand[0] == 0 || binary->mOperand[1] == 0 ) {
-    binary->mType = mTypeInt;
-    errorInLine( QObject::tr("Error. Undefined operand binaryLong to"), binary->mMark );
-    return;
-    }
+  Q_ASSERT( binary != nullptr );
+
+  Q_ASSERT( binary->mOperand[0] != nullptr && binary->mOperand[1] != nullptr && binary->mOperCount > 1 );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), binary->mMark );
     return;
     }
+
   if( binary->mConst ) {
     if( keepValue ) {
       gPushConst( prog, binary->mConstInt, binary->mMark );
@@ -1345,7 +1258,7 @@ void SrVpuCompiler::gvvBinaryLong(SrProgramm *prog, SrValueBinaryLong *binary, b
     //Получить операнды в стеке и выполнить операцию
     gValue( prog, binary->mOperand[0], keepValue, false );
 
-    if( !binary->mOperand[0]->mType->isInt() )
+    if( !binary->mOperand[0]->getType()->isInt() )
       errorInLine( QObject::tr("Error. Operand must be int"), binary->mMark );
 
     binary->mConst = binary->mOperand[0]->mConst;
@@ -1374,15 +1287,10 @@ void SrVpuCompiler::gvvBinaryLong(SrProgramm *prog, SrValueBinaryLong *binary, b
 
 void SrVpuCompiler::gvvLogAnd(SrProgramm *prog, SrValueLogAnd *binary, bool keepValue, bool address)
   {
-  if( binary == 0 ) {
-    Error( QObject::tr("Error. gvvLogAnd") );
-    return;
-    }
-   binary->mType = mTypeInt;
-   if( binary->mOperand[0] == 0 || binary->mOperand[1] == 0 ) {
-     errorInLine( QObject::tr("Error. Undefined operand binaryLong to"), binary->mMark );
-     return;
-     }
+  Q_ASSERT( binary != nullptr );
+
+  Q_ASSERT( binary->mOperand[0] != nullptr && binary->mOperand[1] != nullptr && binary->mOperCount > 1 );
+
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), binary->mMark );
     return;
@@ -1421,15 +1329,11 @@ void SrVpuCompiler::gvvLogAnd(SrProgramm *prog, SrValueLogAnd *binary, bool keep
 
 void SrVpuCompiler::gvvLogOr(SrProgramm *prog, SrValueLogOr *binary, bool keepValue, bool address)
   {
-  if( binary == 0 ) {
-    Error( QObject::tr("Error. gvvLogAnd") );
+  Q_ASSERT( binary != nullptr );
+  if( binary->mOperand[0] == 0 || binary->mOperand[1] == 0 ) {
+    errorInLine( QObject::tr("Error. Undefined operand binaryLong to"), binary->mMark );
     return;
     }
-   binary->mType = mTypeInt;
-   if( binary->mOperand[0] == 0 || binary->mOperand[1] == 0 ) {
-     errorInLine( QObject::tr("Error. Undefined operand binaryLong to"), binary->mMark );
-     return;
-     }
   if( address ) {
     errorInLine( QObject::tr("Error. Need LValue"), binary->mMark );
     return;
@@ -1468,11 +1372,8 @@ void SrVpuCompiler::gvvLogOr(SrProgramm *prog, SrValueLogOr *binary, bool keepVa
 
 void SrVpuCompiler::gvvComma(SrProgramm *prog, SrValueBinaryLong *binary, bool keepValue, bool address)
   {
-  if( binary == 0 ) {
-    Error( QObject::tr("Error. gvvComma") );
-    return;
-    }
-  binary->mType = mTypeInt;
+  Q_ASSERT( binary != nullptr );
+
   if( binary->mOperand[0] == 0 || binary->mOperand[1] == 0 ) {
     errorInLine( QObject::tr("Error. Undefined operand binaryLong to"), binary->mMark );
     return;
@@ -1497,20 +1398,14 @@ void SrVpuCompiler::gvvComma(SrProgramm *prog, SrValueBinaryLong *binary, bool k
 
 void SrVpuCompiler::gvvCondition(SrProgramm *prog, SrValueCondition *condition, bool keepValue, bool address)
   {
-  if( condition == 0 ) {
-    Error( QObject::tr("Error. gvvCondition") );
-    return;
-    }
+  Q_ASSERT( condition != nullptr );
+
   if( address ) {
-    condition->mType = mTypeInt;
     errorInLine( QObject::tr("Error. Need LValue"), condition->mMark );
     return;
     }
-  if( condition->mCondition == 0 || condition->mTrue == 0 || condition->mFalse ) {
-    condition->mType = mTypeInt;
-    errorInLine( QObject::tr("Error in condition"), condition->mMark );
-    return;
-    }
+
+  Q_ASSERT( condition->mCondition != nullptr && condition->mTrue != nullptr && condition->mFalse != nullptr );
 
   if( condition->mConst ) {
     if( keepValue ) {
@@ -1531,7 +1426,6 @@ void SrVpuCompiler::gvvCondition(SrProgramm *prog, SrValueCondition *condition, 
     if( !condition->mCondition->isConst() || condition->mCondition->toConstInt() ) {
       //Ветка true
       gValue( prog, condition->mTrue, keepValue, false );
-      condition->mType = condition->mTrue->mType;
 
       if( condition->mTrue->mConst && condition->mCondition->isConst() ) {
         condition->mConst = true;
@@ -1550,8 +1444,6 @@ void SrVpuCompiler::gvvCondition(SrProgramm *prog, SrValueCondition *condition, 
     if( !condition->mCondition->isConst() || !condition->mCondition->toConstInt() ) {
       gValue( prog, condition->mFalse, keepValue, false );
 
-      condition->mType = condition->mFalse->mType;
-
       if( condition->mFalse->mConst && condition->mCondition->isConst() ) {
         condition->mConst = true;
         condition->mConstInt = condition->mFalse->mConstInt;
@@ -1562,7 +1454,7 @@ void SrVpuCompiler::gvvCondition(SrProgramm *prog, SrValueCondition *condition, 
       }
 
     //Проверим типы
-    if( !condition->mCondition->isConst() && condition->mTrue->mType != condition->mFalse->mType )
+    if( !condition->mCondition->isConst() && condition->mTrue->getType() != condition->mFalse->getType() )
       errorInLine( QObject::tr("Error. Types of condition must be same"), condition->mMark );
 
     }
@@ -1577,29 +1469,23 @@ void SrVpuCompiler::gvvCondition(SrProgramm *prog, SrValueCondition *condition, 
 
 void SrVpuCompiler::gvvCall(SrProgramm *prog, SrValueCall *call, bool keepValue, bool address)
   {
-  if( call == 0 )  {
-    Error( QObject::tr("Error. gvvCall") );
-    return;
-    }
+  Q_ASSERT( call != nullptr );
+
   if( address ) {
-    call->mType = mTypeInt;
     errorInLine( QObject::tr("Error. Need LValue"), call->mMark );
     return;
     }
-  if( call->mFunction == 0 ) {
-    call->mType = mTypeInt;
-    errorInLine( QObject::tr("Error in call"), call->mMark );
-    return;
-    }
+
+  Q_ASSERT( call->mFunction != nullptr );
 
   //Добыть адрес вызова
   gValue( prog, call->mFunction, true, false );
 
   //Тип вызываемой функции
-  SrFunctionType *funType = call->mFunction->mType->toFunction();
+  SrFunctionType *funType = call->mFunction->getType()->toFunction();
 
   //Проверим, функцию ли мы вызываем
-  if( funType == 0 )
+  if( funType == nullptr )
     errorInLine( QObject::tr("Error. Call of nonfunction"), call->mMark );
   else {
     int resultCount = 0;
@@ -1630,7 +1516,7 @@ void SrVpuCompiler::gvvCall(SrProgramm *prog, SrValueCall *call, bool keepValue,
       //Подготовить очередной параметр
       gValue( prog, call->mParam[i], true, false );
       //Проверим соответствие параметров
-      if( !funType->mParamList.at(i).mType->isMatchParam(call->mParam[i]->mType, call->mParam[i]->mConst && call->mParam[i]->mConstInt == 0 ) )
+      if( !funType->mParamList.at(i).mType->isMatchParam(call->mParam[i]->getType(), call->mParam[i]->mConst && call->mParam[i]->mConstInt == 0 ) )
         errorInLine( QObject::tr("Error. Type mismatch in parametr %1").arg(funType->mParamList.at(i).mName), call->mMark );
       }
 

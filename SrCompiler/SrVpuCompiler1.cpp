@@ -201,7 +201,10 @@ void SrVpuCompiler::pass(SrProgramm *prog)
     //Текущее значение счетчика равно адресу начала
     fun->mAddress = prog->codeCount();
     //Сгенерировать выделение локальных переменных
-    gStack( prog, -fun->mLocalAmount, fun->mMarkDefine );
+    if( fun->mLocalAmount ) {
+      gStack( prog, -fun->mLocalAmount, fun->mMarkDefine );
+      codePrintEoln( QString("//local vars %1").arg(fun->mLocalAmount) );
+      }
 
     //Генерировать все операторы
     gOperatorBlock( prog, fun->mBody );
@@ -522,12 +525,12 @@ void SrVpuCompiler::gOperatorContextEnter(SrProgramm *prog, SrOperatorContext *c
       //Теперь значение для сохранения
       gValue( prog, var->mInit, true, false );
       //Теперь сохранение
-      if( var->mType->canAssign(var->mInit->mType) ) {
+      if( var->mType->canAssign(var->mInit->getType()) ) {
         prog->addCode( VBC1_POP, var->mMarkDefine );
         codePrintEoln( QString("VBC1_POP //value for %1").arg(var->mName) );
         }
       else
-        errorInLine( QObject::tr("Error. Can't assign %1 to %2").arg(var->mInit->mType->mName).arg(var->mType->mName), var->mMarkDefine );
+        errorInLine( QObject::tr("Error. Can't assign %1 to %2").arg(var->mInit->getType()->mName).arg(var->mType->mName), var->mMarkDefine );
       }
 
     }

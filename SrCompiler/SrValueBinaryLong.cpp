@@ -16,11 +16,10 @@ Description
 
 using namespace SrCompiler6;
 
-SrValueBinaryLong::SrValueBinaryLong(SrValue *oper1, SrType *type, const SrMark &mark ) :
-  SrValue( mark ),
+SrValueBinaryLong::SrValueBinaryLong(SrValue *oper1, SrType *intType, const SrMark &mark ) :
+  SrValue( intType, mark ),
   mOperCount(0)
   {
-  mType = type;
   memset( mOperand, 0, sizeof(mOperand) );
   mOperand[0] = oper1;
   if( oper1 ) mOperCount = 1;

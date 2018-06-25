@@ -613,7 +613,7 @@ SrOperatorBlock *SrCompiler::DoCompound() {
 
 
 SrOperator *SrCompiler::DoStatement( SrOperator *parent ) {
-  SrOperator *op = 0;
+  SrOperator *op = nullptr;
   switch( mToken ) {
     case tkwStatic   :
     case tkwConst    :
@@ -627,7 +627,7 @@ SrOperator *SrCompiler::DoStatement( SrOperator *parent ) {
     case tkwLong     :
     case tkwShort    :
     case tkwInt      :
-    case ttType      : DoLocal();    mLastStatement = tstLocal; break;
+    case ttType      : op = DoLocal();    mLastStatement = tstLocal; break;
     case tsFOpen     : op = DoCompound(); break;
     case tkwIf       : op = DoIf();       mLastStatement = tstIf; break;
     case tkwWhile    : op = DoWhile();    mLastStatement = tstWhile; break;
@@ -691,6 +691,7 @@ SrOperator *SrCompiler::DoLocal() {   //Оператор определения 
       //Вычислить выражение
       B0(store->mOperand2);
       expr->mExpression = store;
+      var->mInit = store;
       initBlock->mList.append( expr );
       }
     //Проверить следующее определение

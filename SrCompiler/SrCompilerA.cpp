@@ -1,4 +1,4 @@
-﻿/*
+/*
   Проект     "Скриптовый язык reduced c++ (rc++) v6"
   Подпроект  "Пико-компилятор"
   Автор
@@ -20,7 +20,7 @@ using namespace SrCompiler6;
 void SrCompiler::constValueCalc( SrValue *val )
   {
   if( val == nullptr ) return;
-  val->mType = mTypeInt;
+  //val->mType = mTypeInt;
   switch( val->code() ) {
 
     case svvVariable :       //Переменная (глобальная, локальная, параметр)
@@ -55,10 +55,7 @@ void SrCompiler::constValueCalc( SrValue *val )
     case svvCondition :      //Тройная условная операция
     case svvCall :      //Вызов функции
     case svvLast :
-      break;
-
     case svvConstInt :      //Константа
-      dynamic_cast<SrValueConstInt*>(val)->setConst( mTypeInt );
       break;
 
     case svvNot :
