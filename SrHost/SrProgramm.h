@@ -1,4 +1,4 @@
-﻿/*
+/*
   Проект "SaliDs"
     Визуальное программирование микроконтроллеров
   Автор
@@ -74,8 +74,7 @@ typedef QList<SrMark> SrMarkList;
 
 class SrProgramm
   {
-    QString             mName;        //!< Наименование узла
-    qint32              mVariant;     //!< Вариант контроллера для данного сегмента
+    qint32              mVariant;     //!< Вариант контроллера
     qint32              mVersion;     //!< Версия ПО для данного сегмента
     QByteArray          mCode;        //!< Массив, содержащий байт-код
     QList<qint32>       mLines;       //!< Массив, содержащий перечень строк, соответствующих адресу в байт-коде
@@ -95,15 +94,70 @@ class SrProgramm
 
     ~SrProgramm();
 
-    //Получить список ошибок как одну строку
-    QString errorList() const;
 
-    void setName( const QString name ) { mName = name; }
-    void setVariant( int variant ) { mVariant = variant; }
-    void setVersion( int version ) { mVersion = version; }
+    /*!
+       \brief errorList Возвращает список ошибок как одну строку
+       \return Список ошибок в виде одной строки
 
-    //Хэш значение программы
-    void setHashValue();
+       Список ошибок хранится в программе в качетсве списка специальных структур.
+       В каждой такой структуре указано место нахождения ошибки и описание ошибки.
+       Структура с ошибками позволяет осуществить навигацию к месту возникновения
+       ошибки. Для того, чтобы просто вывести список ошибок используется данная
+       функция, которая собирает все описания ошибок и возвращает их как единый текст.
+     */
+    QString    errorList() const;
+
+
+
+
+
+    /*!
+       \brief setVariant Установить вариант виртуальной машины, для которой предназначен данный скрипт
+       \param variant Вариант виртуальной машины
+
+       Хотя виртуальные машины одинаковы по байт-коду, они отличаются набором встроенных
+       функций. Для того, чтобы убедиться, что данный скрипт будет работать на указанной машине
+       и используется данный код.
+     */
+    void       setVariant( int variant ) { mVariant = variant; }
+
+    /*!
+       \brief getVariant Получить вариант контроллера
+       \return Вариант контроллера
+     */
+    int        getVariant() const { return mVariant; }
+
+
+
+
+    /*!
+       \brief setVersion Устанавливает версию ПО виртуальной машины, для которой предназначен данный скрипт.
+       \param version Версия ПО виртуальной машины.
+
+       Одинаковые виртуальные машины могут различаться версией ПО, при которых вводятся изменения в
+       интерфейс встроенных функций, изменяется обработка и т.п. Для того, чтобы убедиться, что
+       данный скрипт будет работать на виртуальной машине с нужной версией ПО
+     */
+    void       setVersion( int version ) { mVersion = version; }
+
+    /*!
+       \brief getVersion Возвращает версию ПО виртуальной машины, для которой предназначен данный скрипт.
+       \return Версия ПО виртуальной машины
+     */
+    int        getVersion() const { return mVersion; }
+
+
+
+
+
+    /*!
+       \brief setHashValue Вычисляет и устанавливает хэш значение кода программы.
+
+       Для того, чтобы исключить ненужные перепрошивки программа установления связи
+       с контроллером может сначала сравнить хэш-значение программ и осуществить
+       перепрошивку только если они различаются.
+     */
+    void       setHashValue();
 
     //Установить сигнатуру
     void setSignature( const QString name );
@@ -192,38 +246,102 @@ class SrProgramm
     int        getFile( int addr ) { return mFiles[addr]; }
     int        getAddr( const QString sym );
     QString    getSymbol( int addr );
-    QString    getName() const { return mName; }
     int        codeCount() const { return mCode.count(); }
-    int        getVariant() const { return mVariant; }
-    int        getVersion() const { return mVersion; }
     QString    getFileByIndex( int index );
+
+
+
+
 
     //===========================
     //Информация из программы
     //===========================
     //Информация из программы
-    //Хэш значение программы
+
+    /*!
+       \brief hashProg Возвращает хэш значение текущей программы
+       \return Хэш значение текущей программы
+     */
     int  hashProg()    const { return svIRead32( getVpuCode() + SRVMH_HASH ); }
-    //Сигнатура (имя программы) Текстовое поле длиной 16 байт
+
+    /*!
+       \brief signature0 Возвращает сигнатуру программы как целое
+       \return 4 байта сигнатуры программы
+
+       Группа функций возвращает сигнатуру программы как набор целых.
+       Все вместе они образуют текстовую строку, представляющую собой сигнатуру
+       программы - текстовое имя.
+     */
     int  signature0()  const { return svIRead32( getVpuCode() + SRVMH_SIGNATURE ); }
     int  signature1()  const { return svIRead32( getVpuCode() + SRVMH_SIGNATURE + 4 ); }
     int  signature2()  const { return svIRead32( getVpuCode() + SRVMH_SIGNATURE + 8 ); }
     int  signature3()  const { return svIRead32( getVpuCode() + SRVMH_SIGNATURE + 12 ); }
-    //Таблица инициализации
-    //Каждая запись таблицы адрес 3 байта : значение 4 байта
-    //Последняя запись - нуль
+
+
+    /*!
+       \brief initTable Возвращает начало таблицы инициализации
+       \return Начало таблицы инициализации
+
+       Таблица инициализации состоит из записей размером 7 байт.
+       Каждая запись таблицы адрес 3 байта : значение 4 байта
+       Последняя запись - нуль
+     */
     int  initTable()   const { return svIRead32( getVpuCode() + SRVMH_INIT_TABLE ); }
-    //Точка входа
+
+
+
+
+    /*!
+       \brief enterPoint Адрес точки входа в программу. Это адрес функции main
+       \return Адрес функции main
+     */
     int  enterPoint()  const { return svIRead32( getVpuCode() + SRVMH_ENTER_POINT ); }
-    //Размер стека для начальной задачи
+
+
+
+
+    /*!
+       \brief stackSize0 Возвращает размер стека для стартовой задачи
+       \return Размер стека для начальной задачи
+     */
     int  stackSize0()  const { return svIRead32( getVpuCode() + SRVMH_STACK_SIZE0 ); }
-    //Размер программы VPU (только код)
+
+
+
+    /*!
+       \brief vpuProgSize Возвращает размер чистого кода программы без учета последующих
+         таблиц
+       \return Размер чистого кода
+     */
     int  vpuProgSize() const { return svIRead32( getVpuCode() + SRVMH_VM_PROG_SIZE ); }
-    //Количество глобальных переменных
+
+
+
+    /*!
+       \brief globalCount Возвращает объем памяти, занятый глобальными переменными
+       \return Объем памяти, занятый глобальными переменными
+     */
     int  globalCount() const { return svIRead32( getVpuCode() + SRVMH_GLOBAL_COUNT ); }
-    //Таблица строк
+
+
+
+
+    /*!
+       \brief constTable Возвращает начало таблицы константных блоков переменной длины.
+       \return Начало таблицы константных блоков
+
+       Каждая запись таблицы состоит из адреса начала блока. Длина записи 4 байта.
+       Размер блока определяется в самом блоке. Константными блоками представлены
+       изображения, звуки, текстовые строки и т.п.
+     */
     int  constTable()  const { return svIRead32( getVpuCode() + SRVMH_CONST_TABLE ); }
-    //Размер всей программы
+
+
+
+    /*!
+       \brief progSize Возвращает размер памяти программ включая все дополнительные таблицы
+       \return Размер всей программы
+     */
     int  progSize()    const { return svIRead32( getVpuCode() + SRVMH_PROG_SIZE ); }
 
 

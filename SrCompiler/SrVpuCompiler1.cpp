@@ -105,7 +105,7 @@ SrProgrammPtr SrVpuCompiler::make(const QString prjPath, const QString &mainScri
 
 
   //Для всех статических объектов сформировать конструирование
-  codePrint( QString("Init table") );
+  codePrintEoln( QString("//Init table") );
   prog->setInitTable();
   for( SrVariable *var : mVarGlobal.mList )
     if( var->mInit ) {
@@ -123,6 +123,7 @@ SrProgrammPtr SrVpuCompiler::make(const QString prjPath, const QString &mainScri
   prog->add24( 0, 0, 0 );
 
   //Экспорт символов
+  codePrintEoln( QString("//Variables") );
   for( SrVariable *var : mVarGlobal.mList ) {
     if( var->mSort == tsrGlobal ) {
       //Добавить символ
@@ -171,7 +172,7 @@ void SrVpuCompiler::addVariable(SrProgramm *prog, const QString prefix, SrVariab
   //Добавить саму переменную
   startAddress += var->mAddress;
   prog->addSymbol( prefix + var->mName, startAddress );
-  codePrint( prefix + var->mName + QString(" : ") + QString::number(startAddress) );
+  codePrintEoln( prefix + var->mName + QString(" : ") + QString::number(startAddress) );
 
   if( var->mType->isStruct() ) {
     //Для переменных структур развернуть и добавить все члены
@@ -196,7 +197,7 @@ void SrVpuCompiler::pass(SrProgramm *prog)
 
   //Проходим все функции и генерируем
   for( SrFunction *fun : mFunGlobal.mList ) {
-    codePrint( QString(";%1 %2").arg(fun->mName).arg(fun->mType->mSignature) );
+    codePrintEoln( QString(";%1 %2").arg(fun->mName).arg(fun->mType->mSignature) );
     //Текущее значение счетчика равно адресу начала
     fun->mAddress = prog->codeCount();
     //Сгенерировать выделение локальных переменных
@@ -212,7 +213,7 @@ void SrVpuCompiler::pass(SrProgramm *prog)
 
 void SrVpuCompiler::gOperator(SrProgramm *prog, SrOperator *op)
   {
-  codePrint( QString(";") + op->mRemark );
+  codePrintEoln( QString(";") + op->mRemark );
   switch( op->statement() ) {
     case tstReturn :
       gOperatorReturn( prog, dynamic_cast<SrOperatorReturn*>(op) );
@@ -255,12 +256,12 @@ void SrVpuCompiler::gOperatorReturn(SrProgramm *prog, SrOperatorReturn *svReturn
     gValue( prog, svReturn->mResult, true, false );
 
     prog->addCodeParam8( VBC2_POP_RESULT, svReturn->mFunction->mParamSize, svReturn->mMark );
-    codePrint( QString("VBC2_POP_RESULT %1").arg(svReturn->mFunction->mParamSize) );
+    codePrintEoln( QString("VBC2_POP_RESULT %1").arg(svReturn->mFunction->mParamSize) );
     }
 
   //Выполнить возврат из функции
   prog->addCode( VBC1_RETURN, svReturn->mMark );
-  codePrint( QString("VBC1_RETURN") );
+  codePrintEoln( QString("VBC1_RETURN") );
   }
 
 
@@ -274,12 +275,12 @@ void SrVpuCompiler::gValueCatchFun(SrProgramm *prog, SrValueCatchFun *svCatch)
   if( svCatch->mCatchMask->mConst ) {
     //Маска - константное значение
     prog->addCodeParam32( VBC5_CATCH, svCatch->mCatchMask->mConstInt, svCatch->mMark );
-    codePrint( QString("VBC5_CATCH %1").arg(svCatch->mCatchMask->mConstInt,0,16) );
+    codePrintEoln( QString("VBC5_CATCH %1").arg(svCatch->mCatchMask->mConstInt,0,16) );
     }
   else {
     //Маска - значение в стеке
     prog->addCode( VBC1_CATCH, svCatch->mMark );
-    codePrint( QString("VBC1_CATCH") );
+    codePrintEoln( QString("VBC1_CATCH") );
     }
   }
 
@@ -294,12 +295,12 @@ void SrVpuCompiler::gValueThrowFun(SrProgramm *prog, SrValueThrowFun *svThrow)
   if( svThrow->mThrowCode->mConst ) {
     //Маска - константное значение
     prog->addCodeParam32( VBC5_THROW, svThrow->mThrowCode->mConstInt, svThrow->mMark );
-    codePrint( QString("VBC5_THROW %1").arg(svThrow->mThrowCode->mConstInt,0,16) );
+    codePrintEoln( QString("VBC5_THROW %1").arg(svThrow->mThrowCode->mConstInt,0,16) );
     }
   else {
     //Маска - значение в стеке
     prog->addCode( VBC1_THROW, svThrow->mMark );
-    codePrint( QString("VBC1_THROW") );
+    codePrintEoln( QString("VBC1_THROW") );
     }
   }
 
@@ -341,7 +342,7 @@ void SrVpuCompiler::gOperatorIf(SrProgramm *prog, SrOperatorIf *svIf)
 
     //Переход на ложное условие
     prog->addCodeParam24( VBC4_FALSE_JUMP, svIf->mFalseAddress, svIf->mMark );
-    codePrint( QString("VBC4_FALSE_JUMP LAB%1").arg(svIf->mFalseAddress) );
+    codePrintEoln( QString("VBC4_FALSE_JUMP LAB%1 //if to false").arg(svIf->mFalseAddress) );
     }
 
   if( !svIf->mCondition || !svIf->mCondition->isConst() || svIf->mCondition->toCondition() ) {
@@ -350,18 +351,18 @@ void SrVpuCompiler::gOperatorIf(SrProgramm *prog, SrOperatorIf *svIf)
 
     if( svIf->mFalse ) {
       prog->addCodeParam24( VBC4_JUMP, svIf->mExitAddress, svIf->mMark );
-      codePrint( QString("VBC4_JUMP LAB%1").arg(svIf->mExitAddress) );
+      codePrintEoln( QString("VBC4_JUMP LAB%1 //if to exit").arg(svIf->mExitAddress) );
       }
     }
 
   svIf->mFalseAddress = prog->codeCount();
-  codePrint( QString("LAB%1:").arg(svIf->mFalseAddress) );
+  codePrintEoln( QString("LAB%1: //if else").arg(svIf->mFalseAddress) );
 
   if( svIf->mFalse ) {
     gOperator( prog, svIf->mFalse );
 
     svIf->mExitAddress = prog->codeCount();
-    codePrint( QString("LAB%1:").arg(svIf->mExitAddress) );
+    codePrintEoln( QString("LAB%1: //if exit").arg(svIf->mExitAddress) );
     }
   }
 
@@ -371,7 +372,7 @@ void SrVpuCompiler::gOperatorIf(SrProgramm *prog, SrOperatorIf *svIf)
 void SrVpuCompiler::gOperatorBreak(SrProgramm *prog, SrOperatorBreak *svBreak)
   {
   prog->addCodeParam24( VBC4_JUMP, svBreak->mLoop->mExitAddress, svBreak->mMark );
-  codePrint( QString("VBC4_JUMP LAB%1").arg(svBreak->mLoop->mConditionAddress) );
+  codePrintEoln( QString("VBC4_JUMP LAB%1 //to loop exit").arg(svBreak->mLoop->mExitAddress) );
   }
 
 
@@ -380,7 +381,7 @@ void SrVpuCompiler::gOperatorBreak(SrProgramm *prog, SrOperatorBreak *svBreak)
 void SrVpuCompiler::gOperatorContinue(SrProgramm *prog, SrOperatorContinue *svContinue)
   {
   prog->addCodeParam24( VBC4_JUMP, svContinue->mLoop->mConditionAddress, svContinue->mMark );
-  codePrint( QString("VBC4_JUMP LAB%1").arg(svContinue->mLoop->mConditionAddress) );
+  codePrintEoln( QString("VBC4_JUMP LAB%1 //to loop condition").arg(svContinue->mLoop->mConditionAddress) );
   }
 
 
@@ -391,7 +392,7 @@ void SrVpuCompiler::gOperatorWhile(SrProgramm *prog, SrOperatorWhile *svWhile)
   {
   //Начало цикла - проверка условия
   svWhile->mConditionAddress = prog->codeCount();
-  codePrint( QString("LAB%1:").arg(svWhile->mConditionAddress) );
+  codePrintEoln( QString("LAB%1: //while condition").arg(svWhile->mConditionAddress) );
 
   if( !svWhile->mCondition || !svWhile->mCondition->isConst() ) {
     //Вычислить условие
@@ -399,7 +400,7 @@ void SrVpuCompiler::gOperatorWhile(SrProgramm *prog, SrOperatorWhile *svWhile)
 
     //Переход на ложное условие
     prog->addCodeParam24( VBC4_FALSE_JUMP, svWhile->mExitAddress, svWhile->mMark );
-    codePrint( QString("VBC4_FALSE_JUMP LAB%1").arg(svWhile->mExitAddress) );
+    codePrintEoln( QString("VBC4_FALSE_JUMP LAB%1 //while to exit").arg(svWhile->mExitAddress) );
 
     }
   //Условие константное, либо зацикливание, либо вообще ничего делать не нужно
@@ -410,11 +411,11 @@ void SrVpuCompiler::gOperatorWhile(SrProgramm *prog, SrOperatorWhile *svWhile)
 
     //зацикливание
     prog->addCodeParam24( VBC4_JUMP, svWhile->mConditionAddress, svWhile->mMark );
-    codePrint( QString("VBC4_JUMP LAB%1").arg(svWhile->mConditionAddress) );
+    codePrintEoln( QString("VBC4_JUMP LAB%1 //while forever loop").arg(svWhile->mConditionAddress) );
     }
 
   svWhile->mExitAddress = prog->codeCount();
-  codePrint( QString("LAB%1:").arg(svWhile->mExitAddress) );
+  codePrintEoln( QString("LAB%1: //while exit").arg(svWhile->mExitAddress) );
   }
 
 
@@ -425,14 +426,14 @@ void SrVpuCompiler::gOperatorWhile(SrProgramm *prog, SrOperatorWhile *svWhile)
 void SrVpuCompiler::gOperatorDoWhile(SrProgramm *prog, SrOperatorDoWhile *svDoWhile)
   {
   int start = prog->codeCount();
-  codePrint( QString("LAB%1:").arg(start) );
+  codePrintEoln( QString("LAB%1: //do while body").arg(start) );
 
   //Тело
   gOperator( prog, svDoWhile->mBody );
 
   //Проверка условия
   svDoWhile->mConditionAddress = prog->codeCount();
-  codePrint( QString("LAB%1:").arg(svDoWhile->mConditionAddress) );
+  codePrintEoln( QString("LAB%1: //do while condition").arg(svDoWhile->mConditionAddress) );
 
   if( svDoWhile->mCondition && svDoWhile->mCondition->isConst() ) {
     //Постоянное условие, вычислять не нужно
@@ -440,18 +441,18 @@ void SrVpuCompiler::gOperatorDoWhile(SrProgramm *prog, SrOperatorDoWhile *svDoWh
     if( !svDoWhile->mCondition->toCondition() )
       //Безусловное зацикливание
       prog->addCodeParam24( VBC4_JUMP, start, svDoWhile->mMark );
-      codePrint( QString("VBC4_JUMP LAB%1").arg(start) );
+      codePrintEoln( QString("VBC4_JUMP LAB%1 //forever loop").arg(start) );
     }
   else {
     gValue( prog, svDoWhile->mCondition, true, false );
 
     //Переход на ложное условие
     prog->addCodeParam24( VBC4_FALSE_JUMP, start, svDoWhile->mMark );
-    codePrint( QString("VBC4_FALSE_JUMP LAB%1").arg(start) );
+    codePrintEoln( QString("VBC4_FALSE_JUMP LAB%1 //do while to body").arg(start) );
     }
 
   svDoWhile->mExitAddress = prog->codeCount();
-  codePrint( QString("LAB%1:").arg(svDoWhile->mExitAddress) );
+  codePrintEoln( QString("LAB%1: //do while exit").arg(svDoWhile->mExitAddress) );
   }
 
 
@@ -468,7 +469,7 @@ void SrVpuCompiler::gOperatorFor(SrProgramm *prog, SrOperatorFor *svFor)
   gValue( prog, svFor->mInit, false, false );
 
   int start = prog->codeCount();
-  codePrint( QString("LAB%1:").arg(start) );
+  codePrintEoln( QString("LAB%1: //for condition").arg(start) );
 
   if( !svFor->mCondition || !svFor->mCondition->isConst() ) {
     //Вычислить условие
@@ -476,7 +477,7 @@ void SrVpuCompiler::gOperatorFor(SrProgramm *prog, SrOperatorFor *svFor)
 
     //Переход на ложное условие
     prog->addCodeParam24( VBC4_FALSE_JUMP, svFor->mExitAddress, svFor->mMark );
-    codePrint( QString("VBC4_FALSE_JUMP LAB%1").arg(svFor->mExitAddress) );
+    codePrintEoln( QString("VBC4_FALSE_JUMP LAB%1 //to for exit").arg(svFor->mExitAddress) );
     }
 
   //Тело цикла не требуется, когда константное условие ложно
@@ -488,17 +489,17 @@ void SrVpuCompiler::gOperatorFor(SrProgramm *prog, SrOperatorFor *svFor)
 
     //Инкремент
     svFor->mConditionAddress = prog->codeCount();
-    codePrint( QString("LAB%1:").arg(svFor->mConditionAddress) );
+    codePrintEoln( QString("LAB%1: //for step").arg(svFor->mConditionAddress) );
 
     gValue( prog, svFor->mAction, false, false );
 
     //Переход на сравнение
     prog->addCodeParam24( VBC4_JUMP, start, svFor->mMark );
-    codePrint( QString("VBC4_JUMP LAB%1").arg(start) );
+    codePrintEoln( QString("VBC4_JUMP LAB%1 //to condition").arg(start) );
     }
 
   svFor->mExitAddress = prog->codeCount();
-  codePrint( QString("LAB%1:").arg(svFor->mExitAddress) );
+  codePrintEoln( QString("LAB%1: //for exit").arg(svFor->mExitAddress) );
   }
 
 
@@ -517,13 +518,13 @@ void SrVpuCompiler::gOperatorContextEnter(SrProgramm *prog, SrOperatorContext *c
     if( var->mInit ) {
       //Есть инициализационное выражение
       prog->addCodeParam8( VBC2_PUSH_B_OFFSET, var->mAddress, var->mMarkDefine );
-      codePrint( QString("VBC2_PUSH_B_OFFSET ") + var->mName + QString("<%1>").arg( var->mAddress ) );
+      codePrintEoln( QString("VBC2_PUSH_B_OFFSET %1 //address of %2").arg(var->mAddress).arg(var->mName) );
       //Теперь значение для сохранения
       gValue( prog, var->mInit, true, false );
       //Теперь сохранение
       if( var->mType->canAssign(var->mInit->mType) ) {
         prog->addCode( VBC1_POP, var->mMarkDefine );
-        codePrint( QString("VBC1_POP") );
+        codePrintEoln( QString("VBC1_POP //value for %1").arg(var->mName) );
         }
       else
         errorInLine( QObject::tr("Error. Can't assign %1 to %2").arg(var->mInit->mType->mName).arg(var->mType->mName), var->mMarkDefine );
@@ -541,37 +542,37 @@ void SrVpuCompiler::gOperatorContextEnter(SrProgramm *prog, SrOperatorContext *c
 
 
 
-void SrVpuCompiler::gPushConst(SrProgramm *prog, int val, const SrMark &mark, const QString label )
+void SrVpuCompiler::gPushConst(SrProgramm *prog, int val, const SrMark &mark )
   {
   switch( val ) {
     case 0 :
       prog->addCode( VBC1_PUSH_0, mark );
-      codePrint( QString("VBC1_PUSH_0 [%1]").arg(label) );
+      codePrint( QString("VBC1_PUSH_0 ") );
       break;
     case 1 :
       prog->addCode( VBC1_PUSH_1, mark );
-      codePrint( QString("VBC1_PUSH_1 [%1]").arg(label) );
+      codePrint( QString("VBC1_PUSH_1 ") );
       break;
     case 2 :
       prog->addCode( VBC1_PUSH_2, mark );
-      codePrint( QString("VBC1_PUSH_2 [%1]").arg(label) );
+      codePrint( QString("VBC1_PUSH_2 ") );
       break;
     default :
       if( val >= -128 && val <= 127 ) {
         prog->addCodeParam8( VBC2_PUSH_CONST, val, mark );
-        codePrint( QString("VBC2_PUSH_CONST %1 [%2]").arg(val).arg(label) );
+        codePrint( QString("VBC2_PUSH_CONST %1 ").arg(val) );
         }
       else if( val >= -32768 && val <= 32767 ) {
         prog->addCodeParam16( VBC3_PUSH_CONST, val, mark );
-        codePrint( QString("VBC3_PUSH_CONST %1 [%2]").arg(val).arg(label) );
+        codePrint( QString("VBC3_PUSH_CONST %1 ").arg(val) );
         }
       else if( val >= -8388608 && val <= 8388607 ) {
         prog->addCodeParam24( VBC4_PUSH_CONST, val, mark );
-        codePrint( QString("VBC4_PUSH_CONST %1 [%2]").arg(val).arg(label) );
+        codePrint( QString("VBC4_PUSH_CONST %1 ").arg(val) );
         }
       else {
         prog->addCodeParam32( VBC5_PUSH_CONST, val, mark );
-        codePrint( QString("VBC5_PUSH_CONST %1 [%2]").arg(val).arg(label) );
+        codePrint( QString("VBC5_PUSH_CONST %1 ").arg(val) );
         }
     }
   }
@@ -655,11 +656,25 @@ void SrVpuCompiler::gLoad(SrProgramm *prog, SrValue *val)
 
 
 
-void SrVpuCompiler::codePrint(const QString code)
+//! Если задан файл листинга, то выводит в него заданную строку
+void SrVpuCompiler::codePrint(const QString str)
   {
   if( mList )
-    (*mList) << code << '\n';
+    (*mList) << str;
   }
+
+
+
+
+//! Если задан файл листинга, то выводит в него строку и символ новой строки
+void SrVpuCompiler::codePrintEoln(const QString str)
+  {
+  if( mList )
+    (*mList) << str << '\n';
+  }
+
+
+
 
 
 

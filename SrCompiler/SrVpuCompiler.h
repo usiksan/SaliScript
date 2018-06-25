@@ -1,4 +1,4 @@
-﻿/*
+/*
   Проект     "Скриптовый язык reduced c++ (rc++) v6"
   Подпроект  "Пико-компилятор"
   Автор
@@ -66,7 +66,7 @@ namespace SrCompiler6 {
       void gValue( SrProgramm *prog, SrValue *val, bool keepValue, bool address );
       void gValueCatchFun(SrProgramm *prog, SrValueCatchFun *svCatch );
       void gValueThrowFun( SrProgramm *prog, SrValueThrowFun *svThrow );
-      void gPushConst(SrProgramm *prog, int val , const SrMark &mark , const QString label = QString() );
+      void gPushConst(SrProgramm *prog, int val , const SrMark &mark );
       void gStack( SrProgramm *prog, int offset, const SrMark &mark );
       void gLoad( SrProgramm *prog, SrValue *val );
 
@@ -99,7 +99,11 @@ namespace SrCompiler6 {
       void gvvCall( SrProgramm *prog, SrValueCall *call, bool keepValue, bool address );
 
       //Вывод в листинг
-      void codePrint( const QString code );
+      //! Если задан файл листинга, то выводит в него заданную строку
+      void codePrint( const QString str );
+
+      //! Если задан файл листинга, то выводит в него строку и символ новой строки
+      void codePrintEoln( const QString str );
 
     };
 

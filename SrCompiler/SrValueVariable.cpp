@@ -17,7 +17,7 @@ Description
 using namespace SrCompiler6;
 
 SrValueVariable::SrValueVariable( SrVariable *var, const SrMark &mark ) :
-  SrValue(mark),
+  SrValue( var->mType, mark ),
   mVariable(var),
   mAddonAddress(0)
   {

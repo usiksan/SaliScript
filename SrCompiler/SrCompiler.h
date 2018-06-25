@@ -847,7 +847,7 @@ namespace SrCompiler6
       int          mConstInt;    //Вычисленный результат
       bool         mConst;       //Флаг показывает константный результат
 
-      SrValue( const SrMark &mark );
+      SrValue( SrType *type, const SrMark &mark );
       virtual ~SrValue() {}
 
       void    clear() { memset( this, 0, sizeof(SrValue) ); }
@@ -1278,7 +1278,7 @@ namespace SrCompiler6
       SrValue *mOperand1;
       SrValue *mOperand2;
 
-      SrValueBinary( SrValue *oper1, const SrMark &mark, SrValue *oper2 = 0 ) :
+      SrValueBinary( SrValue *oper1, const SrMark &mark, SrValue *oper2 = nullptr ) :
         SrValue( mark ), mOperand1(oper1), mOperand2(oper2) {}
       ~SrValueBinary() { if( mOperand1 ) delete mOperand1; if( mOperand2 ) delete mOperand2; }
 

@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
   {
   QCoreApplication a(argc, argv);
   SrCompiler6::SrVpuCompiler compiler;
-  compiler.make( QString("/home/salilab/"), QString("test.c") );
+  compiler.make( QString("d:/"), QString("test1.c") );
 
   return 0;
   }

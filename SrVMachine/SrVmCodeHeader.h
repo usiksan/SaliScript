@@ -28,18 +28,18 @@
 #define SRVMH_HASH              0 //! Хэш-значение кода 4 байта
 #define SRVMH_SIGNATURE         4 //! Текстовое поле сигнатуры длиной 20 байт
 #define SRVMH_SIGNATURE_LENGHT 20 //! Длина поля сигнатуры
-#define SRVMH_INIT_TABLE       24 //! Адрес начала таблицы инициализации 4 байт
+#define SRVMH_INIT_TABLE       28 //! Адрес начала таблицы инициализации 4 байт
                                   //! -Каждая запись таблицы адрес 3 байта : значение 4 байта
                                   //! -Последняя запись - нуль
-#define SRVMH_ENTER_POINT      28 //! Адрес стартовой функции 4 байта
-#define SRVMH_STACK_SIZE0      32 //! Размер стека стартовой задачи 4 байта
-#define SRVMH_VM_PROG_SIZE     36 //! Размер памяти программ 4 байта
-#define SRVMH_GLOBAL_COUNT     40 //! Количество глобальных переменных 4 байта
-#define SRVMH_CONST_TABLE      44 //! Адрес таблицы константных блоков 4 байта (cblock и cstring)
+#define SRVMH_ENTER_POINT      32 //! Адрес стартовой функции 4 байта
+#define SRVMH_STACK_SIZE0      36 //! Размер стека стартовой задачи 4 байта
+#define SRVMH_VM_PROG_SIZE     40 //! Размер памяти программ без учета таблиц, т.е. чистая программа 4 байта
+#define SRVMH_GLOBAL_COUNT     44 //! Количество глобальных переменных 4 байта
+#define SRVMH_CONST_TABLE      48 //! Адрес таблицы константных блоков 4 байта (cblock и cstring)
                                   //! Каждая запись содержит 4 байта с адресом начала блока
-#define SRVMH_PROG_SIZE        48 //! Размер всей программы 4 байта
+#define SRVMH_PROG_SIZE        52 //! Размер всей программы 4 байта
 
-#define SRVMH_HEADER_SIZE      52 //! Размер заголовка
+#define SRVMH_HEADER_SIZE      56 //! Размер заголовка
 
 
 

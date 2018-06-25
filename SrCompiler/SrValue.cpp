@@ -16,8 +16,8 @@ Description
 
 using namespace SrCompiler6;
 
-SrValue::SrValue(const SrMark &mark) :
-  mType(0),
+SrValue::SrValue(SrType *type, const SrMark &mark) :
+  mType(type),
   mMark( mark ),
   mConstInt(0),
   mConst(false)
