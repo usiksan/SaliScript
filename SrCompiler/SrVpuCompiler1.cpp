@@ -64,6 +64,16 @@ SrProgrammPtr SrVpuCompiler::make(const QString prjPath, const QString &mainScri
     return prog;
     }
 
+  //Пройти по глобальным переменным
+  for( SrVariable *var : mVarGlobal.mList )
+    //Среди переменных выискиваем константные блоки
+    if( var->mType == mTypeCBlock ) {
+      //Изменить адрес блока на величину строк в таблице
+      //так как блоки следуют сразу после строк
+      // -1 так как мы ведем нумерацию блоков с 1
+      var->mAddress += mStringTable.count() - 1;
+      }
+
   //Генерация
   //1-й проход - вычисление констант
   mList = 0;
@@ -315,9 +325,6 @@ void SrVpuCompiler::gOperatorBlock(SrProgramm *prog, SrOperatorBlock *svBlock)
   {
   if( svBlock == nullptr ) return;
 
-  //Пролог блока
-  gOperatorContextEnter( prog, svBlock );
-
   //Генерировать все операторы блока
   for( SrOperator *op : svBlock->mList )
     gOperator( prog, op );
@@ -465,8 +472,6 @@ void SrVpuCompiler::gOperatorDoWhile(SrProgramm *prog, SrOperatorDoWhile *svDoWh
 
 void SrVpuCompiler::gOperatorFor(SrProgramm *prog, SrOperatorFor *svFor)
   {
-  //Пролог
-  gOperatorContextEnter( prog, svFor );
 
   //Инициализация
   gValue( prog, svFor->mInit, false, false );
@@ -510,32 +515,6 @@ void SrVpuCompiler::gOperatorFor(SrProgramm *prog, SrOperatorFor *svFor)
 
 
 
-
-//Создать локальные переменные при входе в блок
-void SrVpuCompiler::gOperatorContextEnter(SrProgramm *prog, SrOperatorContext *context)
-  {
-  //Последовательно для всех переменных выполняем создание
-  for( SrVariable *var : context->mVarLocal.mList ) {
-
-    //Проверить наличие инициализационного выражения
-    if( var->mInit ) {
-      //Есть инициализационное выражение
-      prog->addCodeParam8( VBC2_PUSH_B_OFFSET, var->mAddress, var->mMarkDefine );
-      codePrintEoln( QString("VBC2_PUSH_B_OFFSET %1 //address of %2").arg(var->mAddress).arg(var->mName) );
-      //Теперь значение для сохранения
-      gValue( prog, var->mInit, true, false );
-      //Теперь сохранение
-      if( var->mType->canAssign(var->mInit->getType()) ) {
-        prog->addCode( VBC1_POP, var->mMarkDefine );
-        codePrintEoln( QString("VBC1_POP //value for %1").arg(var->mName) );
-        }
-      else
-        errorInLine( QObject::tr("Error. Can't assign %1 to %2").arg(var->mInit->getType()->mName).arg(var->mType->mName), var->mMarkDefine );
-      }
-
-    }
-
-  }
 
 
 

@@ -25,11 +25,13 @@ using namespace SrCompiler6;
 //Блок данных
 void SrCompiler::DoCBlock()
   {
+  //Убрать ключевое слово
+  NextToken();
   //Должно быть имя
   if( mToken == ttName ) {
     //Проверить наличие переменной с таким именем
-    if( !isGlobalSymbol(mToken.mString) == 0 ) {
-      SrVariable *var = new SrVariable( mark(), mToken.mString, mTypeCBlock, mByteArrayTable.count(), 0 );
+    if( !isGlobalSymbol(mToken.mString) ) {
+      SrVariable *var = new SrVariable( mark(), mToken.mString, mTypeCBlock, mByteArrayTable.count() + 1, 0 );
       mVarGlobal.addVariable(var);
       }
     else Error( QObject::tr("Duplicate name %1").arg(mToken.mString) );
@@ -152,6 +154,9 @@ SrCompiler::DoStructure() {
           SrFunction *fun = 0;
           DoSubType( baseType, var, fun, &(type->mSize) );
           if( var ) {
+            if( var->mType->isCBlock() ) {
+              Error( QObject::tr("Error. CBlock can not be member. Use cblock *ptr instead") );
+              }
             //Определена переменная-член
             if( type->mMemberList.isPresent(var->mName) )
               Error( QObject::tr("Error. Member \"%1\" already defined early").arg(var->mName) );
@@ -210,7 +215,7 @@ SrType *SrCompiler::DoBaseType()
   if( mToken == tkwVoid )    return mTypeVoid;
   if( mToken == tkwCString ) return mTypeCString;
   if( mToken == tkwCblock )  return mTypeCBlock;
-  return 0;
+  return nullptr;
   }
 
 
@@ -220,7 +225,8 @@ void SrCompiler::DoDeclareGlobal() {
   bool first = true;
   //Разобрать тип
   SrType *baseType = DoBaseType();
-  if( baseType ) {
+  if( baseType == mTypeCBlock ) DoCBlock();
+  else if( baseType ) {
     NextToken();
     while( 1 ) {
       SrVariable *var = 0;
@@ -338,7 +344,7 @@ SrCompiler::DoParamList( SrFunction *fun ) {
         return;
         }
       SrType *type = DoBaseType();
-      if( type == 0 ) {
+      if( type == nullptr ) {
         ErrorEndSt( QObject::tr("Error. Need function argument type.") );
         //Сформировать тип и распределить параметры
         DoParamAddress(fun);
@@ -359,6 +365,9 @@ SrCompiler::DoParamList( SrFunction *fun ) {
         return;
         }
       if( var ) {
+        if( var->mType->isCBlock() ) {
+          ErrorEndSt( QObject::tr("Error. CBlock can not be param, use cblock *ptr instead.") );
+          }
         //Параметр считан нормально, добавить к списку параметров
         if( !fun->addParam( var ) ) {
           ErrorEndSt( QObject::tr("Error. Duplicate parametr name %1.").arg(var->mName) );
@@ -680,6 +689,10 @@ SrOperator *SrCompiler::DoLocal() {   //Оператор определения 
     if( mContext->mVarLocal.isPresent(var->mName) )
       Error( QObject::tr("Error. Duplicate name %1.").arg(var->mName) );
 
+    if( var->mType->isCBlock() ) {
+      ErrorEndSt( QObject::tr("Error. CBlock can not be local variable, use cblock *ptr instead.") );
+      }
+
     //Добавить переменную
     mContext->mVarLocal.addVariable( var );
 
@@ -768,6 +781,10 @@ SrOperator *SrCompiler::DoFor() {  //Оператор for
 
   //Вычисление установки начальных значений
   if( mToken != tsSemicolon ) {
+    //Пытался сделать возможность определения переменных прямо в цикле
+    // плюнул из-за сложности
+    //    SrType *type = DoBaseType();
+    //    if( type == nullptr )
     BExpression( svFor->mInit );
     }
   NeedSemicolon();

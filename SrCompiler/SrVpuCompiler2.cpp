@@ -348,12 +348,10 @@ void SrVpuCompiler::gvvVariable(SrProgramm *prog, SrValueVariable *var, bool kee
 //Загрузить адрес функции
 void SrVpuCompiler::gvvFunction(SrProgramm *prog, SrValueFunction *fun, bool keepValue, bool address)
   {
-  Q_ASSERT( fun != nullptr );
+  //Для функции в любом случае возвращаем адрес или индекс, так как больше ничего мы возвратить не можем
+  Q_UNUSED( address );
 
-  if( !address ) {
-    errorInLine( QObject::tr("Error. Need LValue"), fun->mMark );
-    return;
-    }
+  Q_ASSERT( fun != nullptr );
 
   Q_ASSERT( fun->mFunction != nullptr );
 
@@ -1482,7 +1480,11 @@ void SrVpuCompiler::gvvCall(SrProgramm *prog, SrValueCall *call, bool keepValue,
   gValue( prog, call->mFunction, true, false );
 
   //Тип вызываемой функции
-  SrFunctionType *funType = call->mFunction->getType()->toFunction();
+  SrFunctionType *funType = nullptr;
+  if( call->mFunction->getClass() & CLASS_FUNCTION )
+    funType = call->mFunction->getType()->toFunction();
+  else if( (call->mFunction->getClass() & CLASS_POINTER) && (call->mFunction->getType()->mBaseType->mClass & CLASS_FUNCTION) )
+    funType = call->mFunction->getType()->mBaseType->toFunction();
 
   //Проверим, функцию ли мы вызываем
   if( funType == nullptr )

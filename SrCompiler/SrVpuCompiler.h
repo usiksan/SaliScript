@@ -60,7 +60,6 @@ namespace SrCompiler6 {
       void gOperatorWhile(SrProgramm *prog, SrOperatorWhile *svWhile );
       void gOperatorDoWhile( SrProgramm *prog, SrOperatorDoWhile *svDoWhile );
       void gOperatorFor( SrProgramm *prog, SrOperatorFor *svFor );
-      void gOperatorContextEnter(SrProgramm *prog, SrOperatorContext *context );
 
       //Генерация выражений
       void gValue( SrProgramm *prog, SrValue *val, bool keepValue, bool address );

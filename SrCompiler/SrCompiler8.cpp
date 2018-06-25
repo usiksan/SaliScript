@@ -127,6 +127,7 @@ SrCompiler::B1( SrValuePtr &val ) {
       return;
       }
 
+    NextToken(); //Убрать :
     B2(cond->mFalse);
     }
   }
@@ -496,9 +497,13 @@ SrCompiler::B13(SrValuePtr &val ) {
     else if( mToken == tsOpen ) {
       //Вызов функции ( <val <,val>... > )
       NextToken();
-      if( val->getClass() & CLASS_FUNCTION  ) {
-        SrFunctionType *fun = val->getType()->toFunction();
-        //Для члена структуры получаем адрес вызова
+      SrFunctionType *fun = nullptr;
+      if( val->getClass() & CLASS_FUNCTION  )
+        fun = val->getType()->toFunction();
+      else if( (val->getClass() & CLASS_POINTER) && (val->getType()->mBaseType->mClass & CLASS_FUNCTION) )
+        fun = val->getType()->mBaseType->toFunction();
+
+      if( fun != nullptr ) {
         //Инициализировать загрузку параметров
         //Вызов
         SrValueCall *call = new SrValueCall( val, fun->mResult, mark() );

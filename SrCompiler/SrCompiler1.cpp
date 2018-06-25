@@ -311,11 +311,6 @@ SrCompiler::Compile( const QString &fname ) {
       Error( QObject::tr("Keyword static not supported.") );
       NextToken();
       }
-    else if( mToken == tkwCblock ) {
-      NextToken();
-      DoCBlock();
-      continue;
-      }
     else if( mToken == tkwImport ) {
       NextToken();
       DoImport();
