@@ -1,0 +1,116 @@
+﻿/*
+  Проект "SaliMt"
+    Визуальное программирование микроконтроллеров
+  Автор
+    Сибилев А.С.
+  Описание
+*/
+
+#ifndef WMAIN_H
+#define WMAIN_H
+
+#include "SvConfig.h"
+#include "WCModeIntro.h"
+#include "WCModeBoard.h"
+#include "WCModeEditor.h"
+#include "WCModeHelp.h"
+#include "Host/SvProgramm.h"
+#include "SvDebugThread.h"
+#include <QMainWindow>
+#include <QStackedWidget>
+#include <QTimer>
+
+class WMain : public QMainWindow
+  {
+    Q_OBJECT
+
+    WCModeIntro     *mCModeIntro;
+    WCModeBoard     *mCModeBoard;
+    WCModeEditor    *mCModeEditor;
+    WCModeHelp      *mCModeHelp;
+    QStackedWidget  *mCentral;
+  public:
+    WMain(QWidget *parent = nullptr);
+    ~WMain();
+
+    void restorePositions();
+
+  public slots:
+    void modeIntro();
+    void modeBoard();
+    void modeEditor();
+    void modeChart();
+    void modeHelp();
+
+    void fileOpen();
+    void fileOpenProject();
+    void fileSave();
+    void fileSaveAs();
+    void fileNew();
+    void fileNewProject();
+    void fileRecentProject();
+    void fileRecentFile();
+    void fileSendProject();
+    void fileReceivProject();
+    void fileSaveProject();
+    void fileCloseAll();
+    void fileClose();
+    void fileProjectOpen( const QString fname );
+
+    void editUndo();
+    void editRedo();
+    void editCopy();
+    void editCut();
+    void editPaste();
+    void editSelectAll();
+    void editSearchText();
+    void editReplaceText();
+    void editAutoIndent();
+    void editAutoIndentSettings();
+    void editSvQmlGeneration();
+
+    void chartsClear();
+
+    void debugMode();
+
+    void buildBuild();
+    void buildAndRun();
+    void buildAndPause();
+    void buildAndLink();
+
+
+    void helpContext();
+    void helpContens();
+    void helpWeb();
+    void helpAbout();
+
+    //Установить тип отладки
+    void onDebugChanged();
+
+    //Активировать режим, подсветить соответствующую кнопку
+    void activateModeIntro();
+    void activateModeBoard();
+    void activateModeEditor();
+    void activateModeHelp();
+
+  private:
+
+    void compile(bool link, bool flash, bool runOrPause );
+
+    //Установить заголовок в соотвествии с проектом
+    void setupTitle();
+
+    //Истина, если текущий режим текстовый
+    bool isText() const;
+
+
+    // QWidget interface
+  protected:
+    virtual void closeEvent(QCloseEvent *ev);
+
+  protected slots:
+     void onProcessChanged( const QString status, bool processStatus, const QString error );
+
+  };
+
+#endif // WMAIN_H
