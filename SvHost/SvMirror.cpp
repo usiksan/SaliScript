@@ -8,7 +8,7 @@
 
 #include "SvMirror.h"
 #include "SvMirrorThread.h"
-#include "Compiler/SvVpuCompiler.h"
+#include "SvCompiler/SvVpuCompiler.h"
 
 #include <QFileInfo>
 
@@ -155,7 +155,7 @@ void SvMirror::debugPauseAll()
 void SvMirror::debugStep(int taskId)
   {
   int ip, run;
-  if( taskInfo( taskId, &run, &ip, 0, 0, 0 ) ) {
+  if( taskInfo( taskId, &run, &ip, nullptr, nullptr, nullptr ) ) {
     //Задача присутствует
     if( run == 0 && ip != 0 ) {
       //Задача заторможена
@@ -176,7 +176,7 @@ void SvMirror::debugStep(int taskId)
 void SvMirror::debugTrace(int taskId)
   {
   int ip, run;
-  if( taskInfo( taskId, &run, &ip, 0, 0, 0 ) ) {
+  if( taskInfo( taskId, &run, &ip, nullptr, nullptr, nullptr ) ) {
     //Задача присутствует
     if( run == 0 && ip != 0 ) {
       //Задача заторможена
@@ -275,9 +275,8 @@ void SvMirror::make()
     mProgramm->load( mPrjPath + mMainScript );
     }
   else {
-    SvVpuCompiler compiler;
     //Построить программу
-    mProgramm = compiler.make( mPrjPath, mMainScript );
+    mProgramm = SvCompiler6::SvVpuCompiler::build( mPrjPath, mMainScript );
     //Сохранить бинарник
     //Заменить расширение
     auto i = mMainScript.lastIndexOf( QChar('.') );

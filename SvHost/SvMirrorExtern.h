@@ -11,6 +11,7 @@
 #define SVMIRROREXTERN_H
 
 #include "SvMirror.h"
+#include "SvVMachine/SvVmVpuState.h"
 #include <QList>
 #include <QMap>
 #include <QMutex>
@@ -37,7 +38,7 @@ class SvMirrorExtern : public SvMirror
     Q_OBJECT
 
   protected:
-    SvVpuState    *mVpuState;    //Зеркало состояния виртуальных машин
+    SvVmVpuState  *mVpuState;    //Зеркало состояния виртуальных машин
     SvDebugTask   *mVpuDebug;    //Команды отладочного управления
     QMutex         mVpuMutex;    //Механизм защиты от сдвоенного доступа к командам управления
     int            mVpuCount;    //Количество работающих VPU
@@ -53,7 +54,7 @@ class SvMirrorExtern : public SvMirror
 
   public:
     SvMirrorExtern( bool scanTasks );
-    virtual ~SvMirrorExtern();
+    virtual ~SvMirrorExtern() override;
 
     //===========================
     //Раздел списка задач

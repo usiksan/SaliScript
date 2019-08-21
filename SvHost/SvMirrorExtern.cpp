@@ -7,18 +7,18 @@
 */
 
 #include "SvMirrorExtern.h"
-#include "Vpu/SvVpuUtils.h"
+#include "SvVMachine/SvVmUtils.h"
 
 #include <QDebug>
 
 SvMirrorExtern::SvMirrorExtern(bool scanTasks) :
   SvMirror( scanTasks ),
   mVpuState(0),    //Зеркало состояния виртуальных машин
-  mVpuDebug(0),
+  mVpuDebug(nullptr),
   mVpuMutex(),
   mVpuCount(0),    //Количество VPU
   mVpuMax(0),
-  mMemory(0),      //Зеркало памяти
+  mMemory(nullptr),      //Зеркало памяти
   mMemorySize(0),  //Размер памяти данных
   mMemoryCount(0),
   mWriteMutex()
@@ -150,18 +150,18 @@ void SvMirrorExtern::setupMirror(int vpuMax, int vpuCount, int memoryMax, int me
   qDebug() << "vpuMax" << mVpuMax << "vpuCount" << mVpuCount << "mMemorySize" << mMemorySize << "mMemoryCount" << mMemoryCount;
   if( mVpuState )
     delete mVpuState;
-  mVpuState = new SvVpuState[mVpuMax];
-  memset( mVpuState, 0, sizeof(SvVpuState) * mVpuMax );
+  mVpuState = new SvVmVpuState[static_cast<unsigned>(mVpuMax)];
+  memset( mVpuState, 0, sizeof(SvVmVpuState) * static_cast<unsigned>(mVpuMax) );
 
   if( mVpuDebug )
     delete mVpuDebug;
-  mVpuDebug = new SvDebugTask[mVpuMax];
-  memset( mVpuDebug, 0, sizeof(SvDebugTask) * mVpuMax );
+  mVpuDebug = new SvDebugTask[static_cast<unsigned>(mVpuMax)];
+  memset( mVpuDebug, 0, sizeof(SvDebugTask) * static_cast<unsigned>(mVpuMax) );
 
   if( mMemory )
     delete mMemory;
-  mMemory = new int[mMemorySize];
-  memset( mMemory, 0, sizeof(int) * mMemorySize );
+  mMemory = new int[static_cast<unsigned>(mMemorySize)];
+  memset( mMemory, 0, sizeof(int) * static_cast<unsigned>(mMemorySize) );
   }
 
 

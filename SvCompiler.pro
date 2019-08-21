@@ -30,44 +30,43 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 HEADERS += \
-    SrCompiler/SrCompiler.h \
-    SrCompiler/SrVpuCompiler.h \
-    SrHost/SrProgramm.h
+  SvCompiler/SvCompiler.h \
+  SvCompiler/SvVpuCompiler.h \
+  SvHost/SvProgramm.h
 
 SOURCES += \
-    SrCompiler/SrClass.cpp \
-    SrCompiler/SrCompiler1.cpp \
-    SrCompiler/SrCompiler2.cpp \
-    SrCompiler/SrCompiler3.cpp \
-    SrCompiler/SrCompiler4.cpp \
-    SrCompiler/SrCompiler5.cpp \
-    SrCompiler/SrCompiler6.cpp \
-    SrCompiler/SrCompiler7.cpp \
-    SrCompiler/SrCompiler8.cpp \
-    SrCompiler/SrCompiler9.cpp \
-    SrCompiler/SrCompilerA.cpp \
-    SrCompiler/SrCompilerB.cpp \
-    SrCompiler/SrFunction.cpp \
-    SrCompiler/SrFunctionList.cpp \
-    SrCompiler/SrFunctionType.cpp \
-    SrCompiler/SrHelp.cpp \
-    SrCompiler/SrOperator.cpp \
-    SrCompiler/SrOperatorBlock.cpp \
-    SrCompiler/SrOperatorReturn.cpp \
-    SrCompiler/SrType.cpp \
-    SrCompiler/SrTypeList.cpp \
-    SrCompiler/SrValue.cpp \
-    SrCompiler/SrValueBinaryLong.cpp \
-    SrCompiler/SrValueCall.cpp \
-    SrCompiler/SrValueList.cpp \
-    SrCompiler/SrValueMemberVariable.cpp \
-    SrCompiler/SrValueVariable.cpp \
-    SrCompiler/SrVariable.cpp \
-    SrCompiler/SrVariableList.cpp \
-    SrCompiler/SrVpuCompiler1.cpp \
-    SrCompiler/SrVpuCompiler2.cpp \
-    SrHost/SrProgramm.cpp \
-    SrCompiler/SrSource.cpp \
-    SrCompiler/SrSourceFile.cpp \
-    SrCompiler/SrCompilerMain.cpp
+  SvCompiler/SvClass.cpp \
+  SvCompiler/SvCompilerConstExpression.cpp \
+  SvCompiler/SvCompilerConstValue.cpp \
+  SvCompiler/SvCompilerErrors.cpp \
+  SvCompiler/SvCompilerExpression.cpp \
+  SvCompiler/SvCompilerInit.cpp \
+  SvCompiler/SvCompilerInputStream.cpp \
+  SvCompiler/SvCompilerListing.cpp \
+  SvCompiler/SvCompilerPreprocessor.cpp \
+  SvCompiler/SvCompilerScaner.cpp \
+  SvCompiler/SvCompilerSyntax.cpp \
+  SvCompiler/SvFunction.cpp \
+  SvCompiler/SvFunctionList.cpp \
+  SvCompiler/SvFunctionType.cpp \
+  SvCompiler/SvHelp.cpp \
+  SvCompiler/SvOperator.cpp \
+  SvCompiler/SvOperatorBlock.cpp \
+  SvCompiler/SvOperatorReturn.cpp \
+  SvCompiler/SvSource.cpp \
+  SvCompiler/SvSourceFile.cpp \
+  SvCompiler/SvType.cpp \
+  SvCompiler/SvTypeList.cpp \
+  SvCompiler/SvValue.cpp \
+  SvCompiler/SvValueBinaryLong.cpp \
+  SvCompiler/SvValueCall.cpp \
+  SvCompiler/SvValueList.cpp \
+  SvCompiler/SvValueMemberVariable.cpp \
+  SvCompiler/SvValueVariable.cpp \
+  SvCompiler/SvVariable.cpp \
+  SvCompiler/SvVariableList.cpp \
+  SvCompiler/SvVpuCompiler1.cpp \
+  SvCompiler/SvVpuCompiler2.cpp \
+  SvCompilerMain.cpp \
+  SvHost/SvProgramm.cpp
 

@@ -6,7 +6,7 @@
 
 QT       += core gui network
 
-CONFIG += c++11
+CONFIG += c++17
 
   DEFINES += ENABLE_USB10
 
@@ -18,130 +18,15 @@ TARGET = SvStudio
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-    Vpu/SvController.cpp \
-    Host/SvControllerLocal.cpp \
-    Host/SvMirror.cpp \
-    Host/SvMirrorLocal.cpp \
-    SvProject.cpp \
-    SvDebugThread.cpp \
-    Host/SvProgramm.cpp \
-    WBrowser.cpp \
-    WCModeBoard.cpp \
-    WCModeEditor.cpp \
-    WCModeHelp.cpp \
-    WCModeIntro.cpp \
-    WCommand.cpp \
-    WMain.cpp \
-    WTextEditor.cpp \
-    WVisualEditor.cpp \
-    WVisualLibrary.cpp \
-    Highlighter.cpp \
-    SvUtils.cpp \
-    SvPeriodicParser.cpp \
-    DsLibCategory.cpp \
-    DPrjProp.cpp \
-    DProcess.cpp \
-    Host/SvMirrorExtern.cpp \
-    Host/SvMirrorRemote.cpp \
-    Compiler/SvClass.cpp \
-    Compiler/SvCompiler1.cpp \
-    Compiler/SvCompiler2.cpp \
-    Compiler/SvCompiler3.cpp \
-    Compiler/SvCompiler4.cpp \
-    Compiler/SvCompiler4A.cpp \
-    Compiler/SvCompiler5.cpp \
-    Compiler/SvCompiler6.cpp \
-    Compiler/SvCompiler7.cpp \
-    Compiler/SvCompiler8.cpp \
-    Compiler/SvCompiler9.cpp \
-    Compiler/SvCompilerA.cpp \
-    Compiler/SvHelp.cpp \
-    Compiler/SvType.cpp \
-    Compiler/SvValue.cpp \
-    Compiler/SvVariable.cpp \
-    Compiler/SvVpuCompiler.cpp \
-    Host/SvMirrorThread.cpp \
-    WDebugTable.cpp \
-    IngDebugCalculator.cpp \
-    WTextSearchPanel.cpp \
-    DTextEditorSettings.cpp \
-    Host/SvMirrorUsb10.cpp \
-    ../SvNet/SvDir.cpp \
-    ../SvNet/SvNetClient.cpp \
-    ../SvNet/SvNetClientFile.cpp \
-    ../SvNet/SvNetPacket.cpp \
-    ../SvNet/SvNetPacketBlock.cpp \
-    ../SvNet/WNetFileList.cpp \
-    ../SvNet/WNetFileManager.cpp \
-    ../SvNet/WNetViewer.cpp \
-    Host/SvNetClientMirror.cpp \
-    ../SvNet/DNetProcess.cpp \
-    bug.cpp \
-    WOscillograph.cpp
-
-HEADERS  += \
-    Vpu/SvController.h \
-    Vpu/SvVpuTypes.h \
-    Host/SvControllerLocal.h \
-    Host/SvMirror.h \
-    Host/SvMirrorLocal.h \
-    Host/SvProgramm.h \
-    SvProject.h \
-    SvDebugThread.h \
-    WBrowser.h \
-    WCModeBoard.h \
-    WCModeEditor.h \
-    WCModeHelp.h \
-    WCModeIntro.h \
-    WCommand.h \
-    WMain.h \
-    WTextEditor.h \
-    WVisualEditor.h \
-    WVisualLibrary.h \
-    Highlighter.h \
-    SvUtils.h \
-    SvPeriodicParser.h \
-    DsLibCategory.h \
-    DPrjProp.h \
-    DProcess.h \
-    SvConfig.h \
-    Host/SvMirrorExtern.h \
-    Host/SvMirrorRemote.h \
-    Vpu/SvVpuCore.h \
-    Compiler/SvCompiler.h \
-    Compiler/SvVpuCompiler.h \
-    Host/SvMirrorThread.h \
-    Vpu/SvVpuUtils.h \
-    Vpu/SvVpuUsbInterface.h \
-    Vpu/vpu5Sys.h \
-    WDebugTable.h \
-    IngDebugCalculator.h \
-    WTextSearchPanel.h \
-    DTextEditorSettings.h \
-    Host/SvMirrorUsb10.h \
-    ../SvNet/SvDir.h \
-    ../SvNet/SvNetClient.h \
-    ../SvNet/SvNetClientFile.h \
-    ../SvNet/SvNetFile.h \
-    ../SvNet/SvNetPacket.h \
-    ../SvNet/SvNetPacketBlock.h \
-    ../SvNet/WNetFileList.h \
-    ../SvNet/WNetFileManager.h \
-    ../SvNet/WNetViewer.h \
-    Host/SvNetClientMirror.h \
-    ../SvNet/DNetProcess.h \
-    Host/SvCompilerBase.h \
-    WOscillograph.h
 
 
 RESOURCES += \
-    SvRes.qrc
+    SvStudio/SvRes.qrc
 
 FORMS += \
-    DPrjProp.ui \
-    DProcess.ui \
-    DTextEditorSettings.ui
+    SvStudio/DPrjProp.ui \
+    SvStudio/DProcess.ui \
+    SvStudio/DTextEditorSettings.ui
 
 unix: !macx {
     CONFIG += link_pkgconfig
@@ -153,3 +38,127 @@ INCLUDEPATH += ../SvNet
 DEPENDPATH += $$PWD/../libusb-1.0
 
 win32: LIBS += -L$$PWD/../libusb-1.0/ -llibusb-1.0.dll
+
+HEADERS += \
+  SvCompiler/SvCompiler.h \
+  SvCompiler/SvVpuCompiler.h \
+  SvHost/SvDir.h \
+  SvHost/SvMirror.h \
+  SvHost/SvMirrorExtern.h \
+  SvHost/SvMirrorLocal.h \
+  SvHost/SvMirrorRemote.h \
+  SvHost/SvMirrorThread.h \
+  SvHost/SvMirrorUsb10.h \
+  SvHost/SvNetClientMirror.h \
+  SvHost/SvProgramm.h \
+  SvHost/SvVMachineLocal.h \
+  SvStudio/DPrjProp.h \
+  SvStudio/DProcess.h \
+  SvStudio/DTextEditorSettings.h \
+  SvStudio/DsLibCategory.h \
+  SvStudio/Highlighter.h \
+  SvStudio/IngDebugCalculator.h \
+  SvStudio/SvConfig.h \
+  SvStudio/SvDebugThread.h \
+  SvStudio/SvPeriodicParser.h \
+  SvStudio/SvProject.h \
+  SvStudio/SvUtils.h \
+  SvStudio/WBrowser.h \
+  SvStudio/WCChartLegend.h \
+  SvStudio/WCModeBoard.h \
+  SvStudio/WCModeEditor.h \
+  SvStudio/WCModeHelp.h \
+  SvStudio/WCModeIntro.h \
+  SvStudio/WCommand.h \
+  SvStudio/WDebugTable.h \
+  SvStudio/WMain.h \
+  SvStudio/WOscillograph.h \
+  SvStudio/WTextEditor.h \
+  SvStudio/WTextSearchPanel.h \
+  SvStudio/WVisualEditor.h \
+  SvStudio/WVisualLibrary.h \
+  SvVMachine/Sv6Plc.h \
+  SvVMachine/Sv6Sys.h \
+  SvVMachine/SvVMachine.h \
+  SvVMachine/SvVmByteCode.h \
+  SvVMachine/SvVmCodeHeader.h \
+  SvVMachine/SvVmTypes.h \
+  SvVMachine/SvVmUsbInterface.h \
+  SvVMachine/SvVmUtils.h \
+  SvVMachine/SvVmVpu.h \
+  SvVMachine/SvVmVpuState.h
+
+SOURCES += \
+  SvCompiler/SvClass.cpp \
+  SvCompiler/SvCompilerConstExpression.cpp \
+  SvCompiler/SvCompilerConstValue.cpp \
+  SvCompiler/SvCompilerErrors.cpp \
+  SvCompiler/SvCompilerExpression.cpp \
+  SvCompiler/SvCompilerInit.cpp \
+  SvCompiler/SvCompilerInputStream.cpp \
+  SvCompiler/SvCompilerListing.cpp \
+  SvCompiler/SvCompilerPreprocessor.cpp \
+  SvCompiler/SvCompilerScaner.cpp \
+  SvCompiler/SvCompilerSyntax.cpp \
+  SvCompiler/SvFunction.cpp \
+  SvCompiler/SvFunctionList.cpp \
+  SvCompiler/SvFunctionType.cpp \
+  SvCompiler/SvHelp.cpp \
+  SvCompiler/SvOperator.cpp \
+  SvCompiler/SvOperatorBlock.cpp \
+  SvCompiler/SvOperatorReturn.cpp \
+  SvCompiler/SvSource.cpp \
+  SvCompiler/SvSourceFile.cpp \
+  SvCompiler/SvType.cpp \
+  SvCompiler/SvTypeList.cpp \
+  SvCompiler/SvValue.cpp \
+  SvCompiler/SvValueBinaryLong.cpp \
+  SvCompiler/SvValueCall.cpp \
+  SvCompiler/SvValueList.cpp \
+  SvCompiler/SvValueMemberVariable.cpp \
+  SvCompiler/SvValueVariable.cpp \
+  SvCompiler/SvVariable.cpp \
+  SvCompiler/SvVariableList.cpp \
+  SvCompiler/SvVpuCompiler1.cpp \
+  SvCompiler/SvVpuCompiler2.cpp \
+  SvHost/SvDir.cpp \
+  SvHost/SvMirror.cpp \
+  SvHost/SvMirrorExtern.cpp \
+  SvHost/SvMirrorLocal.cpp \
+  SvHost/SvMirrorRemote.cpp \
+  SvHost/SvMirrorThread.cpp \
+  SvHost/SvMirrorUsb10.cpp \
+  SvHost/SvNetClientMirror.cpp \
+  SvHost/SvProgramm.cpp \
+  SvHost/SvVMachineLocal.cpp \
+  SvStudio/DPrjProp.cpp \
+  SvStudio/DProcess.cpp \
+  SvStudio/DTextEditorSettings.cpp \
+  SvStudio/DsLibCategory.cpp \
+  SvStudio/Highlighter.cpp \
+  SvStudio/IngDebugCalculator.cpp \
+  SvStudio/SvDebugThread.cpp \
+  SvStudio/SvPeriodicParser.cpp \
+  SvStudio/SvProject.cpp \
+  SvStudio/SvUtils.cpp \
+  SvStudio/WBrowser.cpp \
+  SvStudio/WCChartLegend.cpp \
+  SvStudio/WCModeBoard.cpp \
+  SvStudio/WCModeChart.cpp \
+  SvStudio/WCModeEditor.cpp \
+  SvStudio/WCModeHelp.cpp \
+  SvStudio/WCModeIntro.cpp \
+  SvStudio/WCommand.cpp \
+  SvStudio/WDebugTable.cpp \
+  SvStudio/WMain.cpp \
+  SvStudio/WOscillograph.cpp \
+  SvStudio/WTextEditor.cpp \
+  SvStudio/WTextSearchPanel.cpp \
+  SvStudio/WVisualEditor.cpp \
+  SvStudio/WVisualLibrary.cpp \
+  SvStudio/bug.cpp \
+  SvStudio/main.cpp \
+  SvVMachine/SvVMachine.cpp
+
+
+DISTFILES +=

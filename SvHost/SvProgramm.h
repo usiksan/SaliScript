@@ -25,6 +25,8 @@
 #include "SvVMachine/SvVmUtils.h"
 #include "SvVMachine/SvVmCodeHeader.h"
 
+//Расширение для бинарного представления программы
+#define SV_PROGRAMM_EXTENSION QString(".vpu6prg")
 
 //Элемент ошибки
 struct SvError {

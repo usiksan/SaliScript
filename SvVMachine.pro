@@ -28,22 +28,23 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-HEADERS += \
-    SrVMachine/Sr6Plc.h \
-    SrVMachine/Sr6Sys.h \
-    SrVMachine/SrVMachine.h \
-    SrVMachine/SrVmByteCode.h \
-    SrVMachine/SrVmCodeHeader.h \
-    SrVMachine/SrVmTypes.h \
-    SrVMachine/SrVmUsbInterface.h \
-    SrVMachine/SrVmUtils.h \
-    SrVMachine/SrVmVpu.h \
-    SrVMachine/SrVmVpuState.h
-
-SOURCES += \
-    SrVMachine/SrVMachine.cpp \
-    SrVMachine/SrVmMain.cpp
 
 DISTFILES +=
+
+HEADERS += \
+  SvVMachine/Sv6Plc.h \
+  SvVMachine/Sv6Sys.h \
+  SvVMachine/SvVMachine.h \
+  SvVMachine/SvVmByteCode.h \
+  SvVMachine/SvVmCodeHeader.h \
+  SvVMachine/SvVmTypes.h \
+  SvVMachine/SvVmUsbInterface.h \
+  SvVMachine/SvVmUtils.h \
+  SvVMachine/SvVmVpu.h \
+  SvVMachine/SvVmVpuState.h
+
+SOURCES += \
+  SvVMachine/SvVMachine.cpp \
+  SvVMachineMain.cpp
 
 

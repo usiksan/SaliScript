@@ -10,7 +10,7 @@
 
 //#include <QDebug>
 
-SvMirrorLocal::SvMirrorLocal(SvControllerLocal *controller, bool scanTasks ) :
+SvMirrorLocal::SvMirrorLocal(SvVMachineLocal *controller, bool scanTasks ) :
   SvMirror( scanTasks ),
   mController(controller),
   mDivider(0)
@@ -58,7 +58,7 @@ int SvMirrorLocal::taskCount() const
 bool SvMirrorLocal::taskInfo(int taskId, int *runOrPause, int *ip, int *sp, int *tm, int *bp)
   {
   if( taskId >= 0 && taskId < mController->taskCount() ) {
-    const SvVpuCore *vpu = mController->vpu(taskId);
+    const SvVmVpu *vpu = mController->vpu(taskId);
     if( runOrPause ) *runOrPause = vpu->isRun();
     if( ip ) *ip = vpu->mIp;
     if( sp ) *sp = vpu->mSp;
@@ -92,14 +92,14 @@ void SvMirrorLocal::restart(bool runOrPause)
 
 int SvMirrorLocal::memoryGet(int index)
   {
-  return mController->memGet( 0, index );
+  return mController->memGet( nullptr, index );
   }
 
 
 
 void SvMirrorLocal::memorySet(int index, int value)
   {
-  mController->memSet( 0, index, value );
+  mController->memSet( nullptr, index, value );
   }
 
 
@@ -141,6 +141,7 @@ void SvMirrorLocal::debugRunTrace(int taskId, int start, int stop)
 //Завершить вызов удаленной процедуры и вернуть результат
 void SvMirrorLocal::remoteCallComplete(int result)
   {
+  Q_UNUSED(result)
   }
 
 

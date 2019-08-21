@@ -12,17 +12,17 @@
 #define SVMIRRORLOCAL_H
 
 #include "SvMirror.h"
-#include "SvControllerLocal.h"
+#include "SvVMachineLocal.h"
 
 class SvMirrorLocal : public SvMirror
   {
     Q_OBJECT
 
-    SvControllerLocal *mController;
+    SvVMachineLocal   *mController;
     int                mDivider;
   public:
-    SvMirrorLocal(SvControllerLocal *controller, bool scanTasks);
-    virtual ~SvMirrorLocal();
+    SvMirrorLocal(SvVMachineLocal *controller, bool scanTasks);
+    virtual ~SvMirrorLocal() override;
 
     //Тип зеркала
     virtual int         mirrorType() const override { return SMT_LOCAL; }
