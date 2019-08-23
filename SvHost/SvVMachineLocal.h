@@ -31,7 +31,7 @@ class SvVMachineLocal : public SvVMachine
     ~SvVMachineLocal() override;
 
     //Нарушение доступа к памяти данных
-    virtual void  memFail( SvVmVpu *vpu, int index ) override;
+    virtual void  memFail( SvVmVpu *vpu, int index ) const override;
 
     //Нарушение доступа к памяти программ
     virtual void  progFail( SvVmVpu *vpu, int address, int len ) override;
@@ -39,7 +39,14 @@ class SvVMachineLocal : public SvVMachine
     //Установить программу для исполнения локальным контроллером
     void          setProgrammPtr( SvProgrammPtr prog );
 
+    //Текущая программа, используемая локальным контроллером
     SvProgrammPtr getProgramm() const { return mProgramm; }
+
+    //Получить состояние переменной по ее имени
+    int           variableGet( const QString name, int index = 0 ) const;
+
+    //Установить новое состояние переменной по ее имени
+    void          variableSet( int value, const QString name, int index = 0 );
   };
 
 #endif // SVVMACHINELOCAL_H

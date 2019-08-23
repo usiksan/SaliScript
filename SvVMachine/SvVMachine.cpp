@@ -642,48 +642,49 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         //global[--sp] = ip; ip = addr;
         //bp = sp;
       case VBC2_CALL :            //call( param );
-        call( vpu, PARAM8 );
+        tmp = PARAM8;
         vpu->mIp += 2;
+        call( vpu, tmp );
         break;
 
       case VBC1_CALL0 :
-        call( vpu, 0 );
         vpu->mIp++;
+        call( vpu, 0 );
         break;
 
       case VBC1_CALL1 :
-        call( vpu, 1 );
         vpu->mIp++;
+        call( vpu, 1 );
         break;
 
       case VBC1_CALL2 :
-        call( vpu, 2 );
         vpu->mIp++;
+        call( vpu, 2 );
         break;
 
       case VBC1_CALL3 :
-        call( vpu, 3 );
         vpu->mIp++;
+        call( vpu, 3 );
         break;
 
       case VBC1_CALL4 :
-        call( vpu, 4 );
         vpu->mIp++;
+        call( vpu, 4 );
         break;
 
       case VBC1_CALL5 :
-        call( vpu, 5 );
         vpu->mIp++;
+        call( vpu, 5 );
         break;
 
       case VBC1_CALL6 :
-        call( vpu, 6 );
         vpu->mIp++;
+        call( vpu, 6 );
         break;
 
       case VBC1_CALL7 :
-        call( vpu, 7 );
         vpu->mIp++;
+        call( vpu, 7 );
         break;
 
         //Инкремент
@@ -959,11 +960,10 @@ void SvVMachine::call(SvVmVpu *vpu, int addrOffset)
     //Статическая внешняя функция
     if( executeMethod( vpu, static_cast<int>( static_cast<unsigned>(tmp) & 0xefffffff ) ) )
       return;
-    vpu->mIp += 2;
     }
   else
     //внутренние функции
-    callInternal( vpu, tmp, vpu->mIp + 2 );
+    callInternal( vpu, tmp, vpu->mIp );
   }
 
 

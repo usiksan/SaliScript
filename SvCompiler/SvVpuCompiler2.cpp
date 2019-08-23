@@ -923,7 +923,7 @@ void SvVpuCompiler::gvvStore(SvProgramm *prog, SvValueStore *store, bool keepVal
     errorInLine( QObject::tr("Error. Need lvalue, but %1 is not").arg(store->mOperand1->getType()->mName), store->mMark );
     return;
     }
-  if( !store->mOperand1->getType()->mBaseType->canAssign( store->mOperand2->getType() ) ) {
+  if( !store->mOperand1->getType()->mBaseType->isMatchParam( store->mOperand2->getType(), store->mConst && store->mConstInt == 0 ) ) {
     errorInLine( QObject::tr("Error. Can't store %1 to %2").arg(store->mOperand2->getType()->mName).arg(store->mOperand1->getType()->mBaseType->mName), store->mMark );
     return;
     }

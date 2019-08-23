@@ -45,7 +45,7 @@ SvVMachineLocal::~SvVMachineLocal()
 
 
 
-void SvVMachineLocal::memFail(SvVmVpu *vpu, int index)
+void SvVMachineLocal::memFail(SvVmVpu *vpu, int index) const
   {
   qDebug() << "SvVMachineLocal memFail at " << index;
   Q_UNUSED(vpu)
@@ -70,4 +70,26 @@ void SvVMachineLocal::setProgrammPtr(SvProgrammPtr prog)
   {
   mProgramm = prog;
   setProgramm( mProgramm->getVpuCode() );
+  }
+
+
+
+
+//Получить состояние переменной по ее имени
+int SvVMachineLocal::variableGet(const QString name, int index) const
+  {
+  if( mProgramm ) {
+    return memGet( nullptr, mProgramm->getAddr(name) + index );
+    }
+  return 0;
+  }
+
+
+
+
+//Установить новое состояние переменной по ее имени
+void SvVMachineLocal::variableSet(int value, const QString name, int index)
+  {
+  if( mProgramm )
+    memSet( nullptr, mProgramm->getAddr(name) + index, value );
   }

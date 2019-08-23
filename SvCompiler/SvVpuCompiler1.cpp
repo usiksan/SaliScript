@@ -113,7 +113,6 @@ SvProgrammPtr SvVpuCompiler::make(const QString prjPath, const QString &mainScri
   pass( prog.data() );
 
 
-
   //Для всех статических объектов сформировать конструирование
   codePrintEoln( QString("//Init table") );
   prog->setInitTable();
@@ -131,6 +130,8 @@ SvProgrammPtr SvVpuCompiler::make(const QString prjPath, const QString &mainScri
 
   //Закончить таблицу
   prog->add24( 0, 0, 0 );
+  //Зафиксировать размер программы без учета таблиц
+  prog->setVpuProgSize();
 
   //Экспорт символов
   codePrintEoln( QString("//Variables") );

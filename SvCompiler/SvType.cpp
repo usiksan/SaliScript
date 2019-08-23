@@ -56,27 +56,6 @@ SvType::SvType(const QString &name, int svClass, int size, SvType *base) :
 
 
 
-bool SvType::canAssign(SvType *src)
-  {
-  //Если типы совпадают, то назначать можно
-  if( src == this ) return true;
-
-  //В остальных случаях проверим указатель
-  if( src && mClass == CLASS_POINTER && src->mClass == CLASS_POINTER ) {
-    if( mBaseType->mClass == CLASS_STRUCT && src->mBaseType->mClass == CLASS_STRUCT ) {
-      //Подняться по базовым классам
-      SvStruct *thisClass = mBaseType->toStruct();
-      SvStruct *srcClass  = src->mBaseType->toStruct();
-      Q_ASSERT( thisClass != 0 );
-      while( srcClass != 0 ) {
-        if( thisClass == srcClass ) return true;
-        //Подняться к очередному базовому классу
-        srcClass = srcClass->mBaseStruct;
-        }
-      }
-    }
-  return false;
-  }
 
 
 
@@ -129,7 +108,7 @@ bool SvType::isMatchParam(SvType *src, bool srcNull )
   {
   if( src == this ) return true;
   if( isPointer() && src->isInt() && srcNull ) return true;
-  if( isPointer() && (src->isArray() || src->isPointer()) ) {
+  if( isPointer() && (src->isArray() || src->isPointer() ) ) {
     //Указателю присваивается массив или указатель
 
     //Указателю на void можно присвоить любой указатель
@@ -141,7 +120,20 @@ bool SvType::isMatchParam(SvType *src, bool srcNull )
       for( SvType *base = src->mBaseType; base; base = base->mBaseType )
         if( base == mBaseType ) return true;
       }
+
+    //Указателю на функцию можно присвоить указатель на функцию с такой-же сигнатурой
+    if( mBaseType->isFunction() && src->mBaseType->isFunction() ) {
+      //Сравниваем сигнатуры функций
+      return mBaseType->mSignature == src->mBaseType->mSignature;
+      }
     }
+
+  //Указателю на функцию можно присвоить функцию
+  if( isPointer() && mBaseType->isFunction() && src->isFunction() ) {
+    //Сравниваем сигнатуры функций
+    return mBaseType->mSignature == src->mSignature;
+    }
+
   return false;
   }
 

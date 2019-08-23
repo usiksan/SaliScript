@@ -13,7 +13,7 @@
 
 SvMirrorExtern::SvMirrorExtern(bool scanTasks) :
   SvMirror( scanTasks ),
-  mVpuState(0),    //Зеркало состояния виртуальных машин
+  mVpuState(nullptr),    //Зеркало состояния виртуальных машин
   mVpuDebug(nullptr),
   mVpuMutex(),
   mVpuCount(0),    //Количество VPU
@@ -33,24 +33,19 @@ SvMirrorExtern::~SvMirrorExtern()
 
 
 
+
+
+
 //Получить информацию по задаче
-bool SvMirrorExtern::taskInfo(int taskId, int *runOrPause, int *ip, int *sp, int *tm, int *bp)
+SvVmVpuState *SvMirrorExtern::taskInfo(qint32 taskId)
   {
-  if( taskId >= 0 && taskId < mVpuCount ) {
-    if( runOrPause ) *runOrPause = mVpuState[taskId].mIsRun;
-    if( ip ) *ip = mVpuState[taskId].mIp;
-    if( sp ) *sp = mVpuState[taskId].mSp;
-    if( tm ) *tm = mVpuState[taskId].mTm;
-    if( bp ) *bp = mVpuState[taskId].mBp;
-    return true;
-    }
-  if( runOrPause ) *runOrPause = 0;
-  if( ip ) *ip = 0;
-  if( sp ) *sp = 0;
-  if( tm ) *tm = 0;
-  if( bp ) *bp = 0;
-  return false;
+  if( taskId >= 0 && taskId < mVpuCount )
+    return mVpuState + taskId;
+  return nullptr;
   }
+
+
+
 
 
 

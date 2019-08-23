@@ -110,7 +110,7 @@ class SvVMachine
        \param vpu Виртуальный процессор, вызвавший нарушение
        \param index Индекс ячейки памяти, который вызвал нарушение
      */
-    virtual void memFail( SvVmVpu *vpu, int index ) = 0;
+    virtual void memFail( SvVmVpu *vpu, int index ) const = 0;
 
 
 
@@ -498,7 +498,7 @@ class SvVMachine
        \param index Номер ячейки памяти
        \return Значение из требуемой ячейки или ноль при нарушении границ памяти
      */
-    virtual int memGet( SvVmVpu *vpu, int index ) {
+    virtual int memGet( SvVmVpu *vpu, int index ) const {
       if( index > 0 && index < mMemorySize )
         return mMemory[index];
       memFail( vpu, index );

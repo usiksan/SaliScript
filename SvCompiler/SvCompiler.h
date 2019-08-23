@@ -520,10 +520,6 @@ namespace SvCompiler6
       //Конструктор типа с именем, классом, размером и подтипом
       SvType(const QString &name, int svClass, int size, SvType *base );
 
-      //Проверить возможность назначения типов
-      //т.е. может ли тип src быть присвоен данному типу
-      bool            canAssign( SvType *src );
-
       //Получить id объекта
       int             objectId() const { return (mClass >> 20) & 0xff; }
 
@@ -548,14 +544,17 @@ namespace SvCompiler6
       //Получить тип массив
       SvType         *getTypeArray(int numElem);
 
-      bool            isInt()     const { return mClass == CLASS_INT; }
-      bool            isVoid()    const { return mClass == CLASS_VOID; }
-      bool            isArray()   const { return mClass == CLASS_ARRAY; }
-      bool            isPointer() const { return mClass == CLASS_POINTER; }
-      bool            isCBlock()  const { return mClass == CLASS_CBLOCK; }
-      bool            isCString() const { return mClass == CLASS_CSTRING; }
-      bool            isStruct()  const { return mClass == CLASS_STRUCT; }
+      bool            isInt()      const { return mClass == CLASS_INT; }
+      bool            isVoid()     const { return mClass == CLASS_VOID; }
+      bool            isArray()    const { return mClass == CLASS_ARRAY; }
+      bool            isPointer()  const { return mClass == CLASS_POINTER; }
+      bool            isCBlock()   const { return mClass == CLASS_CBLOCK; }
+      bool            isCString()  const { return mClass == CLASS_CSTRING; }
+      bool            isStruct()   const { return mClass == CLASS_STRUCT; }
+      bool            isFunction() const { return mClass == CLASS_FUNCTION; }
 
+      //Проверить возможность назначения типов
+      //т.е. может ли тип src быть присвоен данному типу
       //Проверить соответствие параметра
       bool            isMatchParam(SvType *src , bool srcNull);
 

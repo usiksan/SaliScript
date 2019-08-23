@@ -58,37 +58,37 @@ class SvMirrorExtern : public SvMirror
 
     //===========================
     //Раздел списка задач
-    virtual int         taskCount() const override { return mVpuCount; }
-    virtual int         taskMax() const override { return mVpuMax; }
+    virtual int           taskCount() const override { return mVpuCount; }
+    virtual int           taskMax() const override { return mVpuMax; }
 
     //Получить информацию по задаче
-    virtual bool        taskInfo( int taskId, int *runOrPause, int *ip, int *sp, int *tm, int *bp ) override;
+    virtual SvVmVpuState *taskInfo( qint32 taskId ) override;
 
     //===========================
     //Раздел памяти данных
 
-    virtual int         memorySize() const override { return mMemorySize; }
+    virtual int           memorySize() const override { return mMemorySize; }
 
     //Получить состояние ячейки памяти
-    virtual int         memoryGet( int index ) override;
+    virtual int           memoryGet( int index ) override;
 
     //Установить состояние ячейки памяти
-    virtual void        memorySet( int index, int value ) override;
+    virtual void          memorySet( int index, int value ) override;
 
     //===========================
     //Раздел управления отладкой
 
     //Отладка - пуск
-    virtual void        debugRun( int taskId ) override;
+    virtual void          debugRun( int taskId ) override;
 
     //Отладка - исполнять пока внутри и не изменится bp (шаг)
-    virtual void        debugRunStep( int taskId, int start, int stop ) override;
+    virtual void          debugRunStep( int taskId, int start, int stop ) override;
 
     //Отладка - исполнять пока снаружи (точка останова)
-    virtual void        debugRunUntil( int taskId, int start, int stop ) override;
+    virtual void          debugRunUntil( int taskId, int start, int stop ) override;
 
     //Отладка - исполнять пока внутри (трассировка)
-    virtual void        debugRunTrace( int taskId, int start, int stop ) override;
+    virtual void          debugRunTrace( int taskId, int start, int stop ) override;
 
   protected:
     //Построить зеркало в соответствии с удаленным контроллером
