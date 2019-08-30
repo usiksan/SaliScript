@@ -278,8 +278,8 @@ void SvVpuCompiler::gOperatorReturn(SvProgramm *prog, SvOperatorReturn *svReturn
     //Вычислить результат и сохранить в возврате
     gValue( prog, svReturn->mResult, true, false );
 
-    prog->addCodeParam8( VBC2_POP_RESULT, svReturn->mFunction->mParamSize, svReturn->mMark );
-    codePrintEoln( QString("VBC2_POP_RESULT %1").arg(svReturn->mFunction->mParamSize) );
+    prog->addCodeParam8( VBC2_POP_RESULT, svReturn->mFunction->mParamSize + TFUN_FRAME_SIZE, svReturn->mMark );
+    codePrintEoln( QString("VBC2_POP_RESULT %1").arg(svReturn->mFunction->mParamSize + TFUN_FRAME_SIZE) );
     }
 
   //Выполнить возврат из функции

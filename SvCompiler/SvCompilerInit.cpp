@@ -255,23 +255,7 @@ SvCompiler::ClearTables() {
 
 
 
-int
-SvCompiler::AllocLocal(SvType *type) {
-  int addr = mLocalAddress;
-  mLocalAddress += type->mSize;
-  if( mLocalMax < mLocalAddress ) mLocalMax = mLocalAddress;
-  return addr+1;
-  }
 
-
-
-
-int
-SvCompiler::AllocGlobal(SvType *type) {
-  int addr = mGlobalAddress;
-  mGlobalAddress += type->mSize;
-  return addr;
-  }
 
 
 

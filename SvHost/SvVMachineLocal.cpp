@@ -58,6 +58,7 @@ void SvVMachineLocal::memFail(SvVmVpu *vpu, int index) const
 void SvVMachineLocal::progFail(SvVmVpu *vpu, int address, int len)
   {
   qDebug() << "SvVMachineLocal progFail at " << address << " with len " << len;
+  reset();
   Q_UNUSED(vpu)
   }
 

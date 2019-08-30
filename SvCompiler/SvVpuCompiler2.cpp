@@ -1495,8 +1495,8 @@ void SvVpuCompiler::gvvCall(SvProgramm *prog, SvValueCall *call, bool keepValue,
     if( funType->mResult->isInt() || funType->mResult->isPointer() ) {
       //Возвращает целое или указатель или объект
       resultCount = 1;
-      prog->addCode( VBC1_ALLOC_RESULT, call->mMark );
-      codePrintEoln( QString("VBC1_ALLOC_RESULT") );
+//      prog->addCode( VBC1_ALLOC_RESULT, call->mMark );
+//      codePrintEoln( QString("VBC1_ALLOC_RESULT") );
       }
     else if( !funType->mResult->isVoid() ) {
       //Другие типы не допустимы
@@ -1564,12 +1564,14 @@ void SvVpuCompiler::gvvCall(SvProgramm *prog, SvValueCall *call, bool keepValue,
     //Теперь убираем все параметры
     if( keepValue ) {
       //Параметры и адрес вызова
-      gStack( prog, call->mParamCount + 1, call->mMark );
+//      gStack( prog, call->mParamCount + 1, call->mMark );
+      gStack( prog, call->mParamCount, call->mMark );
       codePrintEoln( QString("//remove call address and params") );
       }
     else {
       //Параметры, адрес вызова и результат, если есть
-      gStack( prog, call->mParamCount + 1 + resultCount, call->mMark );
+//      gStack( prog, call->mParamCount + 1 + resultCount, call->mMark );
+      gStack( prog, call->mParamCount + 1, call->mMark );
       codePrintEoln( QString("//remove result, call address and params") );
       }
     }

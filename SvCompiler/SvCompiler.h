@@ -374,7 +374,7 @@ namespace SvCompiler6
       void          addList( const SvVariableList &src );
 
       //Получить переменную
-      SvVariable*   getVariable( const QString name ) { return mHash.value( name, 0 ); }
+      SvVariable*   getVariable( const QString name ) { return mHash.value( name, nullptr ); }
 
       //Получить листинг переменных
       QString       listing( int level );
@@ -417,7 +417,7 @@ namespace SvCompiler6
       //Получить глобальное имя функции
       QString     globalName() const;
 
-      SvVariable* getParam( const QString name ) const { return mParams.mHash.value( name, 0 ); }
+      SvVariable* getParam( const QString name ) const { return mParams.mHash.value( name, nullptr ); }
 
       //Добавить параметр, если возможно
       bool        addParam( SvVariable *param );
@@ -2441,10 +2441,6 @@ namespace SvCompiler6
               void         Compile( const QString &fname );
 
     protected:
-              //Распределение переменных
-              int          AllocLocal( SvType *type );
-              int          AllocGlobal( SvType *type );
-
               QString      macroExpansion( const QString mac, const QString def );
 
 

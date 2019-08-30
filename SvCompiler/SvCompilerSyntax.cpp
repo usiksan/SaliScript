@@ -533,7 +533,7 @@ void SvCompiler::DoSubType(SvType *type, SvVariablePtr &var, SvFunctionPtr &fun,
 
 void
 SvCompiler::DoNewFunction( SvFunction *fun ) {
-  if( fun == 0 ) {
+  if( fun == nullptr ) {
     //Идет тело не для функции
     Error( QObject::tr("Error. Function body is not allowed in this context.") );
     return;
@@ -569,8 +569,8 @@ SvCompiler::DoNewFunction( SvFunction *fun ) {
     mActiveFunction->mLocalAmount = mLocalMax;
     }
   else ErrorEndSt( QObject::tr("Error. Need function body.") );
-  mActiveFunction = 0;
-  mActiveStruct = 0;
+  mActiveFunction = nullptr;
+  mActiveStruct = nullptr;
   }
 
 
@@ -663,9 +663,9 @@ SvOperator *SvCompiler::DoLocal() {   //Оператор определения 
   //Разобрать тип
   SvType *baseType = DoBaseType();
   NextToken();
-  if( baseType == 0 ) {
+  if( baseType == nullptr ) {
     Error( QObject::tr("Error. Not allowed type.") );
-    return 0;
+    return nullptr;
     }
   //Определить блок для инициализации переменных
   SvOperatorBlock *initBlock = new SvOperatorBlock( mark(), QString(), mContext );
@@ -695,6 +695,8 @@ SvOperator *SvCompiler::DoLocal() {   //Оператор определения 
 
     //Добавить переменную
     mContext->mVarLocal.addVariable( var );
+    //Локальные переменные идут вниз от bp
+    var->mAddress = -var->mAddress - var->getSize();
 
     //Проверить инициализацию
     if( mToken == tsAssign ) {

@@ -80,8 +80,9 @@ bool SvFunction::addParam(SvVariable *param)
     delete param;
     return false;
     }
-  param->mAddress = mParamSize;
-  mParamSize += param->getSize();
+  //Адрес параметру назначен при вызове DoSubType
+//  param->mAddress = mParamSize;
+//  mParamSize += param->getSize();
   mParams.addVariable( param );
   return true;
   }

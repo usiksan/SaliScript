@@ -21,13 +21,13 @@ using namespace SvCompiler6;
 SvVariable::SvVariable() :
   mHelp(),               //Помощь по переменной
   mName(),               //Имя переменной
-  mType(0),              //Тип переменной
+  mType(nullptr),        //Тип переменной
   mSort(tsrGlobal),
   mAddress(0),           //Адрес начала относительный
   mArraySize(0),         //Размер массива (для массивов)
   mMarkDefine(),         //Место определения
   mRemark(),             //Описание переменной
-  mInit(0)
+  mInit(nullptr)
   {
 
   }

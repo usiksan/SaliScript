@@ -19,6 +19,14 @@
 #include <string.h>
 #include <stdlib.h>
 
+//#define SV_DEBUG_ON
+
+#ifdef SV_DEBUG_ON
+#include <QDebug>
+#define SV_DEBUG(x) x
+#else
+#define SV_DEBUG(x)
+#endif
 
 SvVMachine::SvVMachine() :
   mMemory(nullptr),
@@ -42,8 +50,10 @@ void SvVMachine::processing(int timeOffset)
   memSet( nullptr, 1, memGet(nullptr,1) + timeOffset );
 
   //Для всех VPU выполнить один шаг
-  for( int i = 0; i < mVpuCount; i++ )
+  for( int i = 0; i < mVpuCount; i++ ) {
+    SV_DEBUG(qDebug() << "**** vpu" << i;)
     executeCore( mVpuList + i );
+    }
 
   }
 
@@ -312,105 +322,125 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
       {
       //Команда останова
       case VBC1_HALT :
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_HALT";)
         vpu->mIp = 0;
         break;
 
       //Stack operations read-write
       case VBC1_PUSH_TOS :        //stack[sp-1] = stack[sp--];
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_PUSH_TOS" << VAL(vpu->mSp);)
         MEM( vpu->mSp-1, VAL(vpu->mSp) );
         vpu->mSp--;
         vpu->mIp++;
         break;
 
       case VBC1_PUSH_0 :          //stack[--sp] = 0
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_PUSH_0";)
         MEM( --(vpu->mSp), 0 );
         vpu->mIp++;
         break;
 
       case VBC1_PUSH_1 :          //stack[--sp] = 1
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_PUSH_1";)
         MEM( --(vpu->mSp), 1 );
         vpu->mIp++;
         break;
 
       case VBC1_PUSH_2 :          //stack[--sp] = 2
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_PUSH_2";)
         MEM( --(vpu->mSp), 2 );
         vpu->mIp++;
         break;
 
       case VBC2_PUSH_CONST :      //stack[--sp] = const8
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC2_PUSH_CONST" << PARAM8;)
         MEM( --(vpu->mSp), PARAM8 );
         vpu->mIp += 2;
         break;
 
       case VBC3_PUSH_CONST :      //stack[--sp] = const16
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC3_PUSH_CONST" << PARAM16;)
         MEM( --(vpu->mSp), PARAM16 );
         vpu->mIp += 3;
         break;
 
       case VBC4_PUSH_CONST :      //stack[--sp] = const24
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_PUSH_CONST" << PARAM24;)
         MEM( --(vpu->mSp), PARAM24 );
         vpu->mIp += 4;
         break;
 
       case VBC5_PUSH_CONST :      //stack[--sp] = const32; Загрузка обычного целого
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC5_PUSH_CONST" << PARAM32;)
         MEM( --(vpu->mSp), PARAM32 );
         vpu->mIp += 5;
         break;
 
       case VBC1_ADD_1 :           //stack[sp] += 1;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_ADD_1" << VAL(vpu->mSp) << 1;)
         MEM( vpu->mSp, VAL(vpu->mSp) + 1 );
         vpu->mIp++;
         break;
 
       case VBC1_ADD_2 :           //stack[sp] += 2;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_ADD_2" << VAL(vpu->mSp) << 2;)
         MEM( vpu->mSp, VAL(vpu->mSp) + 2 );
         vpu->mIp++;
         break;
 
       case VBC1_ADD_3 :           //stack[sp] += 3;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_ADD_3" << VAL(vpu->mSp) << 3;)
         MEM( vpu->mSp, VAL(vpu->mSp) + 3 );
         vpu->mIp++;
         break;
 
       case VBC1_ADD_4 :           //stack[sp] += 4;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_ADD_4" << VAL(vpu->mSp) << 4;)
         MEM( vpu->mSp, VAL(vpu->mSp) + 4 );
         vpu->mIp++;
         break;
 
       case VBC2_ADD_CONST :       //stack[sp] += const8
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC2_ADD_CONST" << VAL(vpu->mSp) << PARAM8;)
         MEM( vpu->mSp, VAL(vpu->mSp) + PARAM8 );
         vpu->mIp += 2;
         break;
 
       case VBC2_PUSH_B_OFFSET :   //stack[--sp] = bp + offset; Загрузка адреса локальной переменной
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC2_PUSH_B_OFFSET" << vpu->mBp << PARAM8;)
         MEM(--(vpu->mSp), vpu->mBp + PARAM8 );
         vpu->mIp += 2;
         break;
 
       case VBC4_PUSH_GLOBAL :     //stack[--sp] = global[param]
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_PUSH_GLOBAL" << VAL(PARAM24);)
         MEM(--(vpu->mSp), VAL(PARAM24) );
         vpu->mIp += 4;
         break;
 
       case VBC2_PUSH_LOCAL :      //stack[--sp] = global[bp+offset]
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC2_PUSH_LOCAL" << PARAM8 << VAL(vpu->mBp + PARAM8);)
         MEM(--(vpu->mSp), VAL(vpu->mBp + PARAM8) );
         vpu->mIp += 2;
         break;
 
         //Разместить код исключения в стек
       case VBC1_PUSH_THROW :      //stack[--sp] = mThrow
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_PUSH_THROW" << vpu->mThrow;)
         MEM(--(vpu->mSp), vpu->mThrow );
         vpu->mIp++;
         break;
 
 
       case VBC1_LOAD :            //stack[sp] = global[ stack[sp] ]; //Косвенная загрузка
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_LOAD" << VAL(vpu->mSp) << VAL( VAL(vpu->mSp) );)
         MEM( vpu->mSp, VAL( VAL(vpu->mSp) ) );
         vpu->mIp++;
         break;
 
       case VBC1_STORE :           //global[ stack[sp+1] ] = stack[sp];
                                   //stack[sp+1] = stack[sp++];
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_STORE" << VAL(vpu->mSp + 1) << VAL(vpu->mSp);)
         MEM( VAL(vpu->mSp + 1), VAL(vpu->mSp) );
         MEM( vpu->mSp + 1, VAL(vpu->mSp) );
         vpu->mSp++;
@@ -419,73 +449,87 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
 
       case VBC1_POP :             //global[ stack[sp+1] ] = stack[sp];
                                   //sp += 2;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_POP" << VAL(vpu->mSp + 1) << VAL(vpu->mSp);)
         MEM( VAL(vpu->mSp + 1), VAL(vpu->mSp) );
         vpu->mSp += 2;
         vpu->mIp++;
         break;
 
       case VBC2_POP_RESULT :      //stack[bp+param] = stack[sp++];
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC2_POP_RESULT" << vpu->mBp << PARAM8 << VAL(vpu->mSp);)
         MEM( vpu->mBp + PARAM8, VAL(vpu->mSp++) );
         vpu->mIp += 2;
         break;
 
       //Stack ip manipulations [Манипуляции с указателем стека]
       case VBC1_STACK_DN1 :       //sp--
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_STACK_DN1";)
         vpu->mSp--;
         vpu->mIp++;
         break;
 
       case VBC1_STACK_DN2 :       //sp -= 2
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_STACK_DN2";)
         vpu->mSp -= 2;
         vpu->mIp++;
         break;
 
       case VBC1_STACK_UP1 :       //sp++
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_STACK_UP1";)
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_STACK_UP2 :       //sp += 2
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_STACK_UP2";)
         vpu->mSp += 2;
         vpu->mIp++;
         break;
 
       case VBC1_STACK_UP3 :       //sp += 3
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_STACK_UP3";)
         vpu->mSp += 3;
         vpu->mIp++;
         break;
 
       case VBC1_STACK_UP4 :       //sp += 4
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_STACK_UP4";)
         vpu->mSp += 4;
         vpu->mIp++;
         break;
 
       case VBC1_STACK_UP5 :       //sp += 5
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_STACK_UP5";)
         vpu->mSp += 5;
         vpu->mIp++;
         break;
 
       case VBC1_STACK_UP6 :       //sp += 6
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_STACK_UP6";)
         vpu->mSp += 6;
         vpu->mIp++;
         break;
 
       case VBC1_STACK_UP7 :       //sp += 7
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_STACK_UP7";)
         vpu->mSp += 7;
         vpu->mIp++;
         break;
 
       case VBC1_STACK_UP8 :       //sp += 8
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_STACK_UP8";)
         vpu->mSp += 8;
         vpu->mIp++;
         break;
 
       case VBC2_STACK :           //sp += param; (param - число со знаком)
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC2_STACK" << PARAM8;)
         vpu->mSp += PARAM8;
         vpu->mIp += 2;
         break;
 
       case VBC3_STACK :           //sp += param; (param - число со знаком)
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC3_STACK" << PARAM16;)
         vpu->mSp += PARAM16;
         vpu->mIp += 3;
         break;
@@ -494,90 +538,105 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
 
       //Integer operations
       case VBC1_ADD :             //global[sp+1] = global[sp+1] + global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_ADD" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) + VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_SUB :             //global[sp+1] = global[sp+1] - global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_SUB" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) - VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_AND :             //global[sp+1] = global[sp+1] & global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_AND" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) & VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_OR :              //global[sp+1] = global[sp+1] | global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_OR" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) | VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_XOR :             //global[sp+1] = global[sp+1] ^ global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_XOR" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) ^ VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_LSHIFT :          //global[sp+1] = global[sp+1] << global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_LSHIFT" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) << VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_RSHIFT :          //global[sp+1] = global[sp+1] >> global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_RSHIFT" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) >> VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_EQU :             //global[sp+1] = global[sp+1] == global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_EQU" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) == VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_NOT_EQU :         //global[sp+1] = global[sp+1] != global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_NOT_EQU" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) != VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_LESS :            //global[sp+1] = global[sp+1] < global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_LESS" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) < VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_LESS_EQU :        //global[sp+1] = global[sp+1] <= global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_LESS_EQU" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) <= VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_GREAT :           //global[sp+1] = global[sp+1] > global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_GREAT" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) > VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_GREAT_EQU :       //global[sp+1] = global[sp+1] >= global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_GREAT_EQU" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) >= VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_MUL :             //global[sp+1] = global[sp+1] * global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_MUL" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) * VAL(vpu->mSp) );
         vpu->mSp++;
         vpu->mIp++;
         break;
 
       case VBC1_DIV :             //global[sp+1] = global[sp+1] / global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_DIV" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         tmp = VAL(vpu->mSp);
         if( tmp == 0 ) tmp = 1;
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) / tmp );
@@ -586,6 +645,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         break;
 
       case VBC1_MOD :             //global[sp+1] = global[sp+1] % global[sp]; sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_MOD" << VAL(vpu->mSp+1) << VAL(vpu->mSp);)
         tmp = VAL(vpu->mSp);
         if( tmp == 0 ) tmp = 1;
         MEM( vpu->mSp+1, VAL(vpu->mSp+1) % tmp );
@@ -594,16 +654,19 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         break;
 
       case VBC1_LNOT :            //global[sp] = !global[sp]
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_LNOT" << VAL(vpu->mSp);)
         MEM( vpu->mSp, !VAL(vpu->mSp) );
         vpu->mIp++;
         break;
 
       case VBC1_NOT :             //global[sp] = ~global[sp]
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_NOT" << VAL(vpu->mSp);)
         MEM( vpu->mSp, ~VAL(vpu->mSp) );
         vpu->mIp++;
         break;
 
       case VBC1_NEG :             //global[sp] = -global[sp]
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_NEG" << VAL(vpu->mSp);)
         MEM( vpu->mSp, -VAL(vpu->mSp) );
         vpu->mIp++;
         break;
@@ -621,6 +684,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         //Возврат из функции
       case VBC1_RETURN :          //sp = bp + 4;
                                   //ip = global[bp]; tm = global[bp+1]; tp = global[bp+2]; bp = global[bp+3];
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_RETURN";)
         vpu->mSp = vpu->mBp + 3;
         vpu->mIp = mMemory[vpu->mBp];
         vpu->mTm = mMemory[vpu->mBp+1];
@@ -629,6 +693,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
 
 
       case VBC1_ALLOC_RESULT :    //stack[sp-1] = stack[sp--];
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_ALLOC_RESULT" << VAL(vpu->mSp);)
         MEM( vpu->mSp-1, VAL(vpu->mSp) );
         MEM( vpu->mSp--, 0 );
         vpu->mIp++;
@@ -638,57 +703,66 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         //addr = operand
         //global[--sp] = bp;
         //global[--sp] = tm; tm = 0;
-        //global[--sp] = tp; tp = 0;
         //global[--sp] = ip; ip = addr;
         //bp = sp;
       case VBC2_CALL :            //call( param );
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC2_CALL" << PARAM8;)
         tmp = PARAM8;
         vpu->mIp += 2;
         call( vpu, tmp );
         break;
 
       case VBC1_CALL0 :
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL0";)
         vpu->mIp++;
         call( vpu, 0 );
         break;
 
       case VBC1_CALL1 :
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL1";)
         vpu->mIp++;
         call( vpu, 1 );
         break;
 
       case VBC1_CALL2 :
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL2";)
         vpu->mIp++;
         call( vpu, 2 );
         break;
 
       case VBC1_CALL3 :
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL3";)
         vpu->mIp++;
         call( vpu, 3 );
         break;
 
       case VBC1_CALL4 :
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL4";)
         vpu->mIp++;
         call( vpu, 4 );
         break;
 
       case VBC1_CALL5 :
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL5";)
         vpu->mIp++;
         call( vpu, 5 );
         break;
 
       case VBC1_CALL6 :
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL6";)
         vpu->mIp++;
         call( vpu, 6 );
         break;
 
       case VBC1_CALL7 :
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL7";)
         vpu->mIp++;
         call( vpu, 7 );
         break;
 
         //Инкремент
       case VBC1_INC :             //global[ stack[sp++] ]++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_INC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp++ );
         if( tmp > 0 && tmp < mMemorySize )
           mMemory[tmp]++;
@@ -697,6 +771,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         break;
 
       case VBC4_INC :             //global[ stack[sp++] ] += param24
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_INC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp++ );
         if( tmp > 0 && tmp < mMemorySize )
           mMemory[tmp] += PARAM24;
@@ -706,6 +781,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
 
         //Декремент
       case VBC1_DEC :             //global[ stack[sp++] ]--;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_DEC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp++ );
         if( tmp > 0 && tmp < mMemorySize )
           mMemory[tmp]--;
@@ -714,6 +790,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         break;
 
       case VBC4_DEC :             //global[ stack[sp++] ] -= param24
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_DEC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp++ );
         if( tmp > 0 && tmp < mMemorySize )
           mMemory[tmp] -= PARAM24;
@@ -723,6 +800,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
 
         //Постинкремент
       case VBC1_POST_INC :        //stack[sp] = global[ stack[sp] ]++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_POST_INC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp );
         if( tmp > 0 && tmp < mMemorySize )
           MEM( vpu->mSp, mMemory[tmp]++ );
@@ -731,6 +809,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         break;
 
       case VBC4_POST_INC :        //tmp = stack[sp]; stack[sp] = global[ tmp ]; global[tmp] += param24
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_POST_INC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp );
         if( tmp > 0 && tmp < mMemorySize ) {
           MEM( vpu->mSp, mMemory[tmp] );
@@ -742,6 +821,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
 
         //Постдекремент
       case VBC1_POST_DEC :        //stack[sp] = global[ stack[sp] ]--;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_POST_DEC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp );
         if( tmp > 0 && tmp < mMemorySize )
           MEM( vpu->mSp, mMemory[tmp]-- );
@@ -750,6 +830,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         break;
 
       case VBC4_POST_DEC :        //tmp = stack[sp]; stack[sp] = global[ tmp ]; global[tmp] -= param24
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_POST_DEC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp );
         if( tmp > 0 && tmp < mMemorySize ) {
           MEM( vpu->mSp, mMemory[tmp] );
@@ -762,6 +843,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
 
         //Прединкремент
       case VBC1_PRED_INC :        //stack[sp] = ++global[ stack[sp] ];
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_PRED_INC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp );
         if( tmp > 0 && tmp < mMemorySize )
           MEM( vpu->mSp, ++mMemory[tmp] );
@@ -770,6 +852,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         break;
 
       case VBC4_PRED_INC :        //stack[sp] = global[ stack[sp] ] += param24;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_PRED_INC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp );
         if( tmp > 0 && tmp < mMemorySize )
           MEM( vpu->mSp, mMemory[tmp] += PARAM24 );
@@ -780,6 +863,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
 
         //Преддекремент
       case VBC1_PRED_DEC :        //stack[sp] = --global[ stack[sp] ];
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_PRED_DEC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp );
         if( tmp > 0 && tmp < mMemorySize )
           MEM( vpu->mSp, --mMemory[tmp] );
@@ -788,6 +872,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         break;
 
       case VBC4_PRED_DEC :        //stack[sp] = global[ stack[sp] ] -= param24;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_PRED_DEC" << VAL( vpu->mSp );)
         tmp = VAL( vpu->mSp );
         if( tmp > 0 && tmp < mMemorySize )
           MEM( vpu->mSp, mMemory[tmp] -= PARAM24 );
@@ -798,15 +883,18 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
 
         //Переходы
       case VBC4_JUMP :            //ip = param
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_JUMP" << PARAM24;)
         vpu->mIp = PARAM24;
         break;
 
       case VBC4_TRUE_JUMP :       //if( stack[sp++] != 0 ) ip = param; Переход на метку res при условии
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_TRUE_JUMP" << VAL( vpu->mSp ) << PARAM24;)
         if( VAL(vpu->mSp++) ) vpu->mIp = PARAM24;
         else vpu->mIp += 4;
         break;
 
       case VBC4_TRUE_JUMP_KEEP :  //if( stack[sp] != 0 ) ip = param; else sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_TRUE_JUMP_KEEP" << VAL( vpu->mSp ) << PARAM24;)
         if( VAL(vpu->mSp) ) vpu->mIp = PARAM24;
         else {
           vpu->mSp++;
@@ -815,11 +903,13 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         break;
 
       case VBC4_FALSE_JUMP :      //if( stack[sp++] == 0 ) ip = param;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_FALSE_JUMP" << VAL( vpu->mSp ) << PARAM24;)
         if( !VAL(vpu->mSp++) ) vpu->mIp = PARAM24;
         else vpu->mIp += 4;
         break;
 
       case VBC4_FALSE_JUMP_KEEP : //if( stack[sp] == 0 ) ip = param; else sp++;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_FALSE_JUMP_KEEP" << VAL( vpu->mSp ) << PARAM24;)
         if( !VAL(vpu->mSp) ) vpu->mIp = PARAM24;
         else {
           vpu->mSp++;
@@ -828,34 +918,40 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         break;
 
       case VBC1_NOP :             //Холостая команда
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_NOP";)
         vpu->mIp++;
         break;
 
       //Обработка исключений
       //Объявить, что в данной функции останавливаются заданные исключения
       case VBC1_CATCH :
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CATCH" << VAL( vpu->mSp );)
         vpu->mTm = VAL(vpu->mSp++);
         vpu->mIp++;
         break;
 
       case VBC5_CATCH :           //tm = param;
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC5_CATCH" << PARAM32;)
         vpu->mTm = PARAM32;
         vpu->mIp += 5;
         break;
 
       //Возбудить исключение
       case VBC1_THROW :
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_THROW" << VAL( vpu->mSp );)
         doThrow( vpu, VAL(vpu->mSp++) );
         break;
 
       case VBC5_THROW :           //Делать:
                                   // Возврат из функции
                                   // Пока на корневая функция или маска исключения функции не совпадет с исключением
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC5_THROW" << PARAM32;)
         doThrow( vpu, PARAM32 );
         break;
 
         //Инструкции, порождаемые специальными функциями
       case VBC1_WAIT :            //Передача управления другому потоку
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_WAIT";)
         vpu->mIp++;
         return;
 
@@ -958,7 +1054,7 @@ void SvVMachine::call(SvVmVpu *vpu, int addrOffset)
   if( static_cast<unsigned>(tmp) & 0x80000000 ) {
     //import - функции
     //Статическая внешняя функция
-    if( executeMethod( vpu, static_cast<int>( static_cast<unsigned>(tmp) & 0xefffffff ) ) )
+    if( executeMethod( vpu, static_cast<int>( static_cast<unsigned>(tmp) & 0x7fffffff ) ) )
       return;
     }
   else
