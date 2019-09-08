@@ -1,4 +1,4 @@
-/*
+﻿/*
 Project "Electronic schematic and pcb CAD"
 
 Author
@@ -103,8 +103,5 @@ class SvNetClientMirror : public SvNetClientFile
   protected:
     virtual bool operation(const SvNetOperation &op, QString &opDescr) override;
   };
-
-
-extern SvNetClientMirror *svNetClientMirror;
 
 #endif // SVNETCLIENTMIRROR_H

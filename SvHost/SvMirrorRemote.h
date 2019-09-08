@@ -15,11 +15,6 @@
 
 #include <QStringList>
 
-struct SvRemoteCmd {
-    int mCmd;
-    int mStart;
-  };
-
 class SvMirrorRemote : public SvMirrorExtern
   {
     Q_OBJECT
@@ -30,15 +25,14 @@ class SvMirrorRemote : public SvMirrorExtern
     QString     mRemoteDir;   //Директорий проекта на удаленной машине
   public:
     SvMirrorRemote( bool scanTasks );
-    ~SvMirrorRemote();
+    ~SvMirrorRemote() override;
 
 
     //Тип зеркала
     virtual int         mirrorType() const override { return SMT_REMOTE; }
 
     //Настроить зеркало
-    virtual void        settings( const QString prjPath, const QString mainScript,
-                                  const QString ip, int port,
+    virtual void        settings( const QString ip, int port,
                                   const QString globalName, const QString globalPassw,
                                   int vid, int pid ) override;
 
@@ -46,6 +40,9 @@ class SvMirrorRemote : public SvMirrorExtern
     virtual void        processing( int tickOffset ) override;
 
   signals:
+    //Передать блок по каналу связи
+    void sendBlock( int cmd, QByteArray block );
+
     //Подключиться к мосту
     void linkToBridge();
 
@@ -54,9 +51,6 @@ class SvMirrorRemote : public SvMirrorExtern
 
     //Получить директорий проекта
     void getProjectDir();
-
-    //Отправить список операций
-    void pushList( const SvNetOperationList list );
 
     //Отправить запрос на получение переменных
     void receivVars();
@@ -82,14 +76,11 @@ class SvMirrorRemote : public SvMirrorExtern
 
     // SvMirror interface
   public slots:
+    //При приеме блока по каналу связи
+    void onReceivBlock( int cmd, QByteArray block );
+
     //===========================
     //Раздел управления
-
-    //Отправить содержимое проекта
-    virtual void        sendProject() override;
-
-    //Получить содержимое проекта
-    virtual void        receivProject() override;
 
     //Сначала сброс, затем создание корневого виртуального процессора и пуск с начального адреса
     virtual void        restart( bool runOrPause ) override;

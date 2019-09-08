@@ -1,4 +1,4 @@
-/*
+﻿/*
   Проект     "Скриптовый язык reduced c++ (rc++) v6"
   Подпроект  "Виртуальная машина"
   Автор
@@ -22,6 +22,8 @@ struct SvVmVpuState {
     int   mBaseSp;          //!< stack start [Начало стека для данного процессора]
     int   mThrow;           //!< current exception [Текущее значение исключения]
     int   mDebugRun;        //!< if eq 0 then in debug state else - in run state
+
+    SvVmVpuState() : mIp(0), mSp(0), mBp(0), mTm(0), mBaseSp(0), mThrow(0), mDebugRun(0) {}
   };
 
 #endif // SVVMVPUSTATE_H

@@ -50,6 +50,7 @@ HEADERS += \
   SvHost/SvMirrorThread.h \
   SvHost/SvMirrorUsb10.h \
   SvHost/SvNetClientMirror.h \
+  SvHost/SvNetCommandSet.h \
   SvHost/SvProgramm.h \
   SvHost/SvVMachineLocal.h \
   SvStudio/DPrjProp.h \

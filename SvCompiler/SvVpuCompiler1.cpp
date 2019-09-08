@@ -1,4 +1,4 @@
-/*
+﻿/*
   Проект     "Скриптовый язык reduced c++ (rc++) v6"
   Подпроект  "Пико-компилятор"
   Автор
@@ -167,7 +167,7 @@ SvProgrammPtr SvVpuCompiler::make(const QString prjPath, const QString &mainScri
   listFile.close();
 
   //Сохраним бинарный файл
-  QFile binFile( prjPath + listingFileInfo.completeBaseName() + ".vpu" );
+  QFile binFile( prjPath + listingFileInfo.completeBaseName() + SV_PROGRAMM_EXTENSION );
   if( binFile.open(QIODevice::WriteOnly) ) {
     binFile.write( prog->toArray() );
     binFile.close();

@@ -26,13 +26,31 @@
 #define SMT_REMOTE    3 //Исполняющая система доступна через локальную сеть или интернет
 #define SMT_STORAGE   4 //Архив с состоянием исполняющей системы
 
+
+
+
+inline QDataStream &operator << ( QDataStream &os, const SvVmVpuState &st ) {
+  os << st.mBp << st.mIp << st.mSp << st.mTm << st.mThrow << st.mBaseSp << st.mDebugRun;
+  return os;
+  }
+
+
+
+
+inline QDataStream &operator >> ( QDataStream &is, SvVmVpuState &st ) {
+  is >> st.mBp >> st.mIp >> st.mSp >> st.mTm >> st.mThrow >> st.mBaseSp >> st.mDebugRun;
+  return is;
+  }
+
+
+
+
+
 class SvMirror : public QObject
   {
     Q_OBJECT
 
   protected:
-    QString                  mPrjPath;        //Путь к каталогу с исходниками на машине зеркала
-    QString                  mMainScript;     //Имя главного скрипта
     SvProgrammPtr            mProgramm;       //Скомпилированная программа
     bool                     mLink;           //Состояние связи с реальным исполяемым модулем
     QString                  mLinkStatus;     //Текстовое состояние связи
@@ -50,12 +68,6 @@ class SvMirror : public QObject
     //Тип зеркала
     virtual int           mirrorType() const = 0;
 
-    //Список исходных файлов
-    QStringList           getSourceFileList() const { return mProgramm->mFileList; }
-
-    //Каталог проекта на машине зеркала
-    QString               getPrjPath() const { return mPrjPath; }
-
     //Текущая программа
     SvProgrammPtr         getProgramm() { return mProgramm; }
 
@@ -70,8 +82,7 @@ class SvMirror : public QObject
 
 
     //Настроить зеркало
-    virtual void          settings( const QString prjPath, const QString mainScript,
-                                    const QString ip, int port,
+    virtual void          settings( const QString ip, int port,
                                     const QString globalName, const QString globalPassw,
                                     int vid, int pid );
 
@@ -85,7 +96,7 @@ class SvMirror : public QObject
     virtual int           taskMax() const = 0;
 
     //Получить информацию по задаче
-    virtual SvVmVpuState *taskInfo( qint32 taskId ) = 0;
+    virtual SvVmVpuState  taskInfo( qint32 taskId ) const = 0;
 
             //Получить все задачи списком
             QByteArray    taskList();
@@ -151,6 +162,9 @@ class SvMirror : public QObject
             void          debugTrace( int taskId );
 
   signals:
+            //Передать блок по каналу связи с системой удаленного управления
+            void          sendBlock( int cmd, QByteArray block );
+
             //Прогресс операции
             void          processChanged( const QString status, bool processStatus, const QString error );
 
@@ -166,11 +180,14 @@ class SvMirror : public QObject
             //При поступлении loga
             void          log( const QString msg );
 
-            //Требование вызова удаленной процедуры с максимум 8-ю параметрами
+            //Требование вызова удаленной процедуры с максимум 6-ю параметрами
             void          remoteCall( int procId, int p0, int p1, int p2, int p3, int p4, int p5 );
 
 
   public slots:
+    //При получении блока по каналу связи
+    virtual void          onReceivBlock( int cmd, QByteArray block );
+
     //Завершить вызов удаленной процедуры и вернуть результат
     virtual void          remoteCallComplete( int result );
 
@@ -180,16 +197,13 @@ class SvMirror : public QObject
     //Сначала сброс, затем создание корневого виртуального процессора и пуск с начального адреса
     virtual void          restart( bool runOrPause ) = 0;
 
-    //Отправить содержимое проекта
-    virtual void          sendProject() = 0;
-
-    //Получить содержимое проекта
-    virtual void          receivProject() = 0;
-
     //Компиляция, линковка, если равно, иначе прошивка и запуск
     //Компиляция, прошивка и запуск
-    virtual void          compileFlashRun( bool link, bool flash, bool runOrPause ) = 0;
+    virtual void          setProgrammFlashRun( SvProgrammPtr prog, bool link, bool flash, bool runOrPause ) = 0;
 
+
+            //Выполнить построение программы перед запуском
+            void          compileFlashRun( const QString scriptPath, bool link, bool flash, bool runOrPause );
 
 
             //Запустить скрипт на исполнение
@@ -202,10 +216,6 @@ class SvMirror : public QObject
 
     //Изменить текстовое состояние
     void                  setProcess( const QString status, bool processStatus = true, const QString error = QString() );
-
-    //Построить программу
-    void                  make();
-
   };
 
 #endif // SVMIRROR_H

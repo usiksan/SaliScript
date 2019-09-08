@@ -1,4 +1,4 @@
-/*
+﻿/*
   Проект     "Скриптовый язык reduced c++ (rc++) v6"
   Подпроект  "Пико-компилятор"
   Автор
@@ -25,6 +25,7 @@
 #include "SvVMachine/SvVmUtils.h"
 #include "SvVMachine/SvVmCodeHeader.h"
 
+#define SV_PROGRAMM_EXTENSION ".vpu6"
 
 //Элемент ошибки
 struct SvError {

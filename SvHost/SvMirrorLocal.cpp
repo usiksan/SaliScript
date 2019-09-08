@@ -54,24 +54,24 @@ int SvMirrorLocal::taskCount() const
 
 
 
+
+
+int SvMirrorLocal::taskMax() const
+  {
+  return mController->getVpuMax();
+  }
+
+
+
+
+
+
 //Получить информацию по задаче
-bool SvMirrorLocal::taskInfo(int taskId, int *runOrPause, int *ip, int *sp, int *tm, int *bp)
+SvVmVpuState SvMirrorLocal::taskInfo(qint32 taskId) const
   {
-  if( taskId >= 0 && taskId < mController->taskCount() ) {
-    const SvVmVpu *vpu = mController->vpu(taskId);
-    if( runOrPause ) *runOrPause = vpu->isRun();
-    if( ip ) *ip = vpu->mIp;
-    if( sp ) *sp = vpu->mSp;
-    if( tm ) *tm = vpu->mTm;
-    if( bp ) *bp = vpu->mBp;
-    return true;
-    }
-  if( runOrPause ) *runOrPause = 0;
-  if( ip ) *ip = 0;
-  if( sp ) *sp = 0;
-  if( tm ) *tm = 0;
-  if( bp ) *bp = 0;
-  return false;
+  if( taskId >= 0 && taskId < mController->taskCount() )
+    return *(mController->vpu(taskId));
+  return SvVmVpuState{};
   }
 
 
@@ -80,12 +80,11 @@ bool SvMirrorLocal::taskInfo(int taskId, int *runOrPause, int *ip, int *sp, int 
 
 
 
-//Сначала сброс, затем создание корневого виртуального процессора и пуск с начального адреса
-void SvMirrorLocal::restart(bool runOrPause)
-  {
-  mController->restart( runOrPause );
-  }
 
+int SvMirrorLocal::memorySize() const
+  {
+  return mController->getMemorySize();
+  }
 
 
 
@@ -101,6 +100,9 @@ void SvMirrorLocal::memorySet(int index, int value)
   {
   mController->memSet( nullptr, index, value );
   }
+
+
+
 
 
 
@@ -138,6 +140,7 @@ void SvMirrorLocal::debugRunTrace(int taskId, int start, int stop)
 
 
 
+
 //Завершить вызов удаленной процедуры и вернуть результат
 void SvMirrorLocal::remoteCallComplete(int result)
   {
@@ -148,37 +151,27 @@ void SvMirrorLocal::remoteCallComplete(int result)
 
 
 
-//Отправить содержимое проекта
-void SvMirrorLocal::sendProject()
+
+
+
+//Сначала сброс, затем создание корневого виртуального процессора и пуск с начального адреса
+void SvMirrorLocal::restart(bool runOrPause)
   {
-  //Отправим сигнал о завершении операции, поскольку для локальной копии не актуально
-  setProcess( tr("Complete"), false );
+  mController->restart( runOrPause );
   }
 
 
 
 
-
-//Получить содержимое проекта
-void SvMirrorLocal::receivProject()
-  {
-  //Отправим сигнал о завершении операции, поскольку для локальной копии не актуально
-  setProcess( tr("Complete"), false );
-  }
-
-
-
-
-
-
-//Компиляция, прошивка и запуск
-void SvMirrorLocal::compileFlashRun(bool link, bool flash, bool runOrPause)
+//Установка программы, прошивка и запуск
+void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool link, bool flash, bool runOrPause)
   {
   //Отправим сигнал о начале операции
-  setProcess( tr("Compile %1 in %2").arg(mMainScript).arg(mPrjPath) );
+  setProcess( tr("Compile...") );
 
-  //Выполнить компиляцию
-  make();
+  //Установить новую программу
+  mProgramm = prog;
+
   if( mProgramm->mErrors.count() ) {
     //При наличии ошибок прекращаем
     setProcess( tr("Complete"), false, tr("Compile errors") );
@@ -209,18 +202,10 @@ void SvMirrorLocal::compileFlashRun(bool link, bool flash, bool runOrPause)
 
 
 
-int SvMirrorLocal::taskMax() const
-  {
-  return mController->getVpuMax();
-  }
 
 
 
 
 
 
-int SvMirrorLocal::memorySize() const
-  {
-  return mController->getMemorySize();
-  }
 

@@ -58,9 +58,9 @@ SvMirrorRemote::~SvMirrorRemote()
 
 
 //Настроить зеркало
-void SvMirrorRemote::settings(const QString prjPath, const QString mainScript, const QString ip, int port, const QString globalName, const QString globalPassw, int vid, int pid)
+void SvMirrorRemote::settings(const QString ip, int port, const QString globalName, const QString globalPassw, int vid, int pid)
   {
-  SvMirrorExtern::settings( prjPath, mainScript, ip, port, globalName, globalPassw, vid, pid );
+  SvMirrorExtern::settings( ip, port, globalName, globalPassw, vid, pid );
 
   mRemoteId    = globalName.toInt();
   mRemotePassw = globalPassw.toInt( nullptr, 16);
@@ -164,40 +164,11 @@ void SvMirrorRemote::changeData()
 
 
 
-//Отправить содержимое проекта
-void SvMirrorRemote::sendProject()
-  {
-  //Отправить сигнал о начале процесса
-  setProcess( tr("Send project...") );
-
-  SvNetOperationList list;
-  SvNetClientFile::pushWriteFile( getPrjPath(), mRemoteDir, list );
-
-  emit pushList( list );
-  }
-
-
-
-
-//Получить содержимое проекта
-void SvMirrorRemote::receivProject()
-  {
-  //Отправить сигнал о начале процесса
-  setProcess( tr("Receiv project...") );
-
-  SvNetOperationList list;
-  SvNetClientFile::pushReadFile( mRemoteDir, true, getPrjPath(), list );
-
-  emit pushList( list );
-  }
-
-
-
-
 void SvMirrorRemote::restart(bool runOrPause)
   {
   emit sendRestart( runOrPause );
   }
+
 
 
 

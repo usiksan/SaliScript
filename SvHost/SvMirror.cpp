@@ -9,6 +9,7 @@
 #include "SvMirror.h"
 #include "SvMirrorThread.h"
 #include "SvCompiler/SvVpuCompiler.h"
+#include "SvProgramm.h"
 
 #include <QFileInfo>
 
@@ -31,11 +32,8 @@ SvMirror::~SvMirror()
 
 
 //Настроить зеркало
-void SvMirror::settings(const QString prjPath, const QString mainScript, const QString ip, int port, const QString globalName, const QString globalPassw, int vid, int pid)
+void SvMirror::settings(const QString ip, int port, const QString globalName, const QString globalPassw, int vid, int pid)
   {
-  mPrjPath    = prjPath;
-  mMainScript = mainScript;
-  //mName       = name;
   Q_UNUSED(ip)
   Q_UNUSED(port)
   Q_UNUSED(globalName)
@@ -56,9 +54,7 @@ QByteArray SvMirror::taskList()
   qint32 count = taskCount();
   os << count;
   for( int i = 0; i < count; i++ ) {
-    qint32 run, ip, sp, tm, bp;
-    taskInfo( i, &run, &ip, &sp, &tm, &bp );
-    os << run << ip << sp << tm << bp;
+    os << taskInfo( i );
     }
   return dst;
   }
@@ -154,17 +150,17 @@ void SvMirror::debugPauseAll()
 
 void SvMirror::debugStep(int taskId)
   {
-  int ip, run;
-  if( taskInfo( taskId, &run, &ip, nullptr, nullptr, nullptr ) ) {
+  if( taskId >= 0 && taskId < taskCount() ) {
     //Задача присутствует
-    if( run == 0 && ip != 0 ) {
+    SvVmVpuState st = taskInfo(taskId);
+    if( !st.mDebugRun && st.mIp != 0 ) {
       //Задача заторможена
-      int line = mProgramm->getLine(ip);
-      int file = mProgramm->getFile(ip);
+      int line = mProgramm->getLine(st.mIp);
+      int file = mProgramm->getFile(st.mIp);
       //Пропустить текущую строку
-      int ipe = ip+1;
+      int ipe = st.mIp + 1;
       while( mProgramm->getLine(ipe) == line && mProgramm->getFile(ipe) == file ) ipe++;
-      debugRunStep( taskId, ip, ipe );
+      debugRunStep( taskId, st.mIp, ipe );
       }
     else debugPause( taskId );
     }
@@ -175,17 +171,17 @@ void SvMirror::debugStep(int taskId)
 
 void SvMirror::debugTrace(int taskId)
   {
-  int ip, run;
-  if( taskInfo( taskId, &run, &ip, nullptr, nullptr, nullptr ) ) {
+  if( taskId >= 0 && taskId < taskCount() ) {
     //Задача присутствует
-    if( run == 0 && ip != 0 ) {
+    SvVmVpuState st = taskInfo(taskId);
+    if( !st.mDebugRun && st.mIp != 0 ) {
       //Задача заторможена
-      int line = mProgramm->getLine(ip);
-      int file = mProgramm->getFile(ip);
+      int line = mProgramm->getLine(st.mIp);
+      int file = mProgramm->getFile(st.mIp);
       //Пропустить текущую строку
-      int ipe = ip+1;
+      int ipe = st.mIp + 1;
       while( mProgramm->getLine(ipe) == line && mProgramm->getFile(ipe) == file ) ipe++;
-      debugRunTrace( taskId, ip, ipe );
+      debugRunTrace( taskId, st.mIp, ipe );
       }
     else debugPause( taskId );
     }
@@ -201,21 +197,38 @@ void SvMirror::remoteCallComplete(int result)
 
 
 
-//Запустить скрипт на исполнение
-//scriptPath - полный путь к скрипту
-void SvMirror::startScript(const QString scriptPath)
+void SvMirror::compileFlashRun(const QString scriptPath, bool link, bool flash, bool runOrPause)
   {
   QFileInfo info(scriptPath);
 
   //Записать путь к проекту
-  mPrjPath = info.absolutePath();
-  mPrjPath.append( QChar('/') );
+  QString prjPath = info.absolutePath();
+  prjPath.append( QChar('/') );
 
   //Записать имя скрипта
-  mMainScript = info.fileName();
+  QString mainScript = info.fileName();
 
+  if( mainScript.endsWith( SV_PROGRAMM_EXTENSION ) ) {
+    //Нам передан бинарник программы, просто загружаем
+    mProgramm->load( prjPath + mainScript );
+    }
+  else {
+    //Построить программу
+    //Бинарник сохраняется автоматически при построении
+    mProgramm = SvCompiler6::SvVpuCompiler::build( prjPath, mainScript );
+    }
+  setProgrammFlashRun( mProgramm, link, flash, runOrPause );
+  }
+
+
+
+
+//Запустить скрипт на исполнение
+//scriptPath - полный путь к скрипту
+void SvMirror::startScript(const QString scriptPath)
+  {
   //Запустить исполнение
-  compileFlashRun( false, true, true );
+  compileFlashRun( scriptPath, false, true, true );
   }
 
 
@@ -266,28 +279,6 @@ void SvMirror::setProcess( const QString status, bool processStatus, const QStri
 
 
 
-
-//Построить программу
-void SvMirror::make()
-  {
-  if( mMainScript.endsWith( SV_PROGRAMM_EXTENSION ) ) {
-    //Нам передан бинарник программы, просто загружаем
-    mProgramm->load( mPrjPath + mMainScript );
-    }
-  else {
-    //Построить программу
-    mProgramm = SvCompiler6::SvVpuCompiler::build( mPrjPath, mMainScript );
-    //Сохранить бинарник
-    //Заменить расширение
-    auto i = mMainScript.lastIndexOf( QChar('.') );
-    QString prg;
-    if( i >= 0 )
-      prg = mMainScript.left(i) + SV_PROGRAMM_EXTENSION;
-    else
-      prg = mMainScript + SV_PROGRAMM_EXTENSION;
-    mProgramm->save( mPrjPath + prg );
-    }
-  }
 
 
 
