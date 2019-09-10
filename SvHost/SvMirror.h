@@ -12,12 +12,14 @@
 #ifndef SVMIRROR_H
 #define SVMIRROR_H
 
+#include "SvProgramm.h"
+#include "SvVMachine/SvVmVpuState.h"
+
 #include <QObject>
 #include <QString>
 #include <QMap>
 #include <QStringList>
-#include "SvProgramm.h"
-#include "SvVMachine/SvVmVpuState.h"
+#include <QElapsedTimer>
 
 //Типы возможных зеркал
 #define SMT_UNDEFINED 0 //Зеркало не определено
@@ -50,6 +52,7 @@ class SvMirror : public QObject
   {
     Q_OBJECT
 
+    QElapsedTimer            mTimer;          //Для отсчета временных интервалов
   protected:
     SvProgrammPtr            mProgramm;       //Скомпилированная программа
     bool                     mLink;           //Состояние связи с реальным исполяемым модулем
@@ -58,6 +61,10 @@ class SvMirror : public QObject
     QString                  mProcessStatus;  //Описание текущего этапа
     QString                  mProcessError;   //Ошибка, возникшая в процессе операции
     int                      mRemoteCallId;   //Идентификатор текущей процедуры удаленного вызова
+    int                      mRemoteAddr0;    //Адреса, по которым возвращаются параметры
+    int                      mRemoteAddr1;
+    int                      mRemoteAddr2;
+    int                      mRemoteAddr3;
 
     bool                     mScanTasks;      //Флаг определяет необходимость сканирования задач
 
@@ -89,6 +96,9 @@ class SvMirror : public QObject
     //Выполнить обработку узла
     virtual void          processing( int tickOffset ) = 0;
 
+
+    //Обработка удаленных вызовов
+    void                  proceccingRemoteCall();
 
     //===========================
     //Раздел списка задач
@@ -163,7 +173,7 @@ class SvMirror : public QObject
 
   signals:
             //Передать блок по каналу связи с системой удаленного управления
-            void          sendBlock( int cmd, QByteArray block );
+            void          sendBlock( const void *chId, int cmd, QByteArray block );
 
             //Прогресс операции
             void          processChanged( const QString status, bool processStatus, const QString error );
@@ -180,16 +190,27 @@ class SvMirror : public QObject
             //При поступлении loga
             void          log( const QString msg );
 
-            //Требование вызова удаленной процедуры с максимум 6-ю параметрами
-            void          remoteCall( int procId, int p0, int p1, int p2, int p3, int p4, int p5 );
+            //Требование вызова удаленной процедуры с максимум 4-мя параметрами
+            // Идея в следующем: в скрипте есть 9 переменных (идентификатор удаленной процедуры,
+            //   4 произвольных параметра и 4 указателя для результата)
+            // как только зеркало обнаруживает установленным идентификатор удаленной процедуры,
+            // то оно считывает параметры, запоминает указатели для результата и выдает этот сигнал
+            // для обработки соответствующими объектами
+            // По завершению обработки должен быть вызван слот remoteCallComplete для установления
+            // результатов и для завершения удаленного вызова. Завершение удаленного вызова
+            // осуществляется сбросом идентификатора удаленной процедуры, сброса которого ожидает скрипт
+            void remoteCall( int procId, int p0, int p1, int p2, int p3 );
 
 
   public slots:
-    //При получении блока по каналу связи
-    virtual void          onReceivBlock( int cmd, QByteArray block );
+            //Периодическая функция, обеспечивающая работу зеркала
+            void          periodic();
+
+            //При получении блока по каналу связи
+            void          onReceivBlock( const void *chId, int cmd, QByteArray block );
 
     //Завершить вызов удаленной процедуры и вернуть результат
-    virtual void          remoteCallComplete( int result );
+    virtual void          remoteCallComplete( int r0, int r1, int r2, int r3 );
 
     //===========================
     //Раздел управления
