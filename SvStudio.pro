@@ -46,6 +46,7 @@ HEADERS += \
   SvHost/SvMirror.h \
   SvHost/SvMirrorExtern.h \
   SvHost/SvMirrorLocal.h \
+  SvHost/SvMirrorManager.h \
   SvHost/SvMirrorRemote.h \
   SvHost/SvMirrorThread.h \
   SvHost/SvMirrorUsb10.h \
@@ -126,6 +127,7 @@ SOURCES += \
   SvHost/SvMirror.cpp \
   SvHost/SvMirrorExtern.cpp \
   SvHost/SvMirrorLocal.cpp \
+  SvHost/SvMirrorManager.cpp \
   SvHost/SvMirrorRemote.cpp \
   SvHost/SvMirrorThread.cpp \
   SvHost/SvMirrorUsb10.cpp \

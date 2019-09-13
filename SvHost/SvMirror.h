@@ -1,8 +1,13 @@
 ﻿/*
-  Проект "SaliDs"
-    Визуальное программирование микроконтроллеров
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Host-система"
   Автор
-    Сибилев А.С.
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
+
   Описание
     Отображение (зеркало) исполняющей системы.
 
@@ -238,5 +243,7 @@ class SvMirror : public QObject
     //Изменить текстовое состояние
     void                  setProcess( const QString status, bool processStatus = true, const QString error = QString() );
   };
+
+using SvMirrorPtr = SvMirror*;
 
 #endif // SVMIRROR_H
