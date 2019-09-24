@@ -212,6 +212,9 @@ void SvMirror::debugTrace(int taskId)
 
 
 
+
+
+
 //Периодическая функция, обеспечивающая работу зеркала
 void SvMirror::periodic()
   {
@@ -221,13 +224,6 @@ void SvMirror::periodic()
 
 
 
-
-void SvMirror::onReceivBlock(const void *chId, int cmd, QByteArray block)
-  {
-  switch( cmd ) {
-
-    }
-  }
 
 
 

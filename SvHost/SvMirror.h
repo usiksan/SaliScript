@@ -77,9 +77,6 @@ class SvMirror : public QObject
     SvMirror( bool scanTasks );
     virtual ~SvMirror();
 
-    //Тип зеркала
-    virtual int           mirrorType() const = 0;
-
     //Текущая программа
     SvProgrammPtr         getProgramm() { return mProgramm; }
 
@@ -177,9 +174,6 @@ class SvMirror : public QObject
             void          debugTrace( int taskId );
 
   signals:
-            //Передать блок по каналу связи с системой удаленного управления
-            void          sendBlock( const void *chId, int cmd, QByteArray block );
-
             //Прогресс операции
             void          processChanged( const QString status, bool processStatus, const QString error );
 
@@ -204,15 +198,12 @@ class SvMirror : public QObject
             // По завершению обработки должен быть вызван слот remoteCallComplete для установления
             // результатов и для завершения удаленного вызова. Завершение удаленного вызова
             // осуществляется сбросом идентификатора удаленной процедуры, сброса которого ожидает скрипт
-            void remoteCall( int procId, int p0, int p1, int p2, int p3 );
+            void          remoteCall( int procId, int p0, int p1, int p2, int p3 );
 
 
   public slots:
             //Периодическая функция, обеспечивающая работу зеркала
             void          periodic();
-
-            //При получении блока по каналу связи
-            void          onReceivBlock( const void *chId, int cmd, QByteArray block );
 
     //Завершить вызов удаленной процедуры и вернуть результат
     virtual void          remoteCallComplete( int r0, int r1, int r2, int r3 );

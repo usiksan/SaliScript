@@ -1,8 +1,13 @@
 ﻿/*
-  Проект "SaliDs"
-    Визуальное программирование микроконтроллеров
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "Host-система"
   Автор
-    Сибилев А.С.
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
+
   Описание
     Зеркало для внешнего VPU, работающего на контроллере, подключенного через usb.
 */
@@ -38,8 +43,7 @@ class SvMirrorUsb10 : public SvMirrorExtern
     virtual int         mirrorType() const override { return SMT_USB; }
 
     //Настроить зеркало
-    virtual void        settings( const QString prjPath, const QString mainScript,
-                                  const QString ip, int port,
+    virtual void        settings( const QString ip, int port,
                                   const QString globalName, const QString globalPassw,
                                   int vid, int pid ) override;
 
@@ -50,12 +54,6 @@ class SvMirrorUsb10 : public SvMirrorExtern
   public slots:
     //===========================
     //Раздел управления
-
-    //Отправить содержимое проекта
-    virtual void        sendProject() override;
-
-    //Получить содержимое проекта
-    virtual void        receivProject() override;
 
     //Сначала сброс, затем создание корневого виртуального процессора и пуск с начального адреса
     virtual void        restart( bool runOrPause ) override;

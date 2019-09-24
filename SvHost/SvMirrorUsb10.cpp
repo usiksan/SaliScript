@@ -18,32 +18,28 @@
 
 #ifdef ENABLE_USB10
 
-template <typename T>
-void SvMirrorUsb10::initUsbFunction(T & function, const char *functionName)
-{
-    /* function = (T)mUsbLib.resolve(functionName);
-    if (function == nullptr){
-       mUsbLibReady = false;
-       setLink(QString(functionName) + QString(" not found"), false);
-    }*/
-}
 
-void SvMirrorUsb10::initUsbFunctions(){
 
-    libusb_init(nullptr);
-}
+void SvMirrorUsb10::initUsbFunctions()
+  {
+  libusb_init(nullptr);
+  }
+
+
 
 QString SvMirrorUsb10::usbErrorString(int err)
-{
-    return libusb_strerror((libusb_error)err);
-}
+  {
+  return libusb_strerror( static_cast<libusb_error>(err) );
+  }
+
+
 
 void SvMirrorUsb10::closeUsbDevice()
-{
-    auto device = libusb_get_device(mUsbDev);
-    libusb_close( mUsbDev );
-    libusb_unref_device(device);
-}
+  {
+  auto device = libusb_get_device(mUsbDev);
+  libusb_close( mUsbDev );
+  libusb_unref_device(device);
+  }
 
 
 
@@ -54,7 +50,7 @@ SvMirrorUsb10::SvMirrorUsb10(bool scanTasks) :
   mUsbLibReady(true),
   mVid(0),
   mPid(0),
-  mUsbDev(0),
+  mUsbDev(nullptr),
   mOpenAttempts(0),
   mVersion(0),       //Версия контроллера
   mFlashSize(0),     //Размер флеш-памяти контроллера
@@ -71,6 +67,8 @@ SvMirrorUsb10::SvMirrorUsb10(bool scanTasks) :
 
 
 
+
+
 SvMirrorUsb10::~SvMirrorUsb10()
   {
   UsbClose();
@@ -79,206 +77,189 @@ SvMirrorUsb10::~SvMirrorUsb10()
 
 
 
-void SvMirrorUsb10::settings(const QString prjPath, const QString mainScript, const QString ip, int port, const QString globalName, const QString globalPassw, int vid, int pid)
-{
-    SvMirrorExtern::settings( prjPath, mainScript, ip, port, globalName, globalPassw, vid, pid );
-    bool needDisconnect = mVid != vid || mPid != pid;
-    mVid = vid;
-    mPid = pid;
-    if (needDisconnect)
-        setLink( "Disconnect", false );
-}
+
+
+void SvMirrorUsb10::settings(const QString ip, int port, const QString globalName, const QString globalPassw, int vid, int pid)
+  {
+  SvMirrorExtern::settings( ip, port, globalName, globalPassw, vid, pid );
+  bool needDisconnect = mVid != vid || mPid != pid;
+  mVid = vid;
+  mPid = pid;
+  if (needDisconnect)
+    setLink( "Disconnect", false );
+  }
 
 
 
 
 void SvMirrorUsb10::processing(int tickOffset)
-{
-    QMutexLocker locker(&mProcessingMutex);
-    //Если нету библиотеки, то ничего делать нельзя
-    if( !mUsbLibReady ) {
-        setLink( tr("UsbLib error"), false );
-        return;
+  {
+  QMutexLocker locker(&mProcessingMutex);
+  //Если нету библиотеки, то ничего делать нельзя
+  if( !mUsbLibReady ) {
+    setLink( tr("UsbLib error"), false );
+    return;
     }
 
-    if( !mLink ) {
-        if( mTick <= 0 ) {
-            //Пробуем подключиться
-            Relink();
-            mTick = 1000;
-            //if( !mLink ) return;
-        }
-        else mTick -= tickOffset;
-        return;
+  if( !mLink ) {
+    if( mTick <= 0 ) {
+      //Пробуем подключиться
+      Relink();
+      mTick = 1000;
+      //if( !mLink ) return;
+      }
+    else mTick -= tickOffset;
+    return;
     }
-    if( !mLink ) {
-        //Подключения нету
-        setLink( tr("Not connected"), false );
-        return;
+  if( !mLink ) {
+    //Подключения нету
+    setLink( tr("Not connected"), false );
+    return;
     }
-    else {
-        //Подключение есть
+  else {
+    //Подключение есть
 
-        //Проверить наличие подключения
-        if( !ControllerReady() ){
-            return;
+    //Проверить наличие подключения
+    if( !ControllerReady() ){
+      return;
 
-        }
+      }
 
 
-        //Проверить необходимость отправки переменных
-        if( mWriteQueue.count() )
-            //Отправляем переменные
-            SendVars();
+    //Проверить необходимость отправки переменных
+    if( mWriteQueue.count() )
+      //Отправляем переменные
+      SendVars();
 
-        //Если включено сканирование задач
-        if( mScanTasks ) {
+    //Если включено сканирование задач
+    if( mScanTasks ) {
 
-            //Выполняем отправку управления задачами
-            SendDebugTask();
+      //Выполняем отправку управления задачами
+      SendDebugTask();
 
-            //Получить состояние задач
-            ReceivTasksState();
-        }
+      //Получить состояние задач
+      ReceivTasksState();
+      }
 
-        //Выполняем чтение переменных
-        ReceivVars();
+    //Выполняем чтение переменных
+    ReceivVars();
     }
-}
+  }
 
 
 
 
-//Отправить содержимое проекта
-void SvMirrorUsb10::sendProject()
-{
-    // TODO включить исходный код проекта в прошивку контроллера
-    //Отправим сигнал о завершении операции, пока
-    setProcess( tr("Complete"), false );
-}
-
-
-
-
-
-//Получить содержимое проекта
-void SvMirrorUsb10::receivProject()
-{
-    // TODO включить исходный код проекта в прошивку контроллера
-    //Отправим сигнал о завершении операции, пока
-    setProcess( tr("Complete"), false );
-}
 
 
 //Открыть USB
 bool SvMirrorUsb10::UsbOpen()
-{
-    //Проверить, если не загружена библиотека, то ничего не делаем
-    if( !mUsbLibReady )
-        return false;
-
-    if( mUsbDev == 0 ) {
-        if( mOpenAttempts == 0 ) {
-            mOpenAttempts = 3;
-
-            mUsbDev = UsbOpenDev();
-
-            if( mUsbDev != nullptr ) {
-
-                libusb_set_auto_detach_kernel_driver(mUsbDev, 1);
-                qDebug() << "libusb_set_auto_detach_kernel_driver: " << true;
-                int result = 0;
-                result = libusb_set_configuration(mUsbDev, 1);
-                if (result < 0){
-                    qDebug() << "libusb_set_configuration fail: " << usbErrorString(result);
-                    closeUsbDevice();
-                    mUsbDev = 0;
-                    return false;
-                } else {
-                    qDebug() << "libusb_set_configuration: " << true;
-                    result =  libusb_claim_interface(mUsbDev, 0);
-                    if (result < 0){
-                        qDebug() << "libusb_claim_interface fail: " << usbErrorString(result);
-                        closeUsbDevice();
-                        mUsbDev = 0;
-                        return false;
-                    }
-                    qDebug() << "libusb_claim_interface: " << true;
-                }
-
-                qDebug() << "UsbOpen: " << true;
-                mOpenAttempts = 0;
-                return true;
-            }
-        }
-        else {
-            mOpenAttempts--;
-            return false;
-        }
-    }
-    else return true;
+  {
+  //Проверить, если не загружена библиотека, то ничего не делаем
+  if( !mUsbLibReady )
     return false;
-}
+
+  if( mUsbDev == nullptr ) {
+    if( mOpenAttempts == 0 ) {
+      mOpenAttempts = 3;
+
+      mUsbDev = UsbOpenDev();
+
+      if( mUsbDev != nullptr ) {
+
+        libusb_set_auto_detach_kernel_driver(mUsbDev, 1);
+        qDebug() << "libusb_set_auto_detach_kernel_driver: " << true;
+        int result = 0;
+        result = libusb_set_configuration(mUsbDev, 1);
+        if (result < 0){
+          qDebug() << "libusb_set_configuration fail: " << usbErrorString(result);
+          closeUsbDevice();
+          mUsbDev = nullptr;
+          return false;
+          } else {
+          qDebug() << "libusb_set_configuration: " << true;
+          result =  libusb_claim_interface(mUsbDev, 0);
+          if (result < 0){
+            qDebug() << "libusb_claim_interface fail: " << usbErrorString(result);
+            closeUsbDevice();
+            mUsbDev = nullptr;
+            return false;
+            }
+          qDebug() << "libusb_claim_interface: " << true;
+          }
+
+        qDebug() << "UsbOpen: " << true;
+        mOpenAttempts = 0;
+        return true;
+        }
+      }
+    else {
+      mOpenAttempts--;
+      return false;
+      }
+    }
+  else return true;
+  return false;
+  }
 
 
 
 
 
 libusb_device_handle *SvMirrorUsb10::UsbOpenDev()
-{
-    if (!mUsbLibReady)
-        return nullptr;
-    libusb_device_handle *handle = nullptr;
+  {
+  if (!mUsbLibReady)
+    return nullptr;
+  libusb_device_handle *handle = nullptr;
 
-    libusb_device **list = nullptr;
-    libusb_device *found = nullptr;
+  libusb_device **list = nullptr;
+  libusb_device *found = nullptr;
 
-    ssize_t cnt = libusb_get_device_list(nullptr, &list);
-    int err = 0;
-    if (cnt < 0){
-        qDebug () << "libusb_get_device_list error: " << usbErrorString(cnt);
-        //setUsbLibErrorStatus("Usb get device list error", err);
+  ssize_t cnt = libusb_get_device_list(nullptr, &list);
+  int err = 0;
+  if (cnt < 0){
+    qDebug () << "libusb_get_device_list error: " << usbErrorString(cnt);
+    //setUsbLibErrorStatus("Usb get device list error", err);
     }
 
-    //  qDebug () << "libusb_get_device_list count: " << cnt;
-    for (auto i = 0; i < cnt; ++i) {
-        libusb_device *device = list[i];
-        libusb_device_descriptor  descriptor;
-        libusb_get_device_descriptor(device, &descriptor);
-        if (descriptor.idVendor == mVid && descriptor.idProduct == mPid) {
-            found = device;
-            libusb_ref_device(found);
-            break;
-        }
+  //  qDebug () << "libusb_get_device_list count: " << cnt;
+  for (auto i = 0; i < cnt; ++i) {
+    libusb_device *device = list[i];
+    libusb_device_descriptor  descriptor;
+    libusb_get_device_descriptor(device, &descriptor);
+    if (descriptor.idVendor == mVid && descriptor.idProduct == mPid) {
+      found = device;
+      libusb_ref_device(found);
+      break;
+      }
     }
-    if (found) {
-        err = libusb_open(found, &handle);
-        if (err != 0){
-            qDebug () << "libusb_open error: " << usbErrorString(err);
-            libusb_unref_device(found);
-        }
+  if (found) {
+    err = libusb_open(found, &handle);
+    if (err != 0){
+      qDebug () << "libusb_open error: " << usbErrorString(err);
+      libusb_unref_device(found);
+      }
     }
-    else{
-        qDebug () << "Device with vid " << QString::number(mVid, 16) << " and pid " << QString::number(mPid, 16) << " not found";
+  else{
+    qDebug () << "Device with vid " << QString::number(mVid, 16) << " and pid " << QString::number(mPid, 16) << " not found";
     }
-    libusb_free_device_list(list, 1);
-    return handle;
-}
+  libusb_free_device_list(list, 1);
+  return handle;
+  }
 
 
 
 
 void SvMirrorUsb10::UsbClose()
-{
-    if (!mUsbLibReady)
-        return;
-    //Проверить, если не загружена библиотека, то ничего не делаем
-    if( mUsbDev != nullptr) {
-        closeUsbDevice();
-        mUsbDev = 0;
-        setLink( tr("Not connected"), false );
+  {
+  if (!mUsbLibReady)
+    return;
+  //Проверить, если не загружена библиотека, то ничего не делаем
+  if( mUsbDev != nullptr) {
+    closeUsbDevice();
+    mUsbDev = nullptr;
+    setLink( tr("Not connected"), false );
     }
-}
+  }
 
 
 
@@ -288,32 +269,34 @@ void SvMirrorUsb10::UsbClose()
 //Выполнить обмен по USB
 //Данные передаются из массива dat и считываются туда-же
 bool SvMirrorUsb10::UsbTransferData(quint8 *dat, int sendCount, int receivCount)
-{
-    if( !mUsbLibReady )
-        return false;
+  {
+  if( !mUsbLibReady )
+    return false;
 
-    QMutexLocker locker(&mUsbTransferMutex);
-    int transferred = 0;
-    int error = 0;
-    error =  libusb_bulk_transfer( mUsbDev, 0x03, dat, sendCount, &transferred, 5000 );
-    if(error < 0 ) {
-        return false;
+  QMutexLocker locker(&mUsbTransferMutex);
+  int transferred = 0;
+  int error = 0;
+  error =  libusb_bulk_transfer( mUsbDev, 0x03, dat, sendCount, &transferred, 5000 );
+  if(error < 0 ) {
+    return false;
     }
-    error =  libusb_bulk_transfer( mUsbDev, 0x81, dat, receivCount, &transferred, 5000 );
-    if(error < 0 ) {
-        return false;
+  error =  libusb_bulk_transfer( mUsbDev, 0x81, dat, receivCount, &transferred, 5000 );
+  if(error < 0 ) {
+    return false;
     }
-    return true;
-}
+  return true;
+  }
 
 
 
 
 static void
 FillAssign( quint8 *dat, int addr, int value ) {
-    svIWrite16( dat, addr );
-    svIWrite32( dat + 2, value );
-}
+  svIWrite16( dat, addr );
+  svIWrite32( dat + 2, value );
+  }
+
+
 
 
 //Выполнить передачу переменных
@@ -397,7 +380,7 @@ void SvMirrorUsb10::ReceivVars()
 //Выполнить отправку управления задачами
 void SvMirrorUsb10::SendDebugTask()
 {
-    if( mVpuDebug == 0 ) return;
+    if( mVpuDebug == nullptr ) return;
     quint8 dat[64];
     for( int i = 0; i < mVpuMax; i++ )
         if( mVpuDebug[i].mCommand ) {

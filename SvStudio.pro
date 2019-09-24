@@ -52,8 +52,16 @@ HEADERS += \
   SvHost/SvMirrorUsb10.h \
   SvHost/SvNetClientMirror.h \
   SvHost/SvNetCommandSet.h \
+  SvHost/SvNetHandlerFile.h \
+  SvHost/SvNetHandlerMirror.h \
+  SvHost/SvNetHandlerScreen.h \
+  SvHost/SvNetManager.h \
+  SvHost/SvNetMirrorLocal.h \
   SvHost/SvProgramm.h \
   SvHost/SvVMachineLocal.h \
+  SvNet/SvNetChannel.h \
+  SvNet/SvNetChannelFile.h \
+  SvNet/SvNetPacketInfo.h \
   SvStudio/DPrjProp.h \
   SvStudio/DProcess.h \
   SvStudio/DTextEditorSettings.h \
@@ -132,8 +140,16 @@ SOURCES += \
   SvHost/SvMirrorThread.cpp \
   SvHost/SvMirrorUsb10.cpp \
   SvHost/SvNetClientMirror.cpp \
+  SvHost/SvNetHandlerFile.cpp \
+  SvHost/SvNetHandlerMirror.cpp \
+  SvHost/SvNetHandlerScreen.cpp \
+  SvHost/SvNetManager.cpp \
+  SvHost/SvNetMirrorLocal.cpp \
   SvHost/SvProgramm.cpp \
   SvHost/SvVMachineLocal.cpp \
+  SvNet/SvNetChannel.cpp \
+  SvNet/SvNetChannelFile.cpp \
+  SvNet/SvNetPacketInfo.cpp \
   SvStudio/DPrjProp.cpp \
   SvStudio/DProcess.cpp \
   SvStudio/DTextEditorSettings.cpp \
