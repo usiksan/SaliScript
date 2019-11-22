@@ -13,6 +13,8 @@
 #include <QObject>
 #include <QTcpSocket>
 
+#define SV_NET_CHANNEL_ANSWER_CMD 1
+
 /*!
    \brief The SvNetChannel class Object for low level information transfer
 
@@ -63,6 +65,9 @@ class SvNetChannel : public QObject
     void receivedBlock( SvNetChannel *ch, int cmd, QByteArray block );
 
 
+    void receivedAnswer( SvNetChannel *ch, int srcCmd, int answerCode, const QString msg );
+
+
 
   public slots:
     /*!
@@ -79,6 +84,7 @@ class SvNetChannel : public QObject
     void sendBlock( SvNetChannel *ch, qint8 cmd, QByteArray block );
 
 
+    void sendAnswer( SvNetChannel *ch, qint8 srcCmd, int answerCode, const QString msg );
 
   private slots:
     /*!
@@ -89,6 +95,8 @@ class SvNetChannel : public QObject
      */
     void onReceivBytes();
 
+  private:
+    void receiveBlockPrivate();
   };
 
 #endif // SVNETCHANNEL_H

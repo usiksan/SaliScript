@@ -7,6 +7,9 @@
 */
 #include "SvNetChannel.h"
 
+#include <QDataStream>
+
+
 SvNetChannel::SvNetChannel( QTcpSocket *socket, QObject *parent) :
   QObject(parent),
   mSocket(nullptr),  //Socket, witch connection made with
@@ -75,7 +78,7 @@ void SvNetChannel::onReceivBytes()
       mReadOffset += len;
       //if last part of block then parse received block
       if( mReadOffset >= mReadSize ) {
-        emit receivedBlock( this, mPacketInfo.command(), mBlock );
+        receiveBlockPrivate();
         continue;
         }
       }
@@ -94,10 +97,16 @@ void SvNetChannel::onReceivBytes()
           }
         else {
           mBlock.clear();
-          emit receivedBlock( this, mPacketInfo.command(), mBlock );
+          receiveBlockPrivate();
           continue;
           }
         }
       }
     }
+  }
+
+void SvNetChannel::receiveBlockPrivate()
+  {
+  if( mPacketInfo.command() )
+  emit receivedBlock( this, mPacketInfo.command(), mBlock );
   }
