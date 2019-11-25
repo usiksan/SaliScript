@@ -1,8 +1,11 @@
 /*
-  Проект "Пакетный обмен по локальной сети и через интернет-мост"
+  Project "Net packet interchange over local net and internet bridge server"
   Автор
-    Сибилев А.С.
-  Описание
+    Sibilev A.S.
+
+    www.salilab.com
+    www.salilab.ru
+  Description
     Object for low level information transfer
 */
 #ifndef SVNETCHANNEL_H
@@ -40,14 +43,15 @@ class SvNetChannel : public QObject
     //====================================================================================
     //                         Обмен по локальной сети
     //!
-    //! \brief setSocket Подключить новый сокет к каналу
-    //! \param socket    Подключаемый сокет, прежний сокет удаляется, если он есть
+    //! \brief setSocket Connect new socket to channel
+    //! \param socket    Connected socket, previous socked is deleted if present.
+    //!                  Channel becomes owner for socket. Do'nt delete socket manualy.
     //!
     void        setSocket( QTcpSocket *socket );
 
     //!
-    //! \brief getSocket Получить текущий сокет
-    //! \return Текущий сокет
+    //! \brief getSocket Get current socket
+    //! \return          Current socket
     //!
     QTcpSocket *getSocket() { return mSocket; }
 
@@ -62,10 +66,10 @@ class SvNetChannel : public QObject
        This signal emited on completing block reaciving. In connected classes
        in this function must be block data decoding.
      */
-    void receivedBlock( SvNetChannel *ch, int cmd, QByteArray block );
+    void receivedBlock( SvNetChannel *ch, int cmd, const QByteArray block );
 
 
-    void receivedAnswer( SvNetChannel *ch, int srcCmd, int answerCode, const QString msg );
+    void receivedAnswer( SvNetChannel *ch, int srcCmd, qint32 answerCode, const QString msg );
 
 
 
@@ -81,10 +85,10 @@ class SvNetChannel : public QObject
        prepare with CsPacketInfo struct which contains block command and
        block size follows block data.
      */
-    void sendBlock( SvNetChannel *ch, qint8 cmd, QByteArray block );
+    void sendBlock( SvNetChannel *ch, qint8 cmd, const QByteArray block );
 
 
-    void sendAnswer( SvNetChannel *ch, qint8 srcCmd, int answerCode, const QString msg );
+    void sendAnswer(SvNetChannel *ch, qint8 srcCmd, qint32 answerCode, const QString msg );
 
   private slots:
     /*!

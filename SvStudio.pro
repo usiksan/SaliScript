@@ -59,9 +59,19 @@ HEADERS += \
   SvHost/SvNetMirrorLocal.h \
   SvHost/SvProgramm.h \
   SvHost/SvVMachineLocal.h \
+  SvNet/SvNetBridgeMaster.h \
+  SvNet/SvNetBridgeSlave.h \
   SvNet/SvNetChannel.h \
   SvNet/SvNetChannelFile.h \
+  SvNet/SvNetClient.h \
+  SvNet/SvNetLocalMaster.h \
+  SvNet/SvNetLocalSlave.h \
   SvNet/SvNetPacketInfo.h \
+  SvNet/SvNetServer.h \
+  SvNet/SvNetService.h \
+  SvNet/SvNetServiceFileMaster.h \
+  SvNet/SvNetServiceFileSlave.h \
+  SvNet/SvNetServiceMasterFile.h \
   SvStudio/DPrjProp.h \
   SvStudio/DProcess.h \
   SvStudio/DTextEditorSettings.h \
@@ -147,9 +157,19 @@ SOURCES += \
   SvHost/SvNetMirrorLocal.cpp \
   SvHost/SvProgramm.cpp \
   SvHost/SvVMachineLocal.cpp \
+  SvNet/SvNetBridgeMaster.cpp \
+  SvNet/SvNetBridgeSlave.cpp \
   SvNet/SvNetChannel.cpp \
   SvNet/SvNetChannelFile.cpp \
+  SvNet/SvNetClient.cpp \
+  SvNet/SvNetLocalMaster.cpp \
+  SvNet/SvNetLocalSlave.cpp \
   SvNet/SvNetPacketInfo.cpp \
+  SvNet/SvNetServer.cpp \
+  SvNet/SvNetService.cpp \
+  SvNet/SvNetServiceFileMaster.cpp \
+  SvNet/SvNetServiceFileSlave.cpp \
+  SvNet/SvNetServiceMasterFile.cpp \
   SvStudio/DPrjProp.cpp \
   SvStudio/DProcess.cpp \
   SvStudio/DTextEditorSettings.cpp \

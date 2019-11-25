@@ -1,6 +1,5 @@
 #include "SvNetChannelFile.h"
 
-#include <QDir>
 
 SvNetChannelFile::SvNetChannelFile()
   {
@@ -34,32 +33,6 @@ void SvNetChannelFile::setChannel(SvNetChannel *ch)
 
 void SvNetChannelFile::onDirListRequest(SvNetChannel *ch, const QByteArray bl)
   {
-  SvNetDirInfo svDir( bl );
-
-  QDir dir(svDir.mPath);
-  svDir.mFileInfoList.clear();
-  if( dir.exists() ) {
-    //Директорий существует
-
-    //Список файлов каталога
-    //data: QString путь к каталогу
-    //      QFileInfoList со списком файлов
-    //Переписываем файлы из списка QFileInfoList в список CsFileInfoList
-    // поскольку первый не сериализуется, а второй сериализуется
-    QFileInfoList inList = dir.entryInfoList();
-    for( const QFileInfo &inf : inList ) {
-      SvNetFileInfo info;
-      info.mName = inf.fileName();
-      info.mSize = inf.size();
-      //TODO добавить флаги
-      info.mFlags = 0; //inf.isDir();
-      info.mPermissions = static_cast<quint16>( inf.permissions() );
-      svDir.mFileInfoList.append( info );
-      }
-    }
-  else svDir.mErrors = SVCE_FC_NO_DIR;
-
-  emit sendBlock( ch, SVC_DIR, svDir.buildBlock() );
   }
 
 
