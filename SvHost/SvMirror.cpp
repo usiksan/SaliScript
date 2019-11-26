@@ -74,7 +74,7 @@ QByteArray SvMirror::taskList()
   {
   QByteArray dst;
   QDataStream os( &dst, QIODevice::WriteOnly );
-  qint32 count = taskCount();
+  qint32 count = mControllerInfo.mVpuCount;
   os << count;
   for( int i = 0; i < count; i++ ) {
     os << taskInfo( i );
@@ -86,28 +86,28 @@ QByteArray SvMirror::taskList()
 
 
 
-QByteArray SvMirror::memory()
-  {
-  QByteArray dst;
-  QDataStream os( &dst, QIODevice::WriteOnly );
-  qint32 count = memorySize();
-  os << count;
-  qint32 val;
-  for( int i = 0; i < count; i++ ) {
-    val = memoryGet(i);
-    os << val;
-    }
-  return dst;
-  }
+//QByteArray SvMirror::memory()
+//  {
+//  QByteArray dst;
+//  QDataStream os( &dst, QIODevice::WriteOnly );
+//  qint32 count = memorySize();
+//  os << count;
+//  qint32 val;
+//  for( int i = 0; i < count; i++ ) {
+//    val = memoryGet(i);
+//    os << val;
+//    }
+//  return dst;
+//  }
 
 
 
 
 //Получить размер глобальной памяти
-int SvMirror::memoryGlobalSize() const
-  {
-  return qMin( mProgramm->globalCount(), memorySize() );
-  }
+//int SvMirror::memoryGlobalSize() const
+//  {
+//  return qMin( mProgramm->globalCount(), memorySize() );
+//  }
 
 
 
@@ -117,7 +117,7 @@ QByteArray SvMirror::memoryGlobal()
   {
   QByteArray dst;
   QDataStream os( &dst, QIODevice::WriteOnly );
-  qint32 count = memoryGlobalSize();
+  qint32 count = mProgramm->globalCount();
   os << count;
   qint32 val;
   for( int i = 0; i < count; i++ ) {
@@ -142,8 +142,8 @@ int SvMirror::addressOfName(const QString &name) const
 //Отладка - пуск всех задач
 void SvMirror::debugRunAll()
   {
-  for( int i = 0; i < taskCount(); i++ )
-    debugRun( i );
+  for( int i = 0; i < mControllerInfo.mVpuCount; i++ )
+    debug( i, SDC_RUN, 0, 0 );
   }
 
 
@@ -153,7 +153,7 @@ void SvMirror::debugRunAll()
 //Отладка - стоп (пауза)
 void SvMirror::debugPause(int taskId)
   {
-  debugRunUntil( taskId, 0, mProgramm->codeCount() );
+  debug( taskId, SDC_RUN_UNTIL, 0, mProgramm->codeCount() );
   }
 
 
@@ -163,7 +163,7 @@ void SvMirror::debugPause(int taskId)
 //Отладка - стоп (пауза) всех задач
 void SvMirror::debugPauseAll()
   {
-  for( int i = 0; i < taskCount(); i++ )
+  for( int i = 0; i < mControllerInfo.mVpuCount; i++ )
     debugPause( i );
   }
 
@@ -173,7 +173,7 @@ void SvMirror::debugPauseAll()
 
 void SvMirror::debugStep(int taskId)
   {
-  if( taskId >= 0 && taskId < taskCount() ) {
+  if( taskId >= 0 && taskId < mControllerInfo.mVpuCount ) {
     //Задача присутствует
     SvVmVpuState st = taskInfo(taskId);
     if( !st.mDebugRun && st.mIp != 0 ) {
@@ -183,7 +183,7 @@ void SvMirror::debugStep(int taskId)
       //Пропустить текущую строку
       int ipe = st.mIp + 1;
       while( mProgramm->getLine(ipe) == line && mProgramm->getFile(ipe) == file ) ipe++;
-      debugRunStep( taskId, st.mIp, ipe );
+      debug( taskId, SDC_RUN_STEP, st.mIp, ipe );
       }
     else debugPause( taskId );
     }
@@ -194,7 +194,7 @@ void SvMirror::debugStep(int taskId)
 
 void SvMirror::debugTrace(int taskId)
   {
-  if( taskId >= 0 && taskId < taskCount() ) {
+  if( taskId >= 0 && taskId < mControllerInfo.mVpuCount ) {
     //Задача присутствует
     SvVmVpuState st = taskInfo(taskId);
     if( !st.mDebugRun && st.mIp != 0 ) {
@@ -204,7 +204,7 @@ void SvMirror::debugTrace(int taskId)
       //Пропустить текущую строку
       int ipe = st.mIp + 1;
       while( mProgramm->getLine(ipe) == line && mProgramm->getFile(ipe) == file ) ipe++;
-      debugRunTrace( taskId, st.mIp, ipe );
+      debug( taskId, SDC_RUN_TRACE, st.mIp, ipe );
       }
     else debugPause( taskId );
     }

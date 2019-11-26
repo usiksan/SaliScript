@@ -22,12 +22,6 @@
 #include <QMutex>
 #include <QMutexLocker>
 
-#define SDC_NONE            0 //Нет команд управления для данного VPU
-#define SDC_RUN             1 //Команда пуск (отключение отладки)
-#define SDC_RUN_STEP        2 //Выполнить шаг
-#define SDC_RUN_UNTIL       3 //Выполнять, пока IP вне диапазона адресов
-#define SDC_RUN_TRACE       4 //Выполнить шаг со входом в подпрограмму
-#define SDC_GET_SOURCE_LIST 5 //Получить список исходных файлов
 
 //Задание отладки для задачи
 struct SvDebugTask {

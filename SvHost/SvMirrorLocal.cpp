@@ -15,6 +15,7 @@ SvMirrorLocal::SvMirrorLocal(SvVMachineLocal *controller, bool scanTasks ) :
   mController(controller),
   mDivider(0)
   {
+
   mLink = true;
   //Заполнить строку статуса
   mLinkStatus = QString("Local controller, ram %1, max vpu %2").arg( mController->getMemorySize() ).arg( mController->getVpuMax() );
@@ -33,6 +34,12 @@ SvMirrorLocal::~SvMirrorLocal()
 //Выполнить обработку узла
 void SvMirrorLocal::processing(int tickOffset)
   {
+  if( !mControllerInfo.mLink ) {
+    //На начальном шаге инициируем подключение контроллера
+    mControllerInfo.mLink = true;
+    mControllerInfo.mType = QStringLiteral("Local");
+    mControllerInfo.mLinkStatus = QStringLiteral("Connected");
+    mControllerInfo.mVpuMax = mController->getVpuMax();
    // qDebug() <<"mirror processing";
   mController->processing( tickOffset );
   if( mDivider++ >= 10 ) {
@@ -104,38 +111,35 @@ void SvMirrorLocal::memorySet(int index, int value)
 
 
 
-
-
-//Отладка - пуск
-void SvMirrorLocal::debugRun(int taskId)
+void SvMirrorLocal::debug(int taskId, int debugCmd, int start, int stop)
   {
-  mController->debugRun( taskId );
+  switch( debugCmd ) {
+    case SDC_RUN :
+      //Команда пуск (отключение отладки)
+      mController->debugRun( taskId );
+      break;
+    case SDC_RUN_STEP :
+      //Выполнить шаг
+      //Отладка - исполнять пока внутри и не изменится bp (шаг)
+      mController->debugRunStep( taskId, start, stop );
+      break;
+    case SDC_RUN_UNTIL :
+      //Выполнять, пока IP вне диапазона адресов
+      //Отладка - исполнять пока снаружи (точка останова)
+      mController->debugRunUntil( taskId, start, stop );
+      break;
+    case SDC_RUN_TRACE :
+      //Выполнить шаг со входом в подпрограмму
+      //Отладка - исполнять пока внутри (трассировка)
+      mController->debugRunTrace( taskId, start, stop );
+    }
   }
 
 
 
 
-//Отладка - исполнять пока внутри и не изменится bp (шаг)
-void SvMirrorLocal::debugRunStep(int taskId, int start, int stop)
-  {
-  mController->debugRunStep( taskId, start, stop );
-  }
 
 
-
-//Отладка - исполнять пока снаружи (точка останова)
-void SvMirrorLocal::debugRunUntil(int taskId, int start, int stop)
-  {
-  mController->debugRunUntil( taskId, start, stop );
-  }
-
-
-
-//Отладка - исполнять пока внутри (трассировка)
-void SvMirrorLocal::debugRunTrace(int taskId, int start, int stop)
-  {
-  mController->debugRunTrace( taskId, start, stop );
-  }
 
 
 

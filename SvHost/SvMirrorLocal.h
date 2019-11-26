@@ -30,19 +30,12 @@ class SvMirrorLocal : public SvMirror
     SvMirrorLocal(SvVMachineLocal *controller, bool scanTasks);
     virtual ~SvMirrorLocal() override;
 
-    //Тип зеркала
-    virtual int           mirrorType() const override { return SMT_LOCAL; }
-
     //Выполнить обработку узла
     virtual void          processing( int tickOffset ) override;
 
 
     //===========================
     //Раздел списка задач
-    virtual int           taskCount() const override;
-
-    virtual int           taskMax() const override;
-
     //Получить информацию по задаче
     virtual SvVmVpuState  taskInfo( qint32 taskId ) const override;
 
@@ -50,8 +43,6 @@ class SvMirrorLocal : public SvMirror
 
     //===========================
     //Раздел памяти данных
-    virtual int           memorySize() const override;
-
     virtual int           memoryGet( int index ) override;
 
     virtual void          memorySet( int index, int value ) override;
@@ -61,22 +52,11 @@ class SvMirrorLocal : public SvMirror
     //===========================
     //Раздел управления отладкой
 
-    //Отладка - пуск
-    virtual void          debugRun( int taskId ) override;
+    //Отладка
+    virtual void          debug( int taskId, int debugCmd, int start, int stop ) override;
 
-    //Отладка - исполнять пока внутри и не изменится bp (шаг)
-    virtual void          debugRunStep( int taskId, int start, int stop ) override;
-
-    //Отладка - исполнять пока снаружи (точка останова)
-    virtual void          debugRunUntil( int taskId, int start, int stop ) override;
-
-    //Отладка - исполнять пока внутри (трассировка)
-    virtual void          debugRunTrace( int taskId, int start, int stop ) override;
 
   public slots:
-    //Завершить вызов удаленной процедуры и вернуть результат
-    virtual void          remoteCallComplete( int result ) override;
-
     //===========================
     //Раздел управления
 

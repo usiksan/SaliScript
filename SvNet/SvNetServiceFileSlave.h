@@ -45,10 +45,17 @@
 
 //========================================================================================
 // Error codes
-#define SVCE_FILE_OK                0 //Операция выполнена успешно
-#define SVCE_FILE_NO_DIRECTORY      1 //Указанный директорий не найден
-#define SVCE_FILE_CANT_READ         2
-#define SVCE_FILE_CANT_WRITE        3
+#define SVCE_FILE_OK                 0 //Операция выполнена успешно
+#define SVCE_FILE_NO_DIRECTORY       1 //Указанный директорий не найден
+#define SVCE_FILE_CANT_READ          2
+#define SVCE_FILE_CANT_WRITE         3
+#define SVCE_FILE_CANT_CREATE_DIR    4
+#define SVCE_FILE_NO_FILE_OR_DIR     5
+#define SVCE_FILE_CANT_REMOVE_DIR    6
+#define SVCE_FILE_CANT_REMOVE_FILE   7
+#define SVCE_FILE_NOT_A_FILE_OR_DIR  8
+#define SVCE_FILE_CANT_COPY_FILE     9
+#define SVCE_FILE_CANT_MOVE_FILE    10
 
 
 
@@ -108,6 +115,13 @@ struct SvNetFileAnswer {
 
 //========================================================================================
 // Директории - возможность удаленного просмотра
+
+#define SV_NET_FF_DIR        0x01
+#define SV_NET_FF_SYMLINK    0x02
+#define SV_NET_FF_EXECUTABLE 0x04
+#define SV_NET_FF_HIDDEN     0x08
+#define SV_NET_FF_READABLE   0x10
+#define SV_NET_FF_WRITABLE   0x20
 
 //!
 //! \brief The SvNetFileInfo struct Информация о файле для передачи по каналу
@@ -234,14 +248,12 @@ class SvNetServiceFileSlave : public SvNetService
     void dirRequest( SvNetChannel *ch, const SvNetDirInfo &src );
 
     void makeDir( SvNetChannel *ch, const SvNetFileOper &oper );
-#define SVC_FILE_MAKE_DIR           15 //Query to create directory
-                                       //data: SvNetDirOper
-#define SVC_FILE_REMOVE             16 //Query to remove file or directory (reversive)
-                                       //data: SvNetDirOper
-#define SVC_FILE_COPY               17 //Query to copy file
-                                       //data: SvNetDirOper
-#define SVC_FILE_MOVE               18 //Query to move file
-                                       //data: SvNetDirOper
+
+    void fileRemove( SvNetChannel *ch, const SvNetFileOper &oper );
+
+    void fileCopy( SvNetChannel *ch, const SvNetFileOper &oper );
+
+    void fileMove( SvNetChannel *ch, const SvNetFileOper &oper );
   };
 
 #endif // SVNETSERVICEFILESLAVE_H
