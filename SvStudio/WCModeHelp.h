@@ -16,7 +16,7 @@
 class WCModeHelp : public QTextBrowser {
     Q_OBJECT
   public:
-    explicit WCModeHelp(QWidget *parent = 0);
+    explicit WCModeHelp(QWidget *parent = nullptr);
     ~WCModeHelp();
 
     //Текущая библиотека

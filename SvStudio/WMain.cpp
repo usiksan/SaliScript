@@ -10,12 +10,14 @@
 #include "WCommand.h"
 #include "SvProject.h"
 #include "SvPeriodicParser.h"
-#include "Compiler/SvVpuCompiler.h"
-#include "Vpu/SvVpuCore.h"
+#include "SvCompiler/SvVpuCompiler.h"
+#include "SvVMachine/SvVMachine.h"
 #include "DPrjProp.h"
 #include "DProcess.h"
 #include "DTextEditorSettings.h"
-#include "Host/SvMirror.h"
+#include "SvHost/SvMirror.h"
+#include "SvHost/SvMirrorManager.h"
+
 #include <QToolBar>
 #include <QActionGroup>
 #include <QMessageBox>
@@ -29,7 +31,7 @@
 #include <QApplication>
 
 
-WMain::WMain(QWidget *parent)
+WMain::WMain(SvMirrorManager *manager, QWidget *parent)
   : QMainWindow(parent)
   {
   //Создать систему команд
@@ -38,7 +40,7 @@ WMain::WMain(QWidget *parent)
   //Создать основные режимы
   mCModeIntro  = new WCModeIntro();
   mCModeBoard  = new WCModeBoard();
-  mCModeEditor = new WCModeEditor( this );
+  mCModeEditor = new WCModeEditor( manager, this );
   mCModeHelp   = new WCModeHelp();
 
   connect( maDebugPause, SIGNAL(triggered()), mCModeEditor, SLOT(debugPause()) );
@@ -111,7 +113,7 @@ WMain::WMain(QWidget *parent)
   connect( mCModeIntro, SIGNAL(newProject()), this, SLOT(fileNewProject()) );
   connect( mCModeIntro, SIGNAL(openProject()), this, SLOT(fileOpenProject()) );
   connect( mCModeIntro, &WCModeIntro::projectOpen, this, &WMain::fileProjectOpen );
-  connect( SvDebugThread::mThread, &SvDebugThread::debugChanged, this, &WMain::onDebugChanged );
+  connect( manager, &SvMirrorManager::mirrorChanged, this, &WMain::onMirrorChanged );
 
   //Обновить список проектов
   svProject->updateRecentProjects();
@@ -299,7 +301,7 @@ void WMain::fileNewProject()
 
   //Установить тип канала связи с аппаратурой
   //Вызвать слот через очередь
-  QMetaObject::invokeMethod( SvDebugThread::mThread, "setDebugMode", Qt::QueuedConnection, Q_ARG( int, svProject->mDebugType) );
+  emit setMirror( svProject->mDebugType );
 
   //Установить новый заголовок
   setupTitle();
@@ -442,20 +444,20 @@ void WMain::helpWeb()
 void WMain::helpAbout()
   {
   //Вывести диалог с версией
-  QMessageBox::about( this, tr("About Sali SvStudio"), tr("SaliLAB Distributed System Visual Programming\n VPU version %1.%2\n SvStudio version %3").arg( SV_VPU_VERSION_MAJOR ).arg( SV_VPU_VERSION_MINOR ).arg( SV_VERSION ) );
+  QMessageBox::about( this, tr("About Sali SvStudio"), tr("SaliLAB SaliScript is C programming language subset IDE\n Compiler %1\nVirtual machine %2\n SvStudio version %3").arg( TVERSION ).arg( SV_VMACHINE_VERSION ).arg( SV_VERSION ) );
   }
 
 
 
 
 //Установить тип отладки
-void WMain::onDebugChanged()
+void WMain::onMirrorChanged(int id, SvMirrorPtr mirror)
   {
   //Подключить
-  if( SvDebugThread::mClient ) {
+  if( mirror ) {
 
     //В соответствии с отладчиком изменить команду
-    switch( svProject->mDebugType ) {
+    switch( id ) {
       default :
       case SMT_LOCAL :
         maDebugChannel->setIcon( maChannelSimulator->icon() );
@@ -474,12 +476,7 @@ void WMain::onDebugChanged()
       }
 
 
-    mCModeEditor->setupMirror(SvDebugThread::mClient);
-
-    connect( SvDebugThread::mClient, &SvMirror::processChanged, this, &WMain::onProcessChanged );
-
-
-    //Подключить связи к визуальному редактору
+    mCModeEditor->setupMirror(mirror);
     }
 
   }
@@ -583,7 +580,7 @@ void WMain::fileProjectOpen(const QString fname)
   mCModeEditor->openFromProject();
 
   //Установить тип канала связи с аппаратурой
-  QMetaObject::invokeMethod( SvDebugThread::mThread, "setDebugMode", Qt::QueuedConnection, Q_ARG( int, svProject->mDebugType) );
+  emit setMirror( svProject->mDebugType );
 
   //Отобразить окна
   //Включить визуальный режим как сохранено в проекте
@@ -710,9 +707,7 @@ void WMain::debugMode()
   DPrjProp dprjProp( tr("Apply"), this );
   if( dprjProp.exec() )
     //Установить тип канала связи с аппаратурой
-    QMetaObject::invokeMethod( SvDebugThread::mThread, "setDebugMode", Qt::QueuedConnection, Q_ARG( int, svProject->mDebugType) );
-    //SvDebugThread::mThread->setDebugMode( svProject->mDebugType );
-
+    emit setMirror( svProject->mDebugType );
   }
 
 
@@ -795,10 +790,3 @@ void WMain::closeEvent(QCloseEvent *ev)
 
 
 
-void WMain::onProcessChanged(const QString status, bool processStatus, const QString error)
-  {
-  Q_UNUSED(status)
-  Q_UNUSED(error)
-  if (!processStatus /*&& error.isEmpty()*/){
-    }
-  }

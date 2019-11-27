@@ -22,6 +22,8 @@
 #include "SvVMachine/SvVmVpu.h"
 #include "SvVMachine/SvVmUtils.h"
 
+#define SV_VMACHINE_VERSION "v6.01"
+
 /*!
    \brief The SvVMachine class - виртуальная машина для исполнения байт-кода
 

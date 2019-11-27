@@ -248,13 +248,19 @@ class SvProgramm
     //Операции извлечения
     QByteArray getCode() { return mCode; }
     SvVmCode*  getVpuCode() const { return static_cast<const SvVmCode*>( static_cast<const void*>(mCode.data()) ); }
-    int        getCode( int addr ) { return mCode[addr]; }
-    int        getLine( int addr ) { return mLines[addr]; }
-    int        getFile( int addr ) { return mFiles[addr]; }
-    int        getAddr( const QString sym );
+    int        getCode( int addr ) const { return mCode[addr]; }
+    int        getLine( int addr ) const { return (addr >= 0 && addr < mLines.count()) ? mLines[addr] : 0; }
+    int        getFile( int addr ) const { return (addr >= 0 && addr < mFiles.count()) ? mFiles[addr] : 0; }
+    QString    getFileName( int addr ) const { return getFileByIndex( getFile(addr) ); }
+    int        getAddr( const QString sym ) const;
+    int        getMarkDefineLine( const QString sym );
+    QString    getMarkDefineFile( const QString sym );
+    int        getMarkFirstDeclareLine( const QString sym );
+    QString    getMarkFirstDeclareFile( const QString sym );
+    QString    getRemark( const QString sym );
     QString    getSymbol( int addr );
     int        codeCount() const { return mCode.count(); }
-    QString    getFileByIndex( int index );
+    QString    getFileByIndex( int index ) const;
 
 
 

@@ -14,9 +14,10 @@
 #include "SvProject.h"
 #include "SvUtils.h"
 #include "SvPeriodicParser.h"
-#include "SvDebugThread.h"
 #include "WCModeHelp.h"
 #include "WMain.h"
+#include "SvHost/SvMirrorManager.h"
+
 #include <QFileInfo>
 #include <QFileDialog>
 #include <QJsonArray>
@@ -37,12 +38,13 @@
 #define DE_TASK_LAST  6 //Количество полей
 
 
-WCModeEditor::WCModeEditor(WMain *parent) :
+WCModeEditor::WCModeEditor( SvMirrorManager *manager, WMain *parent) :
   QSplitter(parent),
   mParser(nullptr),
   mVarChangeLock(false),
+  mManager(manager),
   mAutoCompleteParenthesis(true),
-  mAutoIndentSpaceCount(4)
+  mAutoIndentSpaceCount(2)
   {
   QWidget *we;
   QVBoxLayout *box;
@@ -434,15 +436,16 @@ void WCModeEditor::parsingComplete()
 void WCModeEditor::onTaskChanged()
   {
   //Обновить список задач
-  int run = 0, ip = 0, sp = 0, tm = 0, bp = 0;
-  if (SvDebugThread::mClient == nullptr)
+  if( mManager->mirror() == nullptr )
     return;
+
   for( int i = 0; i < SV_MAX_TASK; i++ ) {
-    if( SvDebugThread::mClient->taskInfo( i, &run, &ip, &sp, &tm, &bp ) ) {
+    SvVmVpuState taskInfo;
+    if( mManager->mirror()->taskInfo( i, taskInfo ) ) {
       //Задача присутствует, обновить информацию
       //Заголовок
       mTasks->item( i, DE_TASK_TASK )->setText( QString::number(i) );
-      if( run ) {
+      if( taskInfo.mDebugRun ) {
         //Задача исполняется
         mTasks->item( i, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskRun.png") );
         //Очистить регистры
@@ -453,21 +456,21 @@ void WCModeEditor::onTaskChanged()
         }
       else {
         //Задача заторможена
-        if( ip )
+        if( taskInfo.mIp )
           mTasks->item( i, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskPause.png") );
         else
           mTasks->item( i, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskStop.png") );
         //Если ip изменился с предыдущего значения, то позиционировать курсор редактора к данной строке
-        if( mTasks->item( i, DE_TASK_IP )->text() != QString::number( ip ) ) {
+        if( mTasks->item( i, DE_TASK_IP )->text() != QString::number( taskInfo.mIp ) ) {
           //Получить имя файла, где находится текущая точка исполнения
-          QString fname = SvDebugThread::mClient->getProgramm()->getFileName( ip );
-          int line = SvDebugThread::mClient->getProgramm()->getLine( ip );
+          QString fname = mManager->mirror()->getProgramm()->getFileName( taskInfo.mIp );
+          int line = mManager->mirror()->getProgramm()->getLine( taskInfo.mIp );
           trackToFileLine( fname, line );
           }
-        mTasks->item( i, DE_TASK_IP )->setText( QString::number( ip ) );
-        mTasks->item( i, DE_TASK_SP )->setText( QString::number( sp ) );
-        mTasks->item( i, DE_TASK_TM )->setText( QString::number( tm ) );
-        mTasks->item( i, DE_TASK_BP )->setText( QString::number( bp ) );
+        mTasks->item( i, DE_TASK_IP )->setText( QString::number( taskInfo.mIp ) );
+        mTasks->item( i, DE_TASK_SP )->setText( QString::number( taskInfo.mSp ) );
+        mTasks->item( i, DE_TASK_TM )->setText( QString::number( taskInfo.mTm ) );
+        mTasks->item( i, DE_TASK_BP )->setText( QString::number( taskInfo.mBp ) );
         }
       }
     else {
@@ -909,11 +912,11 @@ void WCModeEditor::setupMirror(SvMirror *pMirror)
   //При поступлении loga
   connect( pMirror, &SvMirror::log, this, &WCModeEditor::onLog );
   //При изменении текстового статуса
-  connect( pMirror, &SvMirror::linkStatusChanged, this, &WCModeEditor::onTextStatusChanged );
+  connect( pMirror, &SvMirror::controllerInfoChanged, this, &WCModeEditor::onTextStatusChanged );
 
 
   //Обновить текстовый статус
-  onTextStatusChanged( pMirror->getLink(), pMirror->getLinkStatus() );
+  onTextStatusChanged();
 
   }
 
@@ -1080,8 +1083,8 @@ void WCModeEditor::debugAddWatch()
 //Пуск VPU
 void WCModeEditor::debugRun()
   {
-  if( SvDebugThread::mClient )
-    SvDebugThread::mClient->debugRun( task() );
+  if( mManager->mirror() != nullptr )
+    mManager->mirror()->debugRun( task() );
   }
 
 
@@ -1089,8 +1092,8 @@ void WCModeEditor::debugRun()
 //Пуск всех VPU
 void WCModeEditor::debugRunAll()
   {
-  if( SvDebugThread::mClient )
-    SvDebugThread::mClient->debugRunAll();
+  if( mManager->mirror() != nullptr )
+    mManager->mirror()->debugRunAll();
   }
 
 
@@ -1099,8 +1102,8 @@ void WCModeEditor::debugRunAll()
 //Шаг программы
 void WCModeEditor::debugStep()
   {
-  if( SvDebugThread::mClient )
-    SvDebugThread::mClient->debugStep( task() );
+  if( mManager->mirror() != nullptr )
+    mManager->mirror()->debugStep( task() );
   }
 
 
@@ -1109,8 +1112,8 @@ void WCModeEditor::debugStep()
 //Шаг программы с заходом в функцию
 void WCModeEditor::debugTrace()
   {
-  if( SvDebugThread::mClient )
-    SvDebugThread::mClient->debugTrace( task() );
+  if( mManager->mirror() != nullptr )
+    mManager->mirror()->debugTrace( task() );
   }
 
 
@@ -1119,8 +1122,8 @@ void WCModeEditor::debugTrace()
 //Пауза VPU
 void WCModeEditor::debugPause()
   {
-  if( SvDebugThread::mClient )
-    SvDebugThread::mClient->debugPause( task() );
+  if( mManager->mirror() != nullptr )
+    mManager->mirror()->debugPause( task() );
   }
 
 
@@ -1128,8 +1131,8 @@ void WCModeEditor::debugPause()
 //Пауза всех VPU
 void WCModeEditor::debugPauseAll()
   {
-  if( SvDebugThread::mClient )
-    SvDebugThread::mClient->debugPauseAll();
+  if( mManager->mirror() != nullptr )
+    mManager->mirror()->debugPauseAll();
   }
 
 
@@ -1137,10 +1140,10 @@ void WCModeEditor::debugPauseAll()
 
 
 //При изменении текстового статуса
-void WCModeEditor::onTextStatusChanged(bool linkStatus, const QString & str)
+void WCModeEditor::onTextStatusChanged()
   {
-  Q_UNUSED(linkStatus)
-  mTextStatus->setText( str );
+  if( mManager->mirror() != nullptr )
+    mTextStatus->setText( mManager->mirror()->controllerInfo().mLinkStatus );
   }
 
 

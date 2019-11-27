@@ -53,32 +53,19 @@ void SvMirrorLocal::processing(int tickOffset)
 
 
 
-int SvMirrorLocal::taskCount() const
-  {
-  return mController->taskCount();
-  }
-
-
-
-
-
-
-int SvMirrorLocal::taskMax() const
-  {
-  return mController->getVpuMax();
-  }
-
 
 
 
 
 
 //Получить информацию по задаче
-SvVmVpuState SvMirrorLocal::taskInfo(qint32 taskId) const
+bool SvMirrorLocal::taskInfo(qint32 taskId, SvVmVpuState &destTaskInfo) const
   {
-  if( taskId >= 0 && taskId < mController->taskCount() )
-    return *(mController->vpu(taskId));
-  return SvVmVpuState{};
+  if( taskId >= 0 && taskId < mController->taskCount() ) {
+    destTaskInfo = *(mController->vpu(taskId));
+    return true;
+    }
+  return false;
   }
 
 
@@ -200,6 +187,7 @@ void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool link, bool flas
     }
   setProcess( tr("Complete"), false );
   }
+
 
 
 

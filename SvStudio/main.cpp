@@ -11,6 +11,7 @@
 #include "SvConfig.h"
 #include "WMain.h"
 #include "SvProject.h"
+#include "SvHost/SvMirrorManager.h"
 #include "SvDebugThread.h"
 #include "Compiler/SvVpuCompiler.h"
 #include "Host/SvNetClientMirror.h"
@@ -31,8 +32,8 @@ int main(int argc, char *argv[])
   //Создать рабочий проект
   svProject = new SvProject();
 
-  //Создать отладчик
-  new SvDebugThread();
+  //Создать менеджер зеркал
+  SvMirrorManager *svMirrorManager = new SvMirrorManager();
 
   QSettings s;
 
@@ -52,13 +53,12 @@ int main(int argc, char *argv[])
   //w.restorePositions();
 
   //Запустить отладчик на исполнение
-  SvDebugThread::mThread->start();
+  svMirrorManager->start();
 
   int res = a.exec();
 
   //Остановить работу сети
-  SvDebugThread::mThread->quit();
-  SvDebugThread::mThread->wait();
+  svMirrorManager->stop();
 
   //Остановить работу удаленного управления
   svNetClientMirror->stopClient();

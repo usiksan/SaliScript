@@ -21,9 +21,11 @@
 #ifndef CMODEEDITOR_H
 #define CMODEEDITOR_H
 
-#include "Compiler/SvVpuCompiler.h"
 #include "WDebugTable.h"
 #include "WTextSearchPanel.h"
+#include "SvHost/SvProgramm.h"
+#include "SvHost/SvMirrorManager.h"
+
 #include <QWidget>
 #include <QSplitter>
 #include <QTabWidget>
@@ -39,19 +41,18 @@ class WMain;
 
 #define SV_MAX_DEBUG_VARS 64 //Максимальное количество переменный (адресов) для мониторинга
 #define SV_MAX_TASK       32 //Максимальное количество задач в узле
-#define SV_MAX_NODE       16 //Максимальное количество узлов в системе
 
 
 class WCModeEditor : public QSplitter
   {
     Q_OBJECT
 
-    QString mMainProjectFile;
+    QString           mMainProjectFile;
     //Колонка 1
     QTabWidget       *mEditorTab;       //Список файлов для редактирования
     QLabel           *mTextStatus;      //Текстовое состояние подключения
 
-    WTextSearchPanel* mSearchPanel;
+    WTextSearchPanel *mSearchPanel;
 
     //Колонка 2
     QSplitter        *mDebugSplitter;   //Хранитель ячеек в колонке 3
@@ -78,10 +79,12 @@ class WCModeEditor : public QSplitter
     bool               mVarChangeLock;   //Блокировка от изменения ячейки внутренними средствами
     QStringList        mFilesList;
 
+    SvMirrorManager   *mManager;         //Менеджер зеркал
+
     bool               mAutoCompleteParenthesis;
     int                mAutoIndentSpaceCount;
   public:
-    explicit WCModeEditor( WMain *parent );
+    explicit WCModeEditor( SvMirrorManager *manager, WMain *parent );
     ~WCModeEditor();
 
     QStringList getFilesList()const { return mFilesList; }
@@ -195,7 +198,7 @@ class WCModeEditor : public QSplitter
     void debugPauseAll();
 
     //При изменении текстового статуса
-    void onTextStatusChanged( bool linkStatus, const QString & str );
+    void onTextStatusChanged();
 
 
     int autoIndentSpaceCount()const;

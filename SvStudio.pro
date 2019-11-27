@@ -75,11 +75,9 @@ HEADERS += \
   SvStudio/DPrjProp.h \
   SvStudio/DProcess.h \
   SvStudio/DTextEditorSettings.h \
-  SvStudio/DsLibCategory.h \
   SvStudio/Highlighter.h \
   SvStudio/IngDebugCalculator.h \
   SvStudio/SvConfig.h \
-  SvStudio/SvDebugThread.h \
   SvStudio/SvPeriodicParser.h \
   SvStudio/SvProject.h \
   SvStudio/SvUtils.h \
@@ -95,8 +93,6 @@ HEADERS += \
   SvStudio/WOscillograph.h \
   SvStudio/WTextEditor.h \
   SvStudio/WTextSearchPanel.h \
-  SvStudio/WVisualEditor.h \
-  SvStudio/WVisualLibrary.h \
   SvVMachine/Sv6Plc.h \
   SvVMachine/Sv6Sys.h \
   SvVMachine/SvVMachine.h \
@@ -176,7 +172,6 @@ SOURCES += \
   SvStudio/DsLibCategory.cpp \
   SvStudio/Highlighter.cpp \
   SvStudio/IngDebugCalculator.cpp \
-  SvStudio/SvDebugThread.cpp \
   SvStudio/SvPeriodicParser.cpp \
   SvStudio/SvProject.cpp \
   SvStudio/SvUtils.cpp \
@@ -194,7 +189,6 @@ SOURCES += \
   SvStudio/WTextEditor.cpp \
   SvStudio/WTextSearchPanel.cpp \
   SvStudio/WVisualEditor.cpp \
-  SvStudio/WVisualLibrary.cpp \
   SvStudio/bug.cpp \
   SvStudio/main.cpp \
   SvVMachine/SvVMachine.cpp

@@ -76,8 +76,10 @@ QByteArray SvMirror::taskList()
   QDataStream os( &dst, QIODevice::WriteOnly );
   qint32 count = mControllerInfo.mVpuCount;
   os << count;
+  SvVmVpuState tskInfo;
   for( int i = 0; i < count; i++ ) {
-    os << taskInfo( i );
+    taskInfo( i, tskInfo );
+    os << tskInfo;
     }
   return dst;
   }
@@ -134,6 +136,14 @@ QByteArray SvMirror::memoryGlobal()
 int SvMirror::addressOfName(const QString &name) const
   {
   return mProgramm->getAddr( name );
+  }
+
+
+
+
+void SvMirror::debugRun(int taskId)
+  {
+  debug( taskId, SDC_RUN, 0, 0 );
   }
 
 

@@ -41,7 +41,7 @@
 #ifndef SVCONFIG
 #define SVCONFIG
 
-#define SV_VERSION "v0.23"
+#define SV_VERSION "v0.1"
 
 //Раздел стандартных путей
 #define PATH_BASE    "c:/work/SaliLab/SaliDsLibrary/"
@@ -51,7 +51,6 @@
 #define PATH_BOARDS  PATH_BASE "boards/"
 
 #define EXTENSION_PROJECT      ".svproject"
-#define EXTENSION_LIB          ".svl"
 #define EXTENSION_SCRIPT       ".svs"
 #define EXTENSION_BINARY       ".svbin"
 

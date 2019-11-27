@@ -55,16 +55,33 @@ class SvMirrorManager : public QObject
     //Идентификатор активного зеркала
     int         mirrorTypeId() const { return mMirrorTypeId; }
 
-    //Добавить фабрику к списку
+    //!
+    //! \brief addMirrorFabric Добавить фабрику к списку. Фабрика - это функтор, используемый для конструирования зеркала.
+    //!                        Фабрика вызывается в контексте потока-обработчика зеркал.
+    //! \param id              Идентификатор данной фабрики
+    //! \param fabric          Собственно фабрика
+    //!
     void        addMirrorFabric( int id, SvMirrorFabric fabric );
   signals:
-    void        mirrorChanged( SvMirrorPtr mirrorPtr );
+    //!
+    //! \brief mirrorChanged Сигнал посылается при изменении активного зеркала, т.е.при переключении
+    //! \param id            Идентификатор зеркала
+    //! \param mirrorPtr     Указатель на новое активное зеркало
+    //!
+    void        mirrorChanged( int id, SvMirrorPtr mirrorPtr );
 
   public slots:
+    //!
+    //! \brief setMirror Используется для смены активного зеркала. На основе идентификатора зеркала
+    //!                  строится новое зеркало и делается текущим. Старое зеркало ставится на удаление
+    //! \param id        Идентификатор зеркала, которое необходимо установить
+    //!
     void        setMirror( int id );
 
-  private slots:
-    void        onStarted();
+    void        start();
+
+    void        stop();
+
   };
 
 #endif // SVMIRRORMANAGER_H

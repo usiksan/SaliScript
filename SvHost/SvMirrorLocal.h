@@ -37,7 +37,7 @@ class SvMirrorLocal : public SvMirror
     //===========================
     //Раздел списка задач
     //Получить информацию по задаче
-    virtual SvVmVpuState  taskInfo( qint32 taskId ) const override;
+    virtual bool          taskInfo( qint32 taskId, SvVmVpuState &destTaskInfo ) const override;
 
 
 

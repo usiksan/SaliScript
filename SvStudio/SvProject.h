@@ -33,6 +33,12 @@
 #define WPK_CHART_VARIABLES  QString("ChartVarialbes")
 #define WPK_CHART_AXES       QString("ChartAxes")
 
+//Типы возможных зеркал
+#define SMT_LOCAL  0 //Локальный контроллер
+#define SMT_USB    1 //Контроллер, подключенный по USB
+#define SMT_REMOTE 2 //Удаленное зеркало
+
+
 
 //Представляет собой проект
 //Часть глобальных данных раскодируется при загрузке и может использоваться глобально

@@ -78,7 +78,7 @@ QString SvProgramm::errorList() const
 
 
 
-int SvProgramm::getAddr( const QString symbol )
+int SvProgramm::getAddr( const QString symbol ) const
   {
   return mSymbols.value( symbol, 0 );
   }
@@ -360,7 +360,7 @@ QString SvProgramm::getSymbol(int addr)
 
 
 
-QString SvProgramm::getFileByIndex(int index)
+QString SvProgramm::getFileByIndex(int index) const
   {
   if( index >= 0 && index < mFileList.count() )
     return mFileList.at(index);

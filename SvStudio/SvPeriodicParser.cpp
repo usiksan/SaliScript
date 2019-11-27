@@ -11,6 +11,7 @@
 #include "SvProject.h"
 #include "WCModeEditor.h"
 #include "Highlighter.h"
+
 #include <QAbstractEventDispatcher>
 #include <QDebug>
 

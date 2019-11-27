@@ -16,7 +16,7 @@ class WCModeBoard : public QWidget
   {
     Q_OBJECT
   public:
-    explicit WCModeBoard(QWidget *parent = 0);
+    explicit WCModeBoard(QWidget *parent = nullptr);
     ~WCModeBoard();
 
     void activateNode( int node );

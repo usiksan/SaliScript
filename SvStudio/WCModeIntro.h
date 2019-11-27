@@ -17,7 +17,7 @@ class WCModeIntro : public WBrowser
   {
     Q_OBJECT
   public:
-    explicit WCModeIntro(QWidget *parent = 0);
+    explicit WCModeIntro(QWidget *parent = nullptr);
     ~WCModeIntro();
 
   signals:

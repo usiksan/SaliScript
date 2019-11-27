@@ -63,7 +63,7 @@ struct SvControllerInfo {
 
 
 
-class SvMirror : public SvNetService
+class SvMirror : public QObject
   {
     Q_OBJECT
 
@@ -108,7 +108,7 @@ class SvMirror : public SvNetService
     //===========================
     //Раздел списка задач
     //Получить информацию по задаче
-    virtual SvVmVpuState    taskInfo( qint32 taskId ) const = 0;
+    virtual bool            taskInfo( qint32 taskId, SvVmVpuState &destTaskInfo ) const = 0;
 
             //Получить все задачи списком
             QByteArray      taskList();
@@ -146,6 +146,8 @@ class SvMirror : public SvNetService
     //Отладочная команда
     virtual void            debug( int taskId, int debugCmd, int start, int stop ) = 0;
 
+            void            debugRun( int taskId );
+
             //Отладка - пуск всех задач
             void            debugRunAll();
 
@@ -163,7 +165,7 @@ class SvMirror : public SvNetService
 
   signals:
             //Изменилось состояние связи
-            void            controllerInfoChanged();
+            void            controllerInfoChanged( SvMirror *mirrorPtr );
 
             //При изменении задач
             void            taskChanged();

@@ -14,26 +14,30 @@
 #include "WCModeBoard.h"
 #include "WCModeEditor.h"
 #include "WCModeHelp.h"
-#include "Host/SvProgramm.h"
-#include "SvDebugThread.h"
+#include "SvHost/SvMirrorManager.h"
 #include <QMainWindow>
 #include <QStackedWidget>
 #include <QTimer>
+
 
 class WMain : public QMainWindow
   {
     Q_OBJECT
 
-    WCModeIntro     *mCModeIntro;
-    WCModeBoard     *mCModeBoard;
-    WCModeEditor    *mCModeEditor;
-    WCModeHelp      *mCModeHelp;
-    QStackedWidget  *mCentral;
+    WCModeIntro     *mCModeIntro;  //Режим. Быстрая навигация по предыдущим проектам
+    WCModeBoard     *mCModeBoard;  //Режим. Обмен файлами с целевым компьютером
+    WCModeEditor    *mCModeEditor; //Режим. Текстовые редакторы и отладчик
+    WCModeHelp      *mCModeHelp;   //Режим. Система помощи
+    QStackedWidget  *mCentral;     //Центральная область - стековый widget, с помощью которого переключаемся между режимами
+    SvMirrorManager *mManager;     //Менеджер зеркал
   public:
-    WMain(QWidget *parent = nullptr);
+    WMain( SvMirrorManager *manager, QWidget *parent = nullptr);
     ~WMain();
 
     void restorePositions();
+
+  signals:
+    void setMirror( int mirrorType );
 
   public slots:
     void modeIntro();
@@ -84,8 +88,8 @@ class WMain : public QMainWindow
     void helpWeb();
     void helpAbout();
 
-    //Установить тип отладки
-    void onDebugChanged();
+    //Установлен новый тип зеркала
+    void onMirrorChanged( int id, SvMirrorPtr mirror );
 
     //Активировать режим, подсветить соответствующую кнопку
     void activateModeIntro();
@@ -107,9 +111,6 @@ class WMain : public QMainWindow
     // QWidget interface
   protected:
     virtual void closeEvent(QCloseEvent *ev);
-
-  protected slots:
-     void onProcessChanged( const QString status, bool processStatus, const QString error );
 
   };
 
