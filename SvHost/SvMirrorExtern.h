@@ -51,47 +51,86 @@ class SvMirrorExtern : public SvMirror
     QMap<int, int> mWriteValues; //Перечень записываемых значений индекс(ключ)-значение
     QMutex         mWriteMutex;  //Механизм защиты от сдвоенного доступа
 
+    int mEtapCount;
+    char mBuf[64];
   public:
     SvMirrorExtern( bool scanTasks );
     virtual ~SvMirrorExtern() override;
 
     //===========================
-    //Раздел списка задач
-    virtual int           taskCount() const override { return mVpuCount; }
-    virtual int           taskMax() const override { return mVpuMax; }
+    //Task list section
+    //!
+    //! \brief taskInfo      Get task information for task with id equals taskId
+    //! \param taskId        Index of task whose information need to get
+    //! \param destTaskInfo  Reference to VpuState - task information structure
+    //! \return              True if successfull or false in other cases
+    //!
+    virtual bool          taskInfo( qint32 taskId, SvVmVpuState &destTaskInfo ) const override;
 
-    //Получить информацию по задаче
-    virtual SvVmVpuState *taskInfo( qint32 taskId ) override;
+
 
     //===========================
-    //Раздел памяти данных
-
-    virtual int           memorySize() const override { return mMemorySize; }
-
-    //Получить состояние ячейки памяти
+    //Memory section
+    //!
+    //! \brief memoryGet Get mirror memory cell value
+    //! \param index     Cell index, whoes value need get
+    //! \return          Cell value
+    //!
     virtual int           memoryGet( int index ) override;
 
-    //Установить состояние ячейки памяти
+    //!
+    //! \brief memorySet Set mirror memory cell value
+    //! \param index     Cell index, whoes value need set
+    //! \param value     Value which set
+    //!
     virtual void          memorySet( int index, int value ) override;
 
+
+
     //===========================
-    //Раздел управления отладкой
+    //Debug section
+    //!
+    //! \brief debug     Execute one debug command
+    //! \param taskId    Index of task on which must be executed debug command
+    //! \param debugCmd  Debug command code
+    //! \param start     Start address needed for debug
+    //! \param stop      Stop address needed for debug
+    //!
+    virtual void          debug( int taskId, int debugCmd, int start, int stop ) override;
 
-    //Отладка - пуск
-    virtual void          debugRun( int taskId ) override;
 
-    //Отладка - исполнять пока внутри и не изменится bp (шаг)
-    virtual void          debugRunStep( int taskId, int start, int stop ) override;
+  public slots:
+    //===========================
+    //Control section
 
-    //Отладка - исполнять пока снаружи (точка останова)
-    virtual void          debugRunUntil( int taskId, int start, int stop ) override;
+    //!
+    //! \brief restart    At first - reset, then root virtual machine creation and run from start address
+    //! \param runOrPause If true - run from start address, else - paused
+    //!
+    virtual void          restart( bool runOrPause ) override;
 
-    //Отладка - исполнять пока внутри (трассировка)
-    virtual void          debugRunTrace( int taskId, int start, int stop ) override;
+    //!
+    //! \brief setProgrammFlashRun Flash programm to controller and run it or paused
+    //! \param prog                Programm which flashed to controller
+    //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
+    //!
+    virtual void          setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause ) override;
+
+  protected:
+    //!
+    //! \brief processing Perform periodic mirror handle
+    //! \param tickOffset Time in ms between previous calling this function and this one
+    //!
+    virtual void          processing( int tickOffset ) override;
+
+    virtual void          send( const char *buf, int len ) = 0;
+
+            void          onReceived( const char *bur );
 
   protected:
     //Построить зеркало в соответствии с удаленным контроллером
     void setupMirror( int vpuMax, int vpuCount, int memoryMax, int memoryCount );
+
 
   };
 

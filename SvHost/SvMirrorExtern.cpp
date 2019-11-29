@@ -8,6 +8,7 @@
 
 #include "SvMirrorExtern.h"
 #include "SvVMachine/SvVmUtils.h"
+#include "SvVMachine/SvVmInterface.h"
 
 #include <QDebug>
 
@@ -25,6 +26,9 @@ SvMirrorExtern::SvMirrorExtern(bool scanTasks) :
   {
   }
 
+
+
+
 SvMirrorExtern::~SvMirrorExtern()
   {
   if( mVpuState ) delete mVpuState;
@@ -35,14 +39,15 @@ SvMirrorExtern::~SvMirrorExtern()
 
 
 
-
-//Получить информацию по задаче
-SvVmVpuState *SvMirrorExtern::taskInfo(qint32 taskId)
+bool SvMirrorExtern::taskInfo(qint32 taskId, SvVmVpuState &destTaskInfo) const
   {
-  if( taskId >= 0 && taskId < mVpuCount )
-    return mVpuState + taskId;
-  return nullptr;
+  if( taskId >= 0 && taskId < mVpuCount ) {
+    destTaskInfo = mVpuState[taskId];
+    return true;
+    }
+  return false;
   }
+
 
 
 
@@ -81,53 +86,56 @@ void SvMirrorExtern::memorySet(int index, int value)
 
 
 
-//Отладка - пуск
-void SvMirrorExtern::debugRun(int taskId)
+void SvMirrorExtern::debug(int taskId, int debugCmd, int start, int stop)
   {
-  if( taskId >= 0 && taskId < mVpuCount ) {
+  if( 0 <= taskId && taskId < mControllerInfo.mVpuCount ) {
     QMutexLocker locker( &mVpuMutex );
 
-    mVpuDebug[taskId].set( SDC_RUN );
-    }
-  }
-
-
-
-//Отладка - исполнять пока внутри и не изменится bp (шаг)
-void SvMirrorExtern::debugRunStep(int taskId, int start, int stop)
-  {
-  if( taskId >= 0 && taskId < mVpuCount ) {
-    QMutexLocker locker( &mVpuMutex );
-
-    mVpuDebug[taskId].set( SDC_RUN_STEP, start, stop );
+    mVpuDebug[taskId].set( debugCmd, start, stop );
     }
   }
 
 
 
 
-//Отладка - исполнять пока снаружи (точка останова)
-void SvMirrorExtern::debugRunUntil(int taskId, int start, int stop)
-  {
-  if( taskId >= 0 && taskId < mVpuCount ) {
-    QMutexLocker locker( &mVpuMutex );
+enum SvEtap {
+  sveIdle,
+  sveError,
+  sveReconnect,
+  sveVersionGet,
+  sveVersionWait,
+};
 
-    mVpuDebug[taskId].set( SDC_RUN_UNTIL, start, stop );
+
+
+
+void SvMirrorExtern::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause)
+  {
+
+  }
+
+
+
+
+void SvMirrorExtern::processing(int tickOffset)
+  {
+  if( !mControllerInfo.mLink ) {
+
+    }
+  if( mEtapCount == sveVersionGet ) {
+    //Get controller version
+    mBuf[0] = SVU_CMD_VERSION_GET;
+    send(mBuf, 1);
+    mEtapCount = sveVersionWait;
+    }
+  else if( mEtapCount == sveVersionWait ) {
+    //No controller answer
     }
   }
 
 
 
 
-//Отладка - исполнять пока внутри (трассировка)
-void SvMirrorExtern::debugRunTrace(int taskId, int start, int stop)
-  {
-  if( taskId >= 0 && taskId < mVpuCount ) {
-    QMutexLocker locker( &mVpuMutex );
-
-    mVpuDebug[taskId].set( SDC_RUN_TRACE, start, stop );
-    }
-  }
 
 
 

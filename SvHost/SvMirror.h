@@ -98,9 +98,6 @@ class SvMirror : public QObject
                                       const QString globalName, const QString globalPassw,
                                       int vid, int pid );
 
-    //Выполнить обработку зеркала
-    virtual void            processing( int tickOffset ) = 0;
-
 
     //Обработка удаленных вызовов
     void                    proceccingRemoteCall();
@@ -206,22 +203,40 @@ class SvMirror : public QObject
     //Сначала сброс, затем создание корневого виртуального процессора и пуск с начального адреса
     virtual void            restart( bool runOrPause ) = 0;
 
-    //Компиляция, линковка, если равно, иначе прошивка и запуск
-    //Компиляция, прошивка и запуск
-    virtual void            setProgrammFlashRun( SvProgrammPtr prog, bool link, bool flash, bool runOrPause ) = 0;
+            //!
+            //! \brief setProgrammFlashRun Flash programm to controller and run it or paused
+            //! \param prog                Programm which flashed to controller
+            //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
+            //!
+    virtual void            setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause ) = 0;
 
 
             //Выполнить построение программы перед запуском
+            //!
+            //! \brief compileFlashRun Perform script compilation and some other tasks defined by params
+            //! \param scriptPath      Full script path. We start compilation of this main script
+            //! \param link            If flag is set, then mirror linked to controller
+            //! \param flash
+            //! \param runOrPause
+            //!
             void            compileFlashRun( const QString scriptPath, bool link, bool flash, bool runOrPause );
 
 
-            //Запустить скрипт на исполнение
-            //scriptPath - полный путь к скрипту
+            //!
+            //! \brief startScript Perofrm script compilation, load to controller and start script to running
+            //! \param scriptPath  Full script path
+            //!
             void            startScript( const QString scriptPath );
 
   protected:
     //Установить новое состояние связи
     void                    setLink( const QString status, bool lnk );
+
+    //!
+    //! \brief processing Perform periodic mirror handle
+    //! \param tickOffset Time in ms between previous calling this function and this one
+    //!
+    virtual void            processing( int tickOffset ) = 0;
   };
 
 using SvMirrorPtr = SvMirror*;

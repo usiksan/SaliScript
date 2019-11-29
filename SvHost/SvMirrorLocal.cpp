@@ -28,42 +28,6 @@ SvMirrorLocal::~SvMirrorLocal()
 
 
 
-//Выполнить обработку узла
-void SvMirrorLocal::processing(int tickOffset)
-  {
-  if( !mControllerInfo.mLink ) {
-    //На начальном шаге инициируем подключение контроллера
-    mControllerInfo.mLink        = true;
-    mControllerInfo.mType        = "Local controller";
-    mControllerInfo.mVpuMax      = mController->getVpuMax();
-    mControllerInfo.mVpuCount    = 0;
-    mControllerInfo.mMemoryMax   = mController->getMemorySize();
-    mControllerInfo.mSignature   = QStringLiteral("--------");
-    mControllerInfo.mLinkStatus  = QString("Local controller, ram %1, max vpu %2").arg( mController->getMemorySize() ).arg( mController->getVpuMax() );
-    mControllerInfo.mMemoryCount = 0;
-    emit controllerInfoChanged( this );
-    }
-
-   // qDebug() <<"mirror processing";
-  mController->processing( tickOffset );
-  if( mDivider++ >= 10 ) {
-    mDivider = 0;
-    //qDebug() <<"mirror memoryChanged";
-    emit memoryChanged();
-    emit taskChanged();
-    }
-
-  if( mController->taskCount() != mControllerInfo.mVpuCount ) {
-    mControllerInfo.mVpuCount = mController->taskCount();
-    emit controllerInfoChanged( this );
-    }
-  }
-
-
-
-
-
-
 
 
 
@@ -153,7 +117,7 @@ void SvMirrorLocal::restart(bool runOrPause)
 
 
 //Установка программы, прошивка и запуск
-void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool link, bool flash, bool runOrPause)
+void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause)
   {
   //Отправим сигнал о начале операции
   emit transferProcess( false, tr("Set programm") );
@@ -161,11 +125,6 @@ void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool link, bool flas
   //Установить новую программу
   mProgramm = prog;
 
-  if( mProgramm->mErrors.count() ) {
-    //При наличии ошибок прекращаем
-    setProcess( tr("Complete"), false, tr("Compile errors") );
-    return;
-    }
 
   if( link ) {
     //Проверить равенство программы только если программа не установлена
@@ -174,8 +133,9 @@ void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool link, bool flas
     else
       flash = mProgramm->getCode() != mController->getProgramm()->getCode();
     }
+
   if( flash ) {
-    setProcess( tr("Setting programm") );
+    emit transferProcess( false, tr("Setup programm to controller") );
 
     //Установить программу в исполняющую систему
     mController->setProgrammPtr( mProgramm );
@@ -183,7 +143,7 @@ void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool link, bool flas
     //Запускаем контроллер
     mController->restart( runOrPause );
     }
-  setProcess( tr("Complete"), false );
+  emit transferProcess( true, QString() );
   }
 
 
@@ -191,10 +151,38 @@ void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool link, bool flas
 
 
 
-void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool link, bool flash, bool runOrPause)
+//Mirror processing
+void SvMirrorLocal::processing(int tickOffset)
   {
+  if( !mControllerInfo.mLink ) {
+    //At first step we initiate controller connection
+    mControllerInfo.mLink        = true;
+    mControllerInfo.mType        = tr("Local controller");
+    mControllerInfo.mVpuMax      = mController->getVpuMax();
+    mControllerInfo.mVpuCount    = 0;
+    mControllerInfo.mMemoryMax   = mController->getMemorySize();
+    mControllerInfo.mSignature   = QStringLiteral("--------");
+    mControllerInfo.mLinkStatus  = tr("Local controller, ram %1, max vpu %2").arg( mController->getMemorySize() ).arg( mController->getVpuMax() );
+    mControllerInfo.mMemoryCount = 0;
+    emit controllerInfoChanged( this );
+    }
 
+   // qDebug() <<"mirror processing";
+  //Controller processing
+  mController->processing( tickOffset );
+  if( mDivider++ >= 10 ) {
+    mDivider = 0;
+    //qDebug() <<"mirror memoryChanged";
+    emit memoryChanged();
+    emit taskChanged();
+    }
+
+  if( mController->taskCount() != mControllerInfo.mVpuCount ) {
+    mControllerInfo.mVpuCount = mController->taskCount();
+    emit controllerInfoChanged( this );
+    }
   }
+
 
 
 
