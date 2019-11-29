@@ -2,7 +2,7 @@
 #define HIGHLIGHTER_H
 
 #include <QSyntaxHighlighter>
-#include "Compiler/SvCompiler.h"
+#include "SvCompiler/SvCompiler.h"
 
 
 class Highlighter : public QSyntaxHighlighter {
@@ -10,12 +10,12 @@ class Highlighter : public QSyntaxHighlighter {
 
     QString mLink; //Идентификатор для перехода по линку
   public:
-    static SvCompiler             *mCompiler;       //Компилятор
+    static SvCompiler6::SvCompiler   *mCompiler;       //Компилятор
 
 //    static QHash<QString,QString>     mMacroTable;     //Таблица макроимен
 //    static QHash<QString,TFileLine>   mSymSources;     //Места определения переменных
 
-    Highlighter(QTextDocument *parent = 0);
+    Highlighter(QTextDocument *parent = nullptr);
 
 
   protected:

@@ -13,18 +13,21 @@
 #include <QTimer>
 #include <QStringList>
 
+namespace SvCompiler6 {
 class SvCompiler;
+};
+
 class WCModeEditor;
 class SvPeriodicParser : public QThread
   {
     Q_OBJECT
 
-    SvCompiler    *mCompiler;
-    SvCompiler    *mCompiler0;
-    SvCompiler    *mCompiler1;
-    WCModeEditor *mEditor;
-    bool          mNeedCompile;
-    QStringList   mFileList;
+    SvCompiler6::SvCompiler    *mCompiler;
+    SvCompiler6::SvCompiler    *mCompiler0;
+    SvCompiler6::SvCompiler    *mCompiler1;
+    WCModeEditor               *mEditor;
+    bool                        mNeedCompile;
+    QStringList                 mFileList;
   public:
     SvPeriodicParser( WCModeEditor *editor );
     ~SvPeriodicParser();

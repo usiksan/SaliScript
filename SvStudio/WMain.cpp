@@ -31,7 +31,7 @@
 #include <QApplication>
 
 
-WMain::WMain(SvMirrorManager *manager, QWidget *parent)
+WMain::WMain(QWidget *parent)
   : QMainWindow(parent)
   {
   //Создать систему команд
@@ -40,7 +40,7 @@ WMain::WMain(SvMirrorManager *manager, QWidget *parent)
   //Создать основные режимы
   mCModeIntro  = new WCModeIntro();
   mCModeBoard  = new WCModeBoard();
-  mCModeEditor = new WCModeEditor( manager, this );
+  mCModeEditor = new WCModeEditor( this );
   mCModeHelp   = new WCModeHelp();
 
   connect( maDebugPause, SIGNAL(triggered()), mCModeEditor, SLOT(debugPause()) );
@@ -113,7 +113,7 @@ WMain::WMain(SvMirrorManager *manager, QWidget *parent)
   connect( mCModeIntro, SIGNAL(newProject()), this, SLOT(fileNewProject()) );
   connect( mCModeIntro, SIGNAL(openProject()), this, SLOT(fileOpenProject()) );
   connect( mCModeIntro, &WCModeIntro::projectOpen, this, &WMain::fileProjectOpen );
-  connect( manager, &SvMirrorManager::mirrorChanged, this, &WMain::onMirrorChanged );
+  connect( svMirrorManager, &SvMirrorManager::mirrorChanged, this, &WMain::onMirrorChanged );
 
   //Обновить список проектов
   svProject->updateRecentProjects();
@@ -477,6 +477,8 @@ void WMain::onMirrorChanged(int id, SvMirrorPtr mirror)
 
 
     mCModeEditor->setupMirror(mirror);
+
+    connect( this, &WMain::setProgrammFlashRun, mirror, &SvMirror::setProgrammFlashRun );
     }
 
   }
@@ -494,18 +496,29 @@ void WMain::compile(bool link, bool flash , bool runOrPause)
     //Подготовительные операции: сохранение текстовых файлов и генерация визуальных
     mCModeEditor->fileSaveAll();
 
-    //Диалог операции
-    DProcess dprocess( link, flash, runOrPause, this );
-    dprocess.exec();
+    //Компилировать
+    SvProgrammPtr prog = SvCompiler6::SvVpuCompiler::build( svProject->mProjectPath, svProject->mProjectName );
+
+    //Установить новый список ошибок
+    mCModeEditor->setErrors( prog->mErrors );
 
     //Если ошибки, то отобразить
-    if( SvDebugThread::mClient && SvDebugThread::mClient->getProgramm()->mErrors.count() ) {
+    if( prog->mErrors.count() ) {
       //Вынести текстовый редактор на передний план
       activateModeEditor();
       }
+    else {
+      //Ошибок нет, передаем программу
+      //Диалог операции
+      DProcess dprocess( this );
 
-    //Установить новый список ошибок
-    mCModeEditor->setErrors( SvDebugThread::mClient->getProgramm()->mErrors );
+      //Отсроченная отправка программы
+      QTimer::singleShot( 30, this, [this, prog, link, flash, runOrPause] () {
+        emit setProgrammFlashRun( prog, link, flash, runOrPause );
+        });
+
+      dprocess.exec();
+      }
 
     //Если есть программа, то сохраняем ее бинарник
 //    if( prog ) {

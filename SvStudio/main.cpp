@@ -12,12 +12,12 @@
 #include "WMain.h"
 #include "SvProject.h"
 #include "SvHost/SvMirrorManager.h"
-#include "SvDebugThread.h"
-#include "Compiler/SvVpuCompiler.h"
+#include "SvCompiler/SvVpuCompiler.h"
 #include "Host/SvNetClientMirror.h"
 #include <QApplication>
 #include <QSettings>
 
+SvMirrorManager *svMirrorManager;
 
 int main(int argc, char *argv[])
   {
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
   svProject = new SvProject();
 
   //Создать менеджер зеркал
-  SvMirrorManager *svMirrorManager = new SvMirrorManager();
+  svMirrorManager = new SvMirrorManager();
 
   QSettings s;
 

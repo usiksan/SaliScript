@@ -169,16 +169,13 @@ SOURCES += \
   SvStudio/DPrjProp.cpp \
   SvStudio/DProcess.cpp \
   SvStudio/DTextEditorSettings.cpp \
-  SvStudio/DsLibCategory.cpp \
   SvStudio/Highlighter.cpp \
   SvStudio/IngDebugCalculator.cpp \
   SvStudio/SvPeriodicParser.cpp \
   SvStudio/SvProject.cpp \
   SvStudio/SvUtils.cpp \
   SvStudio/WBrowser.cpp \
-  SvStudio/WCChartLegend.cpp \
   SvStudio/WCModeBoard.cpp \
-  SvStudio/WCModeChart.cpp \
   SvStudio/WCModeEditor.cpp \
   SvStudio/WCModeHelp.cpp \
   SvStudio/WCModeIntro.cpp \

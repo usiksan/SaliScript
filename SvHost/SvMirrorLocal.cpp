@@ -15,17 +15,14 @@ SvMirrorLocal::SvMirrorLocal(SvVMachineLocal *controller, bool scanTasks ) :
   mController(controller),
   mDivider(0)
   {
-
-  mLink = true;
-  //Заполнить строку статуса
-  mLinkStatus = QString("Local controller, ram %1, max vpu %2").arg( mController->getMemorySize() ).arg( mController->getVpuMax() );
+  //Через секунду после создания выполнить подключение
   }
+
 
 
 SvMirrorLocal::~SvMirrorLocal()
   {
   delete mController;
-  //  qDebug() <<"mirror destroyed";
   }
 
 
@@ -36,10 +33,17 @@ void SvMirrorLocal::processing(int tickOffset)
   {
   if( !mControllerInfo.mLink ) {
     //На начальном шаге инициируем подключение контроллера
-    mControllerInfo.mLink = true;
-    mControllerInfo.mType = QStringLiteral("Local");
-    mControllerInfo.mLinkStatus = QStringLiteral("Connected");
-    mControllerInfo.mVpuMax = mController->getVpuMax();
+    mControllerInfo.mLink        = true;
+    mControllerInfo.mType        = "Local controller";
+    mControllerInfo.mVpuMax      = mController->getVpuMax();
+    mControllerInfo.mVpuCount    = 0;
+    mControllerInfo.mMemoryMax   = mController->getMemorySize();
+    mControllerInfo.mSignature   = QStringLiteral("--------");
+    mControllerInfo.mLinkStatus  = QString("Local controller, ram %1, max vpu %2").arg( mController->getMemorySize() ).arg( mController->getVpuMax() );
+    mControllerInfo.mMemoryCount = 0;
+    emit controllerInfoChanged( this );
+    }
+
    // qDebug() <<"mirror processing";
   mController->processing( tickOffset );
   if( mDivider++ >= 10 ) {
@@ -47,6 +51,11 @@ void SvMirrorLocal::processing(int tickOffset)
     //qDebug() <<"mirror memoryChanged";
     emit memoryChanged();
     emit taskChanged();
+    }
+
+  if( mController->taskCount() != mControllerInfo.mVpuCount ) {
+    mControllerInfo.mVpuCount = mController->taskCount();
+    emit controllerInfoChanged( this );
     }
   }
 
@@ -75,13 +84,6 @@ bool SvMirrorLocal::taskInfo(qint32 taskId, SvVmVpuState &destTaskInfo) const
 
 
 
-int SvMirrorLocal::memorySize() const
-  {
-  return mController->getMemorySize();
-  }
-
-
-
 
 int SvMirrorLocal::memoryGet(int index)
   {
@@ -90,10 +92,16 @@ int SvMirrorLocal::memoryGet(int index)
 
 
 
+
+
+
 void SvMirrorLocal::memorySet(int index, int value)
   {
   mController->memSet( nullptr, index, value );
   }
+
+
+
 
 
 
@@ -132,18 +140,6 @@ void SvMirrorLocal::debug(int taskId, int debugCmd, int start, int stop)
 
 
 
-//Завершить вызов удаленной процедуры и вернуть результат
-void SvMirrorLocal::remoteCallComplete(int result)
-  {
-  Q_UNUSED(result)
-  }
-
-
-
-
-
-
-
 
 //Сначала сброс, затем создание корневого виртуального процессора и пуск с начального адреса
 void SvMirrorLocal::restart(bool runOrPause)
@@ -154,11 +150,13 @@ void SvMirrorLocal::restart(bool runOrPause)
 
 
 
+
+
 //Установка программы, прошивка и запуск
 void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool link, bool flash, bool runOrPause)
   {
   //Отправим сигнал о начале операции
-  setProcess( tr("Compile...") );
+  emit transferProcess( false, tr("Set programm") );
 
   //Установить новую программу
   mProgramm = prog;
@@ -186,6 +184,16 @@ void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool link, bool flas
     mController->restart( runOrPause );
     }
   setProcess( tr("Complete"), false );
+  }
+
+
+
+
+
+
+void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool link, bool flash, bool runOrPause)
+  {
+
   }
 
 

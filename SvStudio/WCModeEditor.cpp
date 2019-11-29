@@ -38,11 +38,10 @@
 #define DE_TASK_LAST  6 //Количество полей
 
 
-WCModeEditor::WCModeEditor( SvMirrorManager *manager, WMain *parent) :
+WCModeEditor::WCModeEditor(WMain *parent) :
   QSplitter(parent),
   mParser(nullptr),
   mVarChangeLock(false),
-  mManager(manager),
   mAutoCompleteParenthesis(true),
   mAutoIndentSpaceCount(2)
   {
@@ -436,12 +435,12 @@ void WCModeEditor::parsingComplete()
 void WCModeEditor::onTaskChanged()
   {
   //Обновить список задач
-  if( mManager->mirror() == nullptr )
+  if( svMirrorManager->mirror() == nullptr )
     return;
 
   for( int i = 0; i < SV_MAX_TASK; i++ ) {
     SvVmVpuState taskInfo;
-    if( mManager->mirror()->taskInfo( i, taskInfo ) ) {
+    if( svMirrorManager->mirror()->taskInfo( i, taskInfo ) ) {
       //Задача присутствует, обновить информацию
       //Заголовок
       mTasks->item( i, DE_TASK_TASK )->setText( QString::number(i) );
@@ -463,8 +462,8 @@ void WCModeEditor::onTaskChanged()
         //Если ip изменился с предыдущего значения, то позиционировать курсор редактора к данной строке
         if( mTasks->item( i, DE_TASK_IP )->text() != QString::number( taskInfo.mIp ) ) {
           //Получить имя файла, где находится текущая точка исполнения
-          QString fname = mManager->mirror()->getProgramm()->getFileName( taskInfo.mIp );
-          int line = mManager->mirror()->getProgramm()->getLine( taskInfo.mIp );
+          QString fname = svMirrorManager->mirror()->getProgramm()->getFileName( taskInfo.mIp );
+          int line = svMirrorManager->mirror()->getProgramm()->getLine( taskInfo.mIp );
           trackToFileLine( fname, line );
           }
         mTasks->item( i, DE_TASK_IP )->setText( QString::number( taskInfo.mIp ) );
@@ -1083,8 +1082,8 @@ void WCModeEditor::debugAddWatch()
 //Пуск VPU
 void WCModeEditor::debugRun()
   {
-  if( mManager->mirror() != nullptr )
-    mManager->mirror()->debugRun( task() );
+  if( svMirrorManager->mirror() != nullptr )
+    svMirrorManager->mirror()->debugRun( task() );
   }
 
 
@@ -1092,8 +1091,8 @@ void WCModeEditor::debugRun()
 //Пуск всех VPU
 void WCModeEditor::debugRunAll()
   {
-  if( mManager->mirror() != nullptr )
-    mManager->mirror()->debugRunAll();
+  if( svMirrorManager->mirror() != nullptr )
+    svMirrorManager->mirror()->debugRunAll();
   }
 
 
@@ -1102,8 +1101,8 @@ void WCModeEditor::debugRunAll()
 //Шаг программы
 void WCModeEditor::debugStep()
   {
-  if( mManager->mirror() != nullptr )
-    mManager->mirror()->debugStep( task() );
+  if( svMirrorManager->mirror() != nullptr )
+    svMirrorManager->mirror()->debugStep( task() );
   }
 
 
@@ -1112,8 +1111,8 @@ void WCModeEditor::debugStep()
 //Шаг программы с заходом в функцию
 void WCModeEditor::debugTrace()
   {
-  if( mManager->mirror() != nullptr )
-    mManager->mirror()->debugTrace( task() );
+  if( svMirrorManager->mirror() != nullptr )
+    svMirrorManager->mirror()->debugTrace( task() );
   }
 
 
@@ -1122,8 +1121,8 @@ void WCModeEditor::debugTrace()
 //Пауза VPU
 void WCModeEditor::debugPause()
   {
-  if( mManager->mirror() != nullptr )
-    mManager->mirror()->debugPause( task() );
+  if( svMirrorManager->mirror() != nullptr )
+    svMirrorManager->mirror()->debugPause( task() );
   }
 
 
@@ -1131,8 +1130,8 @@ void WCModeEditor::debugPause()
 //Пауза всех VPU
 void WCModeEditor::debugPauseAll()
   {
-  if( mManager->mirror() != nullptr )
-    mManager->mirror()->debugPauseAll();
+  if( svMirrorManager->mirror() != nullptr )
+    svMirrorManager->mirror()->debugPauseAll();
   }
 
 
@@ -1142,8 +1141,8 @@ void WCModeEditor::debugPauseAll()
 //При изменении текстового статуса
 void WCModeEditor::onTextStatusChanged()
   {
-  if( mManager->mirror() != nullptr )
-    mTextStatus->setText( mManager->mirror()->controllerInfo().mLinkStatus );
+  if( svMirrorManager->mirror() != nullptr )
+    mTextStatus->setText( svMirrorManager->mirror()->controllerInfo().mLinkStatus );
   }
 
 

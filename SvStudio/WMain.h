@@ -19,6 +19,7 @@
 #include <QStackedWidget>
 #include <QTimer>
 
+extern SvMirrorManager *svMirrorManager;
 
 class WMain : public QMainWindow
   {
@@ -29,15 +30,16 @@ class WMain : public QMainWindow
     WCModeEditor    *mCModeEditor; //Режим. Текстовые редакторы и отладчик
     WCModeHelp      *mCModeHelp;   //Режим. Система помощи
     QStackedWidget  *mCentral;     //Центральная область - стековый widget, с помощью которого переключаемся между режимами
-    SvMirrorManager *mManager;     //Менеджер зеркал
   public:
-    WMain( SvMirrorManager *manager, QWidget *parent = nullptr);
+    WMain( QWidget *parent = nullptr );
     ~WMain();
 
     void restorePositions();
 
   signals:
     void setMirror( int mirrorType );
+
+    void setProgrammFlashRun( SvProgrammPtr prog, bool link, bool flash, bool runOrPause );
 
   public slots:
     void modeIntro();

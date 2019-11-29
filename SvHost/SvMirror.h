@@ -164,6 +164,11 @@ class SvMirror : public QObject
             void            debugTrace( int taskId );
 
   signals:
+            //Процесс передачи
+            // Пока complete - ложь, msg - отражает происходящий процесс передачи
+            // Когда complete - истина, то если msg не пустой, то он показывает ошибку, иначе все ок
+            void            transferProcess( bool complete, const QString msg );
+
             //Изменилось состояние связи
             void            controllerInfoChanged( SvMirror *mirrorPtr );
 

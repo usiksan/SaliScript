@@ -79,12 +79,10 @@ class WCModeEditor : public QSplitter
     bool               mVarChangeLock;   //Блокировка от изменения ячейки внутренними средствами
     QStringList        mFilesList;
 
-    SvMirrorManager   *mManager;         //Менеджер зеркал
-
     bool               mAutoCompleteParenthesis;
     int                mAutoIndentSpaceCount;
   public:
-    explicit WCModeEditor( SvMirrorManager *manager, WMain *parent );
+    explicit WCModeEditor( WMain *parent );
     ~WCModeEditor();
 
     QStringList getFilesList()const { return mFilesList; }

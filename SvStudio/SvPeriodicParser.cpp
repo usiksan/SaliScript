@@ -7,7 +7,7 @@
 */
 #include "SvConfig.h"
 #include "SvPeriodicParser.h"
-#include "Compiler/SvCompiler.h"
+#include "SvCompiler/SvCompiler.h"
 #include "SvProject.h"
 #include "WCModeEditor.h"
 #include "Highlighter.h"
@@ -15,7 +15,7 @@
 #include <QAbstractEventDispatcher>
 #include <QDebug>
 
-class TPeriodicCompiler : public SvCompiler {
+class TPeriodicCompiler : public SvCompiler6::SvCompiler {
     WCModeEditor *mEditor;
   public:
     TPeriodicCompiler( WCModeEditor *editor ) : SvCompiler(), mEditor(editor) {}
@@ -24,26 +24,31 @@ class TPeriodicCompiler : public SvCompiler {
 
     // TCompiler interface
   public:
-    virtual SvSource *CreateSource(const QString &fname, bool current);
+    virtual SvCompiler6::SvSource *CreateSource(const QString &fname, bool current);
 
-    // SvCompiler interface
-  public:
-    virtual SvProgrammPtr make(const QString prjPath, const QString &mainScript);
   };
 
 
 
 
-SvProgrammPtr TPeriodicCompiler::make(const QString prjPath, const QString &mainScript)
-  {
-  Q_UNUSED(prjPath)
-  Q_UNUSED(mainScript)
-  return SvProgrammPtr();
-  }
+//Источник исходного кода - строка текста
+class SvStringSource : public SvCompiler6::SvSource {
+    QString mSource;
+  public:
+    SvStringSource( const QString &src, int fileId ) :
+      SvSource(fileId),
+      mSource(src)
+      {
+      mInputStream = new QTextStream( &mSource, QIODevice::ReadOnly );
+      }
+  };
 
 
 
-SvSource *TPeriodicCompiler::CreateSource(const QString &fname, bool current)
+
+
+
+SvCompiler6::SvSource *TPeriodicCompiler::CreateSource(const QString &fname, bool current)
   {
   QString file;
   if( current )
@@ -75,7 +80,7 @@ SvSource *TPeriodicCompiler::CreateSource(const QString &fname, bool current)
 
 SvPeriodicParser::SvPeriodicParser(WCModeEditor *editor) :
   QThread(),
-  mCompiler(0),
+  mCompiler(nullptr),
   mEditor(editor),
   mNeedCompile(false)
   {
@@ -114,7 +119,7 @@ void SvPeriodicParser::run()
 void SvPeriodicParser::compile()
   {
   //Если еще нет компилятора, то создать
-  if( mCompiler == 0 ) {
+  if( mCompiler == nullptr ) {
     Highlighter::mCompiler = mCompiler = mCompiler0 = new TPeriodicCompiler(mEditor);
     mCompiler1 = new TPeriodicCompiler(mEditor);
     }

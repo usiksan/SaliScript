@@ -22,31 +22,20 @@ class DProcess : public QDialog
   {
     Q_OBJECT
 
-    bool mLink;       //Выполнить ли подключение к программе
-    bool mFlash;      //Выполнять прошивку или просто компиляцию
-    bool mRunOrPause; //Запускать приложение или поставить на паузу
+    bool mCompleted;
   public:
-    //Конструктор, обеспечивающий компиляцию, прошивку и запуск
-    explicit DProcess( bool link, bool flash, bool runOrPause, QWidget *parent = 0);
-
-    //Конструктор, обеспечивающй отправку или прием проекта
-    DProcess( bool sendOrReceiv, QWidget *parent = 0 );
+    //Конструктор
+    explicit DProcess( QWidget *parent = nullptr);
 
     ~DProcess();
 
-  signals:
-    //Компилировать проект, программировать и запустить
-    void compile( bool link, bool flash, bool runOrPause );
-
-    //Передать проект в удаленную машину или принять проект из удаленной машины
-    void transferProject();
-
+    bool isCompleted() const { return mCompleted; }
   public slots:
     //При запуске процесса (вызывается когда диалог построен)
     void onStart();
 
     //При изменении состояния процесса
-    void onProcessChanged( const QString status, bool processStatus, const QString error );
+    void onTransferProcess( bool complete, const QString msg );
   protected:
     void changeEvent(QEvent *e);
 
