@@ -41,7 +41,6 @@ class SvMirrorExtern : public SvMirror
     SvDebugTask   *mVpuDebug;    //Команды отладочного управления
     QMutex         mVpuMutex;    //Механизм защиты от сдвоенного доступа к командам управления
     int            mVpuCount;    //Количество работающих VPU
-    int            mVpuMax;      //Максимальное количество VPU
     int           *mMemory;      //Зеркало памяти
     int            mMemorySize;  //Размер памяти данных
     int            mMemoryCount; //Размер памяти глобальных переменных
@@ -51,14 +50,22 @@ class SvMirrorExtern : public SvMirror
     QMap<int, int> mWriteValues; //Перечень записываемых значений индекс(ключ)-значение
     QMutex         mWriteMutex;  //Механизм защиты от сдвоенного доступа
 
-    int mEtapCount;
-    char mBuf[64];
+    int mItemCount;
+    int mReceivTimeOut;
+    bool mFlash;
+    bool mReset;
+    bool mRun;
+    unsigned char mBuf[64];
+    char mLog[1024];
+    int  mLogLen;
   public:
     SvMirrorExtern( bool scanTasks );
     virtual ~SvMirrorExtern() override;
 
     //===========================
     //Task list section
+    virtual int           taskCount() const override { return mVpuCount; }
+
     //!
     //! \brief taskInfo      Get task information for task with id equals taskId
     //! \param taskId        Index of task whose information need to get
@@ -123,14 +130,29 @@ class SvMirrorExtern : public SvMirror
     //!
     virtual void          processing( int tickOffset ) override;
 
-    virtual void          send( const char *buf, int len ) = 0;
+    virtual void          send( const unsigned char *buf, int len ) = 0;
 
-            void          onReceived( const char *bur );
+            void          onReceived(const unsigned char *buf );
 
   protected:
-    //Построить зеркало в соответствии с удаленным контроллером
-    void setupMirror( int vpuMax, int vpuCount, int memoryMax, int memoryCount );
+            void          parseVersion( const unsigned char *buf );
+            void          parseState( const unsigned char *buf );
+            void          parseVariables( const unsigned char *buf );
+            void          parseTask( const unsigned char *buf );
+            void          parseFlash( const unsigned char *buf );
 
+    void queryMemory();
+    void queryNextMemory();
+    void queryNextTask();
+    void queryNextDebug();
+    void queryNextFlash();
+    void queryEraseFlash();
+
+    void queryState();
+    void queryReset();
+    void queryFlashRead();
+    void queryRestart();
+    void queryVersion();
 
   };
 

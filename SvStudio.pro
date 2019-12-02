@@ -101,7 +101,6 @@ HEADERS += \
   SvVMachine/SvVmCodeHeader.h \
   SvVMachine/SvVmInterface.h \
   SvVMachine/SvVmTypes.h \
-  SvVMachine/SvVmUsbInterface.h \
   SvVMachine/SvVmUtils.h \
   SvVMachine/SvVmVpu.h \
   SvVMachine/SvVmVpuState.h

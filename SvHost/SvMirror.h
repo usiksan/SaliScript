@@ -54,9 +54,9 @@ struct SvControllerInfo {
     QString mLinkStatus;
     QString mType;
     qint32  mVpuMax = 0;
-    qint32  mVpuCount = 0;
-    qint32  mMemoryMax = 0;
-    qint32  mMemoryCount = 0;
+    qint32  mProgrammMaxSize = 0;
+    qint32  mVariableMaxCount = 0;
+    qint32  mVersion = 0;
     QString mSignature;
   };
 
@@ -104,6 +104,8 @@ class SvMirror : public QObject
 
     //===========================
     //Раздел списка задач
+    virtual int             taskCount() const = 0;
+
     //Получить информацию по задаче
     virtual bool            taskInfo( qint32 taskId, SvVmVpuState &destTaskInfo ) const = 0;
 

@@ -74,7 +74,7 @@ QByteArray SvMirror::taskList()
   {
   QByteArray dst;
   QDataStream os( &dst, QIODevice::WriteOnly );
-  qint32 count = mControllerInfo.mVpuCount;
+  qint32 count = taskCount();
   os << count;
   SvVmVpuState tskInfo;
   for( int i = 0; i < count; i++ ) {
