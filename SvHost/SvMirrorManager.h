@@ -78,10 +78,16 @@ class SvMirrorManager : public QObject
     //!
     void        setMirror( int id );
 
-    void        start();
 
     void        stop();
 
+  protected slots:
+    //!
+    //! \brief start This slot atomatic called on manager thread creation
+    //!
+    void        start();
+
+    void        periodic();
   };
 
 #endif // SVMIRRORMANAGER_H

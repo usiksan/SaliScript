@@ -225,16 +225,6 @@ void SvMirror::debugTrace(int taskId)
 
 
 
-//Периодическая функция, обеспечивающая работу зеркала
-void SvMirror::periodic()
-  {
-  processing( static_cast<int>(mTimer.restart()) );
-  }
-
-
-
-
-
 
 
 

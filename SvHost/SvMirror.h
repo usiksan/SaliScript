@@ -67,7 +67,6 @@ class SvMirror : public QObject
   {
     Q_OBJECT
 
-    QElapsedTimer            mTimer;          //Для отсчета временных интервалов
   protected:
     //Копия скомпилированной программы
     SvProgrammPtr            mProgramm;       //Скомпилированная программа
@@ -193,9 +192,6 @@ class SvMirror : public QObject
 
 
   public slots:
-            //Периодическая функция, обеспечивающая работу зеркала
-            void            periodic();
-
             //Завершить вызов удаленной процедуры и вернуть результат
             void            remoteCallComplete( int r0, int r1, int r2, int r3 );
 
@@ -230,9 +226,6 @@ class SvMirror : public QObject
             //!
             void            startScript( const QString scriptPath );
 
-  protected:
-    //Установить новое состояние связи
-    void                    setLink( const QString status, bool lnk );
 
     //!
     //! \brief processing Perform periodic mirror handle

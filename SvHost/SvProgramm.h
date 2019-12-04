@@ -236,12 +236,6 @@ class SvProgramm
     //! Добавить код в таблицу кода. Пять байт (байт кода и четыре байта параметра)
     void addCodeParam32( int code, int param, const SvMark &mark );
 
-    //! Создание свойства
-    void addProperty(int code, int bindingAddress, int sceneIndex, int init, const SvMark &mark);
-
-    //! Создание сцены
-    void addScene( int sceneId, int propertyCount, int childCount, const SvMark &mark );
-
 
 
 

@@ -125,25 +125,23 @@ void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause)
   //Установить новую программу
   mProgramm = prog;
 
+  //Установить программу в исполняющую систему
+  mController->setProgrammPtr( mProgramm );
 
-  if( link ) {
-    //Проверить равенство программы только если программа не установлена
-    if( mController->getProgramm() == nullptr )
-      flash = true;
-    else
-      flash = mProgramm->getCode() != mController->getProgramm()->getCode();
-    }
+  //Запускаем контроллер
+  mController->restart( runOrPause );
 
-  if( flash ) {
-    emit transferProcess( false, tr("Setup programm to controller") );
-
-    //Установить программу в исполняющую систему
-    mController->setProgrammPtr( mProgramm );
-
-    //Запускаем контроллер
-    mController->restart( runOrPause );
-    }
   emit transferProcess( true, QString() );
+
+  //Extract signature from programm
+  char str[SVVMH_SIGNATURE_LENGHT+1];
+  for( int i = 0; i < SVVMH_SIGNATURE_LENGHT; i++ )
+    str[i] = static_cast<char>( mProgramm->getCode( SVVMH_SIGNATURE + i ) );
+
+  //Fill signature
+  str[SVVMH_SIGNATURE_LENGHT] = 0; //Close string
+  mControllerInfo.mSignature = QString::fromLatin1( str );
+  emit controllerInfoChanged( this );
   }
 
 
@@ -156,14 +154,12 @@ void SvMirrorLocal::processing(int tickOffset)
   {
   if( !mControllerInfo.mLink ) {
     //At first step we initiate controller connection
-    mControllerInfo.mLink        = true;
-    mControllerInfo.mType        = tr("Local controller");
-    mControllerInfo.mVpuMax      = mController->getVpuMax();
-    mControllerInfo.mVpuCount    = 0;
-    mControllerInfo.mMemoryMax   = mController->getMemorySize();
-    mControllerInfo.mSignature   = QStringLiteral("--------");
-    mControllerInfo.mLinkStatus  = tr("Local controller, ram %1, max vpu %2").arg( mController->getMemorySize() ).arg( mController->getVpuMax() );
-    mControllerInfo.mMemoryCount = 0;
+    mControllerInfo.mLink             = true;
+    mControllerInfo.mType             = tr("Local controller");
+    mControllerInfo.mVpuMax           = mController->getVpuMax();
+    mControllerInfo.mVariableMaxCount = mController->getMemorySize();
+    mControllerInfo.mSignature        = QStringLiteral("--------");
+    mControllerInfo.mLinkStatus       = tr("Local controller, ram %1, max vpu %2").arg( mController->getMemorySize() ).arg( mController->getVpuMax() );
     emit controllerInfoChanged( this );
     }
 
@@ -177,10 +173,6 @@ void SvMirrorLocal::processing(int tickOffset)
     emit taskChanged();
     }
 
-  if( mController->taskCount() != mControllerInfo.mVpuCount ) {
-    mControllerInfo.mVpuCount = mController->taskCount();
-    emit controllerInfoChanged( this );
-    }
   }
 
 

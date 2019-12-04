@@ -26,6 +26,7 @@
                                      //data - none
 
 #define SVU_CMD_FLASH_ERASE_OK     6 //Flash memory erased successfully
+                                     //data - none
 
 #define SVU_CMD_FLASH_READ         7 //Read flash memory block
                                      //data [1]   block size
@@ -42,7 +43,8 @@
                                      //     [6-63] flash memory block data
 
 #define SVU_CMD_FLASH_WRITE_OK    10 //Flash memory block writed successfully
-                                     //data - none
+                                     //data [1]    block size
+                                     //     [2-5]  start address of readed block
 
 
 
@@ -97,5 +99,6 @@
 
 #define SVU_CMD_DEBUG_OK          22 //VPU debug command successfully
 
+#define SVU_CMD_LENS {0,1,32,1,64,1,1,6,64,64,6,4,64,64,1,2,27,2,1,1,1,11,1}
 
 #endif // SVVMINTERFACE_H

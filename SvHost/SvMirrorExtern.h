@@ -64,6 +64,10 @@ class SvMirrorExtern : public SvMirror
 
     //===========================
     //Task list section
+    //!
+    //! \brief taskCount Return current active tasks count
+    //! \return          Current active tasks count
+    //!
     virtual int           taskCount() const override { return mVpuCount; }
 
     //!
@@ -130,7 +134,7 @@ class SvMirrorExtern : public SvMirror
     //!
     virtual void          processing( int tickOffset ) override;
 
-    virtual void          send( const unsigned char *buf, int len ) = 0;
+    virtual void          send( const unsigned char *buf ) = 0;
 
             void          onReceived(const unsigned char *buf );
 
@@ -140,20 +144,15 @@ class SvMirrorExtern : public SvMirror
             void          parseVariables( const unsigned char *buf );
             void          parseTask( const unsigned char *buf );
             void          parseFlash( const unsigned char *buf );
+            void          parseFlashWriteOk( const unsigned char *buf );
 
-    void queryMemory();
-    void queryNextMemory();
-    void queryNextTask();
-    void queryNextDebug();
-    void queryNextFlash();
-    void queryEraseFlash();
-
-    void queryState();
-    void queryReset();
-    void queryFlashRead();
-    void queryRestart();
-    void queryVersion();
-
+            void          queryMemory();
+            void          queryNextDebug();
+            void          queryNextFlash(int addr);
+            void          queryState();
+            void          queryReset();
+            void          queryFlashRead();
+            void          queryRestart();
   };
 
 #endif // SVMIRROREXTERN_H

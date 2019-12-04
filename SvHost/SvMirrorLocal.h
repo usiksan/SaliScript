@@ -33,6 +33,14 @@ class SvMirrorLocal : public SvMirror
 
     //===========================
     //Task list section
+    //===========================
+    //Task list section
+    //!
+    //! \brief taskCount Return current active tasks count
+    //! \return          Current active tasks count
+    //!
+    virtual int           taskCount() const override { return mController->taskCount(); }
+
     //!
     //! \brief taskInfo      Get task information for task with id equals taskId
     //! \param taskId        Index of task whose information need to get

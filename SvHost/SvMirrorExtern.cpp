@@ -18,7 +18,6 @@ SvMirrorExtern::SvMirrorExtern(bool scanTasks) :
   mVpuDebug(nullptr),
   mVpuMutex(),
   mVpuCount(0),    //Количество VPU
-  mVpuMax(0),
   mMemory(nullptr),      //Зеркало памяти
   mMemorySize(0),  //Размер памяти данных
   mMemoryCount(0),
@@ -88,7 +87,7 @@ void SvMirrorExtern::memorySet(int index, int value)
 
 void SvMirrorExtern::debug(int taskId, int debugCmd, int start, int stop)
   {
-  if( 0 <= taskId && taskId < mControllerInfo.mVpuCount ) {
+  if( 0 <= taskId && taskId < mVpuCount ) {
     QMutexLocker locker( &mVpuMutex );
 
     mVpuDebug[taskId].set( debugCmd, start, stop );
@@ -117,7 +116,9 @@ void SvMirrorExtern::processing(int tickOffset)
     if( !mControllerInfo.mLink ) {
       //Not linked yet
       mReceivTimeOut = 1000;
-      queryVersion();
+      //Query controller version
+      mBuf[0] = SVU_CMD_VERSION_GET;
+      send( mBuf );
       }
     else {
       //Read time-out
@@ -188,50 +189,27 @@ void SvMirrorExtern::onReceived(const unsigned char *buf)
         queryRestart();
       break;
 
-    case SVU_CMD_VPU_RESET_BUSY :
-      queryReset();
-      break;
-
     case SVU_CMD_VPU_RESTART_OK :
       queryMemory();
       break;
 
-    case SVU_CMD_VPU_RESTART_BUSY :
-      queryRestart();
-      break;
-
-    case SVU_CMD_FLASH_BLOCK : {
+    case SVU_CMD_FLASH_BLOCK :
       //Start flash block received
-      //TODO compare with programm
-      bool equal = true; //At begin we assume that flash equals
-      for( int i = 0; i < SVVMH_HEADER_SIZE && equal; i++ )
-        equal = buf[i] == mProgramm->getCode(i);
-      if( equal ) {
-
-        }
-      else {
-        //Need to flash
-        queryEraseFlash();
-        }
-      }
+      parseFlash(buf);
       break;
 
     case SVU_CMD_FLASH_ERASE_OK :
-      mItemCount = 0;
-      queryNextFlash();
+      queryNextFlash( 0 );
       break;
 
     case SVU_CMD_FLASH_WRITE_OK :
-      mItemCount += 59;
-      queryNextFlash();
+      parseFlashWriteOk( buf );
       break;
-
-    case SVU_CMD_FLASH_WRITE_BUSY :
-      queryNextFlash();
-      break;
-
     }
   }
+
+
+
 
 void SvMirrorExtern::parseVersion(const unsigned char *buf)
   {
@@ -315,7 +293,7 @@ void SvMirrorExtern::parseVariables(const unsigned char *buf)
       mReceivTimeOut = 100;
       mBuf[1] = static_cast<unsigned char>(globalCount);
       svIWrite16( mBuf + 2, addr );
-      send( mBuf, 4 );
+      send( mBuf );
       return;
       }
 
@@ -356,7 +334,7 @@ void SvMirrorExtern::parseTask(const unsigned char *buf)
       //Query next task
       mBuf[0] = SVU_CMD_VPU_STATE_GET;
       mBuf[1] = static_cast<unsigned char>(taskId);
-      send( mBuf, 2 );
+      send( mBuf );
       return;
       }
     }
@@ -366,7 +344,34 @@ void SvMirrorExtern::parseTask(const unsigned char *buf)
 
 
 
+void SvMirrorExtern::parseFlash(const unsigned char *buf)
+  {
+  //Compare with programm
+  bool equal = true; //At begin we assume that flash equals
+  for( int i = 0; i < SVVMH_HEADER_SIZE && equal; i++ )
+    equal = buf[i] == mProgramm->getCode(i);
+  if( equal )
+    //Flash not need. Immediately restart
+    queryRestart();
+  else {
+    //Need to flash
+    mBuf[0] = SVU_CMD_FLASH_ERASE;
+    send( mBuf );
+    emit transferProcess( false, tr("Erase flash...") );
+    mReceivTimeOut = 6000;
+    }
+  }
 
+
+
+
+void SvMirrorExtern::parseFlashWriteOk(const unsigned char *buf)
+  {
+  int len = buf[1];
+  int addr = svIRead32( buf + 2 );
+  addr += len;
+  queryNextFlash( addr );
+  }
 
 
 
@@ -399,7 +404,7 @@ void SvMirrorExtern::queryMemory()
     for( int i = 0; i < size; i++ )
       mWriteValues.remove( mWriteQueue.takeFirst() );
 
-    send( mBuf, 2 + size * 6 );
+    send( mBuf );
     }
   else {
     //Memory read
@@ -409,7 +414,7 @@ void SvMirrorExtern::queryMemory()
     mReceivTimeOut = 100;
     mBuf[1] = static_cast<unsigned char>(globalCount);
     svIWrite16( mBuf + 2, 0 );
-    send( mBuf, 4 );
+    send( mBuf );
     }
   }
 
@@ -421,12 +426,14 @@ void SvMirrorExtern::queryNextDebug()
   for( int i = 0; i < mControllerInfo.mVpuMax; i++ )
     if( mVpuDebug[i].mCommand ) {
       //Execute debug command
+      QMutexLocker locker( &mVpuMutex );
+
       mBuf[0] = SVU_CMD_DEBUG;
       mBuf[1] = static_cast<unsigned char>(i);
       mBuf[2] = static_cast<unsigned char>(mVpuDebug[i].mCommand);
       svIWrite32( mBuf + 3, mVpuDebug[i].mParam1 );
       svIWrite32( mBuf + 7, mVpuDebug[i].mParam2 );
-      send( mBuf, 11 );
+      send( mBuf );
       mVpuDebug[i].mCommand = 0;
       return;
       }
@@ -434,7 +441,25 @@ void SvMirrorExtern::queryNextDebug()
   //Query next task
   mBuf[0] = SVU_CMD_VPU_STATE_GET;
   mBuf[1] = 0;
-  send( mBuf, 2 );
+  send( mBuf );
+  }
+
+
+
+
+void SvMirrorExtern::queryNextFlash( int addr )
+  {
+  if( addr < mProgramm->codeCount() ) {
+    int len = svILimit( mProgramm->codeCount() - addr, 1, 58 );
+    mBuf[0] = SVU_CMD_FLASH_WRITE;
+    mBuf[1] = static_cast<unsigned char>(len);
+    svIWrite32( mBuf + 2, addr );
+    for( int i = 0; i < len; i++ )
+      mBuf[i + 6] = static_cast<unsigned char>( mProgramm->getCode(addr + i) );
+    send( mBuf );
+    emit transferProcess( false, tr("Programming %1 from %2").arg(addr).arg(mProgramm->codeCount()) );
+    }
+  else queryRestart();
   }
 
 
@@ -444,7 +469,7 @@ void SvMirrorExtern::queryState()
   //Command
   mBuf[0] = SVU_CMD_STATE_GET;
   //Send query
-  send( mBuf, 1 );
+  send( mBuf );
   }
 
 
@@ -455,7 +480,7 @@ void SvMirrorExtern::queryReset()
   //Command
   mBuf[0] = SVU_CMD_VPU_RESET;
   //Send query
-  send( mBuf, 1 );
+  send( mBuf );
   }
 
 
@@ -466,7 +491,18 @@ void SvMirrorExtern::queryFlashRead()
   mBuf[0] = SVU_CMD_FLASH_READ;
   mBuf[1] = SVVMH_HEADER_SIZE;
   svIWrite32( mBuf + 2, 0 );
-  send( mBuf, 6 );
+  send( mBuf );
+  }
+
+
+
+
+void SvMirrorExtern::queryRestart()
+  {
+  mBuf[0] = SVU_CMD_VPU_RESTART;
+  mBuf[1] = static_cast<unsigned char>(mRun);
+  send( mBuf );
+  emit transferProcess( true, QString() );
   }
 
 
