@@ -49,20 +49,15 @@ HEADERS += \
   SvHost/SvMirrorLocal.h \
   SvHost/SvMirrorManager.h \
   SvHost/SvMirrorRemote.h \
-  SvHost/SvMirrorThread.h \
   SvHost/SvMirrorUsb10.h \
   SvHost/SvNetClientMirror.h \
   SvHost/SvNetHandlerFile.h \
-  SvHost/SvNetHandlerMirror.h \
-  SvHost/SvNetManager.h \
-  SvHost/SvNetMirrorLocal.h \
   SvHost/SvProgramm.h \
   SvHost/SvVMachineLocal.h \
   SvNet/SvNetBridgeMaster.h \
   SvNet/SvNetBridgeSlave.h \
   SvNet/SvNetChannel.h \
   SvNet/SvNetChannelFile.h \
-  SvNet/SvNetClient.h \
   SvNet/SvNetLocalMaster.h \
   SvNet/SvNetLocalSlave.h \
   SvNet/SvNetPacketInfo.h \
@@ -70,6 +65,11 @@ HEADERS += \
   SvNet/SvNetService.h \
   SvNet/SvNetServiceFileMaster.h \
   SvNet/SvNetServiceFileSlave.h \
+  SvStudio/DNetProcess.h \
+  SvStudio/DNetProcessFileDirRequest.h \
+  SvStudio/DNetProcessFileOperation.h \
+  SvStudio/DNetProcessFileRequest.h \
+  SvStudio/DNetProcessFileSend.h \
   SvStudio/DPrjProp.h \
   SvStudio/DProcess.h \
   SvStudio/DTextEditorSettings.h \
@@ -88,6 +88,9 @@ HEADERS += \
   SvStudio/WCommand.h \
   SvStudio/WDebugTable.h \
   SvStudio/WMain.h \
+  SvStudio/WNetFileList.h \
+  SvStudio/WNetFileManager.h \
+  SvStudio/WNetViewer.h \
   SvStudio/WOscillograph.h \
   SvStudio/WTextEditor.h \
   SvStudio/WTextSearchPanel.h \
@@ -142,20 +145,13 @@ SOURCES += \
   SvHost/SvMirrorLocal.cpp \
   SvHost/SvMirrorManager.cpp \
   SvHost/SvMirrorRemote.cpp \
-  SvHost/SvMirrorThread.cpp \
   SvHost/SvMirrorUsb10.cpp \
   SvHost/SvNetClientMirror.cpp \
-  SvHost/SvNetHandlerFile.cpp \
-  SvHost/SvNetHandlerMirror.cpp \
-  SvHost/SvNetHandlerScreen.cpp \
-  SvHost/SvNetManager.cpp \
-  SvHost/SvNetMirrorLocal.cpp \
   SvHost/SvProgramm.cpp \
   SvHost/SvVMachineLocal.cpp \
   SvNet/SvNetBridgeMaster.cpp \
   SvNet/SvNetBridgeSlave.cpp \
   SvNet/SvNetChannel.cpp \
-  SvNet/SvNetClient.cpp \
   SvNet/SvNetLocalMaster.cpp \
   SvNet/SvNetLocalSlave.cpp \
   SvNet/SvNetPacketInfo.cpp \
@@ -163,6 +159,11 @@ SOURCES += \
   SvNet/SvNetService.cpp \
   SvNet/SvNetServiceFileMaster.cpp \
   SvNet/SvNetServiceFileSlave.cpp \
+  SvStudio/DNetProcess.cpp \
+  SvStudio/DNetProcessFileDirRequest.cpp \
+  SvStudio/DNetProcessFileOperation.cpp \
+  SvStudio/DNetProcessFileRequest.cpp \
+  SvStudio/DNetProcessFileSend.cpp \
   SvStudio/DPrjProp.cpp \
   SvStudio/DProcess.cpp \
   SvStudio/DTextEditorSettings.cpp \
@@ -179,6 +180,9 @@ SOURCES += \
   SvStudio/WCommand.cpp \
   SvStudio/WDebugTable.cpp \
   SvStudio/WMain.cpp \
+  SvStudio/WNetFileList.cpp \
+  SvStudio/WNetFileManager.cpp \
+  SvStudio/WNetViewer.cpp \
   SvStudio/WOscillograph.cpp \
   SvStudio/WTextEditor.cpp \
   SvStudio/WTextSearchPanel.cpp \

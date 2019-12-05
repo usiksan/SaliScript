@@ -11,12 +11,12 @@
   Описание
     Зеркало для внешнего VPU, работающего через машину в локальной сети.
 */
-
+#if 0
 #ifndef SVMIRRORREMOTE_H
 #define SVMIRRORREMOTE_H
 
 #include "SvMirrorExtern.h"
-#include "SvNetClientMirror.h"
+#include "SvNet/SvNetChannel.h"
 
 #include <QStringList>
 
@@ -24,12 +24,13 @@ class SvMirrorRemote : public SvMirrorExtern
   {
     Q_OBJECT
   protected:
+    SvNetChannel *mChannel;
     int         mRemoteId;    //Id удаленной машины
     int         mRemotePassw; //Passw удаленной машины
     int         mTime;
     QString     mRemoteDir;   //Директорий проекта на удаленной машине
   public:
-    SvMirrorRemote( bool scanTasks );
+    SvMirrorRemote( const QString remoteIp, int remotePort, const QString bridgeName = QString{}, const QString bridgePassw = QString{} );
     ~SvMirrorRemote() override;
 
 
@@ -111,3 +112,4 @@ class SvMirrorRemote : public SvMirrorExtern
   };
 
 #endif // SVMIRRORREMOTE_H
+#endif

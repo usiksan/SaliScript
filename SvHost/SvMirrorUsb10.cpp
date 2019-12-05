@@ -5,7 +5,7 @@
     Сибилев А.С.
   Описание
 */
-
+#if 0
 #include "SvMirrorUsb10.h"
 #include "Vpu/SvVpuUsbInterface.h"
 #include "Vpu/SvVpuUtils.h"
@@ -846,4 +846,5 @@ void SvMirrorUsb10::compileFlashRun(bool link, bool flash, bool runOrPause)
 
 
 
+#endif
 #endif

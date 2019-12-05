@@ -1,6 +1,6 @@
 ﻿#include "Highlighter.h"
 
-SvCompiler             *Highlighter::mCompiler;       //Компилятор
+SvCompiler6::SvCompiler             *Highlighter::mCompiler;       //Компилятор
 
 //QHash<QString,QString>   Highlighter::mMacroTable;     //Таблица макроимен
 //QHash<QString,int>       Highlighter::mKeyWords;       //Список ключевых слов с токенами
@@ -162,7 +162,7 @@ Highlighter::highlightBlock(const QString &text) {
         }
 
       //Выполнить поиск идентификатора
-      if( mCompiler && mCompiler->mGlobalTable.contains(name) ) {
+      if( mCompiler && mCompiler->isGlobalSymbol(name) ) {
         //Это переменная
         //Проверить необходимость линковки
         if( !mLink.isEmpty() && mLink == name )

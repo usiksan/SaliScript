@@ -10,12 +10,13 @@
 
 //#include <QDebug>
 
-SvMirrorLocal::SvMirrorLocal(SvVMachineLocal *controller, bool scanTasks ) :
-  SvMirror( scanTasks ),
+SvMirrorLocal::SvMirrorLocal(SvVMachineLocal *controller ) :
+  SvMirror(),
   mController(controller),
-  mDivider(0)
+  mDivider(0),
+  mVpuDebugRun( mController->getVpuMax(), 0 )
   {
-  //Через секунду после создания выполнить подключение
+
   }
 
 
@@ -28,30 +29,49 @@ SvMirrorLocal::~SvMirrorLocal()
 
 
 
-
-
-
-//Получить информацию по задаче
-bool SvMirrorLocal::taskInfo(qint32 taskId, SvVmVpuState &destTaskInfo) const
+int SvMirrorLocal::addressOfName(const QString name) const
   {
-  if( taskId >= 0 && taskId < mController->taskCount() ) {
-    destTaskInfo = *(mController->vpu(taskId));
-    return true;
-    }
-  return false;
+  return mController->getProgramm()->getAddr( name );
   }
 
 
 
 
 
-
-
-
-
-int SvMirrorLocal::memoryGet(int index)
+int SvMirrorLocal::memoryGet(int index) const
   {
   return mController->memGet( nullptr, index );
+  }
+
+
+
+
+//Установка программы, прошивка и запуск
+void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause)
+  {
+  //Emit signal of start of operation [Отправим сигнал о начале операции]
+  emit transferProcess( false, tr("Set programm") );
+
+  //Setup new programm to local controller [Установить программу в исполняющую систему]
+  mController->setProgrammPtr( prog );
+  emit programmChanged( prog );
+
+  //Start controller [Запускаем контроллер]
+  mController->restart( runOrPause );
+  if( !runOrPause )
+    mScanTasks = true;
+
+
+  emit transferProcess( true, QString() );
+
+  //Extract signature from programm
+  char str[SVVMH_SIGNATURE_LENGHT+1];
+  for( int i = 0; i < SVVMH_SIGNATURE_LENGHT; i++ )
+    str[i] = static_cast<char>( prog->getCode( SVVMH_SIGNATURE + i ) );
+
+  //Fill signature
+  str[SVVMH_SIGNATURE_LENGHT] = 0; //Close string
+  emit linkChanged( true, tr("Local controller"), QString::fromLatin1( str ) );
   }
 
 
@@ -72,6 +92,7 @@ void SvMirrorLocal::memorySet(int index, int value)
 
 void SvMirrorLocal::debug(int taskId, int debugCmd, int start, int stop)
   {
+  mScanTasks = true;
   switch( debugCmd ) {
     case SDC_RUN :
       //Команда пуск (отключение отладки)
@@ -99,93 +120,25 @@ void SvMirrorLocal::debug(int taskId, int debugCmd, int start, int stop)
 
 
 
-
-
-
-
-
-
-//Сначала сброс, затем создание корневого виртуального процессора и пуск с начального адреса
-void SvMirrorLocal::restart(bool runOrPause)
-  {
-  mController->restart( runOrPause );
-  }
-
-
-
-
-
-
-//Установка программы, прошивка и запуск
-void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause)
-  {
-  //Отправим сигнал о начале операции
-  emit transferProcess( false, tr("Set programm") );
-
-  //Установить новую программу
-  mProgramm = prog;
-
-  //Установить программу в исполняющую систему
-  mController->setProgrammPtr( mProgramm );
-
-  //Запускаем контроллер
-  mController->restart( runOrPause );
-
-  emit transferProcess( true, QString() );
-
-  //Extract signature from programm
-  char str[SVVMH_SIGNATURE_LENGHT+1];
-  for( int i = 0; i < SVVMH_SIGNATURE_LENGHT; i++ )
-    str[i] = static_cast<char>( mProgramm->getCode( SVVMH_SIGNATURE + i ) );
-
-  //Fill signature
-  str[SVVMH_SIGNATURE_LENGHT] = 0; //Close string
-  mControllerInfo.mSignature = QString::fromLatin1( str );
-  emit controllerInfoChanged( this );
-  }
-
-
-
-
-
-
 //Mirror processing
 void SvMirrorLocal::processing(int tickOffset)
   {
-  if( !mControllerInfo.mLink ) {
-    //At first step we initiate controller connection
-    mControllerInfo.mLink             = true;
-    mControllerInfo.mType             = tr("Local controller");
-    mControllerInfo.mVpuMax           = mController->getVpuMax();
-    mControllerInfo.mVariableMaxCount = mController->getMemorySize();
-    mControllerInfo.mSignature        = QStringLiteral("--------");
-    mControllerInfo.mLinkStatus       = tr("Local controller, ram %1, max vpu %2").arg( mController->getMemorySize() ).arg( mController->getVpuMax() );
-    emit controllerInfoChanged( this );
-    }
-
-   // qDebug() <<"mirror processing";
-  //Controller processing
   mController->processing( tickOffset );
   if( mDivider++ >= 10 ) {
     mDivider = 0;
-    //qDebug() <<"mirror memoryChanged";
-    emit memoryChanged();
-    emit taskChanged();
+    //Emit memory changed
+    emit memoryChanged( this );
+    //Emit task changed
+    if( mScanTasks ) {
+      for( int i = 0; i < mController->getVpuMax(); i++ ) {
+        const SvVmVpu *vpu = mController->vpu(i);
+        if( mVpuDebugRun[i] || vpu->mDebugRun ) {
+          mVpuDebugRun[i] = vpu->mDebugRun;
+          emit taskChanged( i, vpu->mIp, vpu->mSp, vpu->mBp, vpu->mTm, vpu->mBaseSp, vpu->mThrow, vpu->mDebugRun );
+          }
+        }
+      }
     }
 
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

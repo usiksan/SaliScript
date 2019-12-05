@@ -67,6 +67,8 @@ class SvVMachine
      */
     int getMemorySize() const { return mMemorySize; }
 
+    const int *getMemory() const { return mMemory; }
+
 
 
 

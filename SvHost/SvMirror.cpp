@@ -7,21 +7,20 @@
 */
 
 #include "SvMirror.h"
-#include "SvMirrorThread.h"
 #include "SvCompiler/SvVpuCompiler.h"
 #include "SvProgramm.h"
 
 #include <QFileInfo>
+#include <QTimer>
 
 
-SvMirror::SvMirror(bool scanTasks ) :
-  mProgramm( new SvProgramm() ),
-  mLink(false),
-  mProcess(false),
-  mScanTasks(scanTasks)
+SvMirror::SvMirror() :
+  QObject(),
+  mScanTasks(false)
   {
-  mLinkStatus = tr("Unconnected");
   }
+
+
 
 SvMirror::~SvMirror()
   {
@@ -31,20 +30,45 @@ SvMirror::~SvMirror()
 
 
 
-//Настроить зеркало
-void SvMirror::settings(const QString ip, int port, const QString globalName, const QString globalPassw, int vid, int pid)
+void SvMirror::compileFlashRun(const QString scriptPath, bool runOrPause)
   {
-  Q_UNUSED(ip)
-  Q_UNUSED(port)
-  Q_UNUSED(globalName)
-  Q_UNUSED(globalPassw)
-  Q_UNUSED(vid)
-  Q_UNUSED(pid)
+  QFileInfo info(scriptPath);
+
+  //Записать путь к проекту
+  QString prjPath = info.absolutePath();
+  prjPath.append( QChar('/') );
+
+  //Записать имя скрипта
+  QString mainScript = info.fileName();
+
+  SvProgrammPtr prog( new SvProgramm{} );
+
+  if( mainScript.endsWith( SV_PROGRAMM_EXTENSION ) ) {
+    //Нам передан бинарник программы, просто загружаем
+    prog->load( prjPath + mainScript );
+    }
+  else {
+    //Построить программу
+    //Бинарник сохраняется автоматически при построении
+    prog = SvCompiler6::SvVpuCompiler::build( prjPath, mainScript );
+    }
+  setProgrammFlashRun( prog, runOrPause );
   }
 
 
 
 
+//Запустить скрипт на исполнение
+//scriptPath - полный путь к скрипту
+void SvMirror::startScript(const QString scriptPath)
+  {
+  //Запустить исполнение
+  compileFlashRun( scriptPath, true );
+  }
+
+
+
+#if 0
 
 void SvMirror::proceccingRemoteCall()
   {
@@ -241,102 +265,4 @@ void SvMirror::remoteCallComplete(int r0, int r1, int r2, int r3)
   }
 
 
-
-
-
-
-void SvMirror::compileFlashRun(const QString scriptPath, bool link, bool flash, bool runOrPause)
-  {
-  QFileInfo info(scriptPath);
-
-  //Записать путь к проекту
-  QString prjPath = info.absolutePath();
-  prjPath.append( QChar('/') );
-
-  //Записать имя скрипта
-  QString mainScript = info.fileName();
-
-  if( mainScript.endsWith( SV_PROGRAMM_EXTENSION ) ) {
-    //Нам передан бинарник программы, просто загружаем
-    mProgramm->load( prjPath + mainScript );
-    }
-  else {
-    //Построить программу
-    //Бинарник сохраняется автоматически при построении
-    mProgramm = SvCompiler6::SvVpuCompiler::build( prjPath, mainScript );
-    }
-  setProgrammFlashRun( mProgramm, link, flash, runOrPause );
-  }
-
-
-
-
-//Запустить скрипт на исполнение
-//scriptPath - полный путь к скрипту
-void SvMirror::startScript(const QString scriptPath)
-  {
-  //Запустить исполнение
-  compileFlashRun( scriptPath, false, true, true );
-  }
-
-
-
-
-
-//Установить новое состояние связи
-void SvMirror::setLink(const QString status, bool lnk)
-  {
-  //Переменная для определения изменений в состоянии
-  bool update = false;
-
-  //Проверить, изменилось ли текстовое состояние
-  if( mLinkStatus != status ) {
-    //Текстовое состояние изменилось - обновить
-    mLinkStatus = status;
-    update = true;
-    }
-
-  //Проверить, изменилось ли состояние подключения
-  if( mLink != lnk ) {
-    mLink = lnk;
-    update = true;
-    }
-
-  if( update )
-    emit linkStatusChanged( mLink, mLinkStatus );
-  }
-
-
-
-
-
-
-
-
-
-
-//Установить новый процесс операции
-void SvMirror::setProcess( const QString status, bool processStatus, const QString error )
-  {
-  mProcess       = processStatus;
-  mProcessStatus = status;
-  mProcessError  = error;
-  emit processChanged( mProcessStatus, mProcess, mProcessError );
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif

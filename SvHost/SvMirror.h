@@ -19,13 +19,15 @@
 
 #include "SvProgramm.h"
 #include "SvVMachine/SvVmVpuState.h"
-#include "SvNet/SvNetService.h"
 
 #include <QObject>
 #include <QString>
 #include <QMap>
 #include <QStringList>
 #include <QElapsedTimer>
+#include <QList>
+#include <QMutex>
+#include <QMutexLocker>
 
 
 #define SDC_NONE            0 //Нет команд управления для данного VPU
@@ -68,170 +70,115 @@ class SvMirror : public QObject
     Q_OBJECT
 
   protected:
-    //Копия скомпилированной программы
-    SvProgrammPtr            mProgramm;       //Скомпилированная программа
+    bool mScanTasks;      //! True if needed to scan tasks. Without this debug is impossible. [Флаг определяет необходимость сканирования задач]
 
-    //Удаленный вызов процедур
-    int                      mRemoteCallId;   //Идентификатор текущей процедуры удаленного вызова
-    int                      mRemoteAddr0;    //Адреса, по которым возвращаются параметры
-    int                      mRemoteAddr1;
-    int                      mRemoteAddr2;
-    int                      mRemoteAddr3;
-
-    //Флаг необходимости сканирования задач
-    bool                     mScanTasks;      //Флаг определяет необходимость сканирования задач
-
-    SvControllerInfo         mControllerInfo; //
   public:
-    SvMirror( bool scanTasks );
+    SvMirror();
     virtual ~SvMirror();
 
-    //Текущая программа
-    SvProgrammPtr           getProgramm() { return mProgramm; }
+    //!
+    //! \brief addressOfName Return address of symbol or zero if name not defined
+    //! \param name          Name which address need to find
+    //! \return              Address of symbol name
+    //!
+    virtual int  addressOfName( const QString name ) const = 0;
 
-    //Получить информацию о контроллере
-    const SvControllerInfo &controllerInfo() const { return mControllerInfo; }
-
-    //Настроить зеркало
-    virtual void            settings( const QString ip, int port,
-                                      const QString globalName, const QString globalPassw,
-                                      int vid, int pid );
-
-
-    //Обработка удаленных вызовов
-    void                    proceccingRemoteCall();
-
-    //===========================
-    //Раздел списка задач
-    virtual int             taskCount() const = 0;
-
-    //Получить информацию по задаче
-    virtual bool            taskInfo( qint32 taskId, SvVmVpuState &destTaskInfo ) const = 0;
-
-            //Получить все задачи списком
-            QByteArray      taskList();
-
-
-
-    //===========================
-    //Раздел памяти данных
-
-    //Получить состояние ячейки памяти
-    virtual int             memoryGet( int index ) = 0;
-
-    //Установить состояние ячейки памяти
-    virtual void            memorySet( int index, int value ) = 0;
-
-            //Получить размер глобальной памяти
-            int             memoryGlobalSize() const;
-
-            //Получить только глобальную память
-            QByteArray      memoryGlobal();
-
-            //Получить адрес символа
-            int             addressOfName( const QString &name ) const;
-
-            int             memoryGetByName( const QString &name ) { return memoryGet( addressOfName(name) ); }
-
-            void            memorySetByName( const QString &name, int value ) { memorySet( addressOfName(name), value ); }
-
-
-
-
-    //===========================
-    //Раздел управления отладкой
-
-    //Отладочная команда
-    virtual void            debug( int taskId, int debugCmd, int start, int stop ) = 0;
-
-            void            debugRun( int taskId );
-
-            //Отладка - пуск всех задач
-            void            debugRunAll();
-
-            //Отладка - стоп (пауза)
-            void            debugPause( int taskId );
-
-            //Отладка - стоп (пауза) всех задач
-            void            debugPauseAll();
-
-            //Отладка - исполнять пока внутри и не изменится bp (шаг)
-            void            debugStep( int taskId );
-
-            //Отладка - исполнять пока внутри (трассировка)
-            void            debugTrace( int taskId );
-
+    //!
+    //! \brief memoryGet Return value of memory cell with index
+    //! \param index     Cell index which value will be retrived
+    //! \return          Value of cell
+    //!
+    virtual int  memoryGet( int index ) const = 0;
   signals:
-            //Процесс передачи
-            // Пока complete - ложь, msg - отражает происходящий процесс передачи
-            // Когда complete - истина, то если msg не пустой, то он показывает ошибку, иначе все ок
-            void            transferProcess( bool complete, const QString msg );
 
-            //Изменилось состояние связи
-            void            controllerInfoChanged( SvMirror *mirrorPtr );
+    void linkChanged( bool linked, const QString controllerType, const QString loadedProgramm );
 
-            //При изменении задач
-            void            taskChanged();
+    void transferProcess( bool complete, const QString msg );
 
-            //При изменении памяти
-            void            memoryChanged();
+    //!
+    //! \brief programmChanged Signal sended when controller programm changed
+    //! \param programm        New controller programm
+    //!
+    void programmChanged( SvProgrammPtr programm );
 
-            //При поступлении loga
-            void            log( const QString msg );
+    //!
+    //! \brief memoryChanged Signal that values of some cell changed. Handler must own retrive
+    //!                      single or more cell values with memoryGet function
+    //! \param src           Mirror which values are changed
+    //!
+    void memoryChanged( SvMirror *src );
 
-            //Требование вызова удаленной процедуры с максимум 4-мя параметрами
-            // Идея в следующем: в скрипте есть 9 переменных (идентификатор удаленной процедуры,
-            //   4 произвольных параметра и 4 указателя для результата)
-            // как только зеркало обнаруживает установленным идентификатор удаленной процедуры,
-            // то оно считывает параметры, запоминает указатели для результата и выдает этот сигнал
-            // для обработки соответствующими объектами
-            // По завершению обработки должен быть вызван слот remoteCallComplete для установления
-            // результатов и для завершения удаленного вызова. Завершение удаленного вызова
-            // осуществляется сбросом идентификатора удаленной процедуры, сброса которого ожидает скрипт
-            void            remoteCall( int procId, int p0, int p1, int p2, int p3 );
+    //!
+    //! \brief taskChanged Signal sended when task changed
+    //! \param taskIndex   Task index
+    //! \param ip          instruction pointer [указатель инструкций]
+    //! \param sp          stack pointer [указатель стека]
+    //! \param bp          function frame pointer [указатель базы в стеке локальных переменных для текущей функции (указывает на фрейм возврата из функции)]
+    //! \param tm          exception mask [маска обрабатываемых исключений]
+    //! \param baseSp      stack start [Начало стека для данного процессора]
+    //! \param mthrow      current exception [Текущее значение исключения]
+    //! \param debugRun    if eq 0 then in debug state else - in run state
+    //!
+    void taskChanged( int taskIndex, int ip, int sp, int bp, int tm, int baseSp, int mthrow, int debugRun );
 
+    //!
+    //! \brief log Signal sended when log emited
+    //! \param msg Log message
+    //!
+    void log( const QString msg );
 
   public slots:
-            //Завершить вызов удаленной процедуры и вернуть результат
-            void            remoteCallComplete( int r0, int r1, int r2, int r3 );
-
-    //===========================
-    //Раздел управления
-
-    //Сначала сброс, затем создание корневого виртуального процессора и пуск с начального адреса
-    virtual void            restart( bool runOrPause ) = 0;
-
-            //!
-            //! \brief setProgrammFlashRun Flash programm to controller and run it or paused
-            //! \param prog                Programm which flashed to controller
-            //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
-            //!
-    virtual void            setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause ) = 0;
 
 
-            //Выполнить построение программы перед запуском
-            //!
-            //! \brief compileFlashRun Perform script compilation and some other tasks defined by params
-            //! \param scriptPath      Full script path. We start compilation of this main script
-            //! \param link            If flag is set, then mirror linked to controller
-            //! \param flash
-            //! \param runOrPause
-            //!
-            void            compileFlashRun( const QString scriptPath, bool link, bool flash, bool runOrPause );
+    //!
+    //! \brief setProgrammFlashRun Flash programm to controller and run it or paused
+    //! \param prog                Programm which flashed to controller
+    //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
+    //!
+    virtual void setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause ) = 0;
 
 
-            //!
-            //! \brief startScript Perofrm script compilation, load to controller and start script to running
-            //! \param scriptPath  Full script path
-            //!
-            void            startScript( const QString scriptPath );
+    //!
+    //! \brief compileFlashRun Perform script compilation and some other tasks defined by params
+    //! \param scriptPath      Full script path. We start compilation of this main script
+    //! \param runOrPause      If true then programm automaticly started after flash, else - it paused
+    //!
+    void compileFlashRun(const QString scriptPath, bool runOrPause );
 
+
+    //!
+    //! \brief startScript Perofrm script compilation, load to controller and start script to running
+    //! \param scriptPath  Full script path
+    //!
+    void startScript( const QString scriptPath );
+
+    //!
+    //! \brief memorySet Set memory cell new value
+    //! \param index     Memory cell index
+    //! \param value     Memory cell value
+    //!
+    virtual void memorySet( int index, int value ) = 0;
+
+    //!
+    //! \brief debug     Execute one debug command
+    //! \param taskId    Task index for which debug command
+    //! \param debugCmd  Debug command code
+    //! \param start     Start address (used some debug commands)
+    //! \param stop      Stop address (used some debug commands)
+    //!
+    virtual void debug( int taskId, int debugCmd, int start, int stop ) = 0;
 
     //!
     //! \brief processing Perform periodic mirror handle
     //! \param tickOffset Time in ms between previous calling this function and this one
     //!
-    virtual void            processing( int tickOffset ) = 0;
+    virtual void processing( int tickOffset ) = 0;
+
+    //!
+    //! \brief init Called automaticly from inside execution thread to init mirror after creation
+    //!
+    virtual void init() {}
+
   };
 
 using SvMirrorPtr = SvMirror*;

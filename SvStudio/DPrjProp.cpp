@@ -9,7 +9,7 @@
 #include "DPrjProp.h"
 #include "ui_DPrjProp.h"
 #include "SvProject.h"
-#include "Host/SvMirror.h"
+#include "SvHost/SvMirror.h"
 
 #include <QFileDialog>
 #include <QFileInfo>

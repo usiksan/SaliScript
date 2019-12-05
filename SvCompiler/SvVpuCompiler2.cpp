@@ -1490,11 +1490,11 @@ void SvVpuCompiler::gvvCall(SvProgramm *prog, SvValueCall *call, bool keepValue,
   if( funType == nullptr )
     errorInLine( QObject::tr("Error. Call of nonfunction"), call->mMark );
   else {
-    int resultCount = 0;
+//    int resultCount = 0;
     //Если функция возвращает значение, то оставим под него место
     if( funType->mResult->isInt() || funType->mResult->isPointer() ) {
       //Возвращает целое или указатель или объект
-      resultCount = 1;
+//      resultCount = 1;
 //      prog->addCode( VBC1_ALLOC_RESULT, call->mMark );
 //      codePrintEoln( QString("VBC1_ALLOC_RESULT") );
       }

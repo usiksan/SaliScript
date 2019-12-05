@@ -61,6 +61,41 @@ void SvNetServiceFileSlave::onReceivedBlock(SvNetChannel *ch, qint8 cmd, QByteAr
 
 
 
+
+SvNetDirInfo SvNetServiceFileSlave::getDirInfo(const QString path)
+  {
+  QDir dir(path);
+  SvNetDirInfo dst(path);
+  dst.mFileInfoList.clear();
+  if( dir.exists() ) {
+    //Директорий существует
+
+    //Список файлов каталога
+    //data: QString путь к каталогу
+    //      QFileInfoList со списком файлов
+    //Переписываем файлы из списка QFileInfoList в список CsFileInfoList
+    // поскольку первый не сериализуется, а второй сериализуется
+    QFileInfoList inList = dir.entryInfoList();
+    for( const QFileInfo &inf : inList ) {
+      SvNetFileInfo info;
+      info.mName = inf.fileName();
+      info.mSize = inf.size();
+      info.mFlags = (inf.isDir()        ? SV_NET_FF_DIR : 0) |
+                    (inf.isSymLink()    ? SV_NET_FF_SYMLINK : 0) |
+                    (inf.isExecutable() ? SV_NET_FF_EXECUTABLE : 0) |
+                    (inf.isHidden()     ? SV_NET_FF_HIDDEN : 0) |
+                    (inf.isReadable()   ? SV_NET_FF_READABLE : 0) |
+                    (inf.isWritable()   ? SV_NET_FF_WRITABLE : 0);
+      info.mPermissions = static_cast<quint16>( inf.permissions() );
+      info.mTime = inf.fileTime(QFileDevice::FileModificationTime);
+      dst.mFileInfoList.append( info );
+      }
+    }
+  return dst;
+  }
+
+
+
 void SvNetServiceFileSlave::sendAnswer(SvNetChannel *ch, quint32 errCode, const QString msg)
   {
   emit sendBlock( ch, SVC_FILE_ANSWER, SvNetFileAnswer( msg, errCode ).buildBlock() );
@@ -110,33 +145,9 @@ void SvNetServiceFileSlave::file(SvNetChannel *ch, const SvNetFile &src)
 void SvNetServiceFileSlave::dirRequest(SvNetChannel *ch, const SvNetDirInfo &src)
   {
   QDir dir(src.mPath);
-  SvNetDirInfo dst(src);
-  dst.mFileInfoList.clear();
-  if( dir.exists() ) {
-    //Директорий существует
-
-    //Список файлов каталога
-    //data: QString путь к каталогу
-    //      QFileInfoList со списком файлов
-    //Переписываем файлы из списка QFileInfoList в список CsFileInfoList
-    // поскольку первый не сериализуется, а второй сериализуется
-    QFileInfoList inList = dir.entryInfoList();
-    for( const QFileInfo &inf : inList ) {
-      SvNetFileInfo info;
-      info.mName = inf.fileName();
-      info.mSize = inf.size();
-      info.mFlags = (inf.isDir()        ? SV_NET_FF_DIR : 0) |
-                    (inf.isSymLink()    ? SV_NET_FF_SYMLINK : 0) |
-                    (inf.isExecutable() ? SV_NET_FF_EXECUTABLE : 0) |
-                    (inf.isHidden()     ? SV_NET_FF_HIDDEN : 0) |
-                    (inf.isReadable()   ? SV_NET_FF_READABLE : 0) |
-                    (inf.isWritable()   ? SV_NET_FF_WRITABLE : 0);
-      info.mPermissions = static_cast<quint16>( inf.permissions() );
-      info.mTime = inf.fileTime(QFileDevice::FileModificationTime);
-      dst.mFileInfoList.append( info );
-      }
+  SvNetDirInfo dst = getDirInfo( src.mPath );
+  if( dir.exists() )
     emit sendBlock( ch, SVC_FILE_DIR, dst.buildBlock() );
-    }
   else
     sendAnswer( ch, SVCE_FILE_NO_DIRECTORY, QString("Directory \"%1\" does not exist").arg(src.mPath) );
   }

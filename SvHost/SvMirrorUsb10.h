@@ -11,7 +11,7 @@
   Описание
     Зеркало для внешнего VPU, работающего на контроллере, подключенного через usb.
 */
-
+#if 0
 #ifndef SVMIRRORUSB10_H
 #define SVMIRRORUSB10_H
 
@@ -112,3 +112,4 @@ class SvMirrorUsb10 : public SvMirrorExtern
 #endif
 
 #endif // SVMIRRORUSB10_H
+#endif

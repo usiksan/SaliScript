@@ -69,7 +69,7 @@ struct SvNetFileOper {
     SvNetFileOper( const QByteArray ar ) { parseBlock(ar); }
 
     //Serialise SvNetFileOper object
-    QByteArray buildBlock() {
+    QByteArray buildBlock() const {
       QByteArray ar;
       QDataStream os( &ar, QIODevice::WriteOnly );
       os << mSource
@@ -95,7 +95,7 @@ struct SvNetFileAnswer {
     SvNetFileAnswer( const QByteArray ar ) { parseBlock(ar); }
 
     //Serialise SvNetFileAnswer object
-    QByteArray buildBlock() {
+    QByteArray buildBlock() const {
       QByteArray ar;
       QDataStream os( &ar, QIODevice::WriteOnly );
       os << mMsg
@@ -159,17 +159,15 @@ inline QDataStream& operator >> ( QDataStream &is, SvNetFileInfo &info ) {
 struct SvNetDirInfo {
     QString              mPath;         //! Directory path
     QList<SvNetFileInfo> mFileInfoList; //! Directory file list
-    quint32              mErrors;       //! Errors
 
-    SvNetDirInfo( QString path ) : mPath(path), mErrors(0) {}
+    SvNetDirInfo( QString path ) : mPath(path) {}
     SvNetDirInfo( const QByteArray ar ) { parseBlock(ar); }
 
     //Serialise SvNetDirInfo object
-    QByteArray buildBlock() {
+    QByteArray buildBlock() const {
       QByteArray ar;
       QDataStream os( &ar, QIODevice::WriteOnly );
       os << mPath
-         << mErrors
          << mFileInfoList;
       return ar;
       }
@@ -178,7 +176,6 @@ struct SvNetDirInfo {
     void parseBlock( const QByteArray ar ) {
       QDataStream is(ar);
       is >> mPath
-         >> mErrors
          >> mFileInfoList;
       }
 
@@ -238,6 +235,7 @@ class SvNetServiceFileSlave : public SvNetService
   public slots:
     virtual void onReceivedBlock( SvNetChannel *ch, qint8 cmd, QByteArray block );
 
+    static SvNetDirInfo getDirInfo( const QString path );
   private:
     void sendAnswer(SvNetChannel *ch, quint32 errCode, const QString msg );
 

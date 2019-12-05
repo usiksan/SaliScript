@@ -9,6 +9,8 @@
 #ifndef CMODEBOARD_H
 #define CMODEBOARD_H
 
+#include "SvHost/SvMirrorManager.h"
+
 #include <QWidget>
 
 
@@ -16,15 +18,8 @@ class WCModeBoard : public QWidget
   {
     Q_OBJECT
   public:
-    explicit WCModeBoard(QWidget *parent = nullptr);
-    ~WCModeBoard();
+    explicit WCModeBoard( SvMirrorManager *manager, QWidget *parent = nullptr);
 
-    void activateNode( int node );
-
-  signals:
-
-  public slots:
-    void onNodeListChanged();
   };
 
 #endif // CMODEBOARD_H

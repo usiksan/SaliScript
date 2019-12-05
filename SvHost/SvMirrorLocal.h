@@ -24,86 +24,60 @@ class SvMirrorLocal : public SvMirror
   {
     Q_OBJECT
 
-    SvVMachineLocal   *mController; //! Local controller
-    int                mDivider;    //! Divider for change event thinning
+    SvVMachineLocal *mController;  //! Local controller
+    int              mDivider;     //! Divider for change event thinning
+    QVector<int>     mVpuDebugRun; //! Previous states of debug flag every task
   public:
-    SvMirrorLocal(SvVMachineLocal *controller, bool scanTasks);
+    SvMirrorLocal(SvVMachineLocal *controller);
     virtual ~SvMirrorLocal() override;
 
 
-    //===========================
-    //Task list section
-    //===========================
-    //Task list section
     //!
-    //! \brief taskCount Return current active tasks count
-    //! \return          Current active tasks count
+    //! \brief addressOfName Return address of symbol or zero if name not defined
+    //! \param name          Name which address need to find
+    //! \return              Address of symbol name
     //!
-    virtual int           taskCount() const override { return mController->taskCount(); }
+    virtual int  addressOfName( const QString name ) const override;
 
     //!
-    //! \brief taskInfo      Get task information for task with id equals taskId
-    //! \param taskId        Index of task whose information need to get
-    //! \param destTaskInfo  Reference to VpuState - task information structure
-    //! \return              True if successfull or false in other cases
+    //! \brief memoryGet Return value of memory cell with index
+    //! \param index     Cell index which value will be retrived
+    //! \return          Value of cell
     //!
-    virtual bool          taskInfo( qint32 taskId, SvVmVpuState &destTaskInfo ) const override;
-
-
-
-    //===========================
-    //Memory section
-    //!
-    //! \brief memoryGet Get mirror memory cell value
-    //! \param index     Cell index, whoes value need get
-    //! \return          Cell value
-    //!
-    virtual int           memoryGet( int index ) override;
-
-    //!
-    //! \brief memorySet Set mirror memory cell value
-    //! \param index     Cell index, whoes value need set
-    //! \param value     Value which set
-    //!
-    virtual void          memorySet( int index, int value ) override;
-
-
-
-    //===========================
-    //Debug section
-    //!
-    //! \brief debug     Execute one debug command
-    //! \param taskId    Index of task on which must be executed debug command
-    //! \param debugCmd  Debug command code
-    //! \param start     Start address needed for debug
-    //! \param stop      Stop address needed for debug
-    //!
-    virtual void          debug( int taskId, int debugCmd, int start, int stop ) override;
-
+    virtual int  memoryGet( int index ) const override;
 
   public slots:
-    //===========================
-    //Control section
 
-    //!
-    //! \brief restart    At first - reset, then root virtual machine creation and run from start address
-    //! \param runOrPause If true - run from start address, else - paused
-    //!
-    virtual void          restart( bool runOrPause ) override;
 
     //!
     //! \brief setProgrammFlashRun Flash programm to controller and run it or paused
     //! \param prog                Programm which flashed to controller
     //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
     //!
-    virtual void          setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause ) override;
+    virtual void setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause ) override;
 
-  protected:
+
+    //!
+    //! \brief memorySet Set memory cell new value
+    //! \param index     Memory cell index
+    //! \param value     Memory cell value
+    //!
+    virtual void memorySet( int index, int value ) override;
+
+    //!
+    //! \brief debug     Execute one debug command
+    //! \param taskId    Task index for which debug command
+    //! \param debugCmd  Debug command code
+    //! \param start     Start address (used some debug commands)
+    //! \param stop      Stop address (used some debug commands)
+    //!
+    virtual void debug( int taskId, int debugCmd, int start, int stop ) override;
+
     //!
     //! \brief processing Perform periodic mirror handle
     //! \param tickOffset Time in ms between previous calling this function and this one
     //!
-    virtual void          processing( int tickOffset ) override;
+    virtual void processing( int tickOffset ) override;
 
   };
 

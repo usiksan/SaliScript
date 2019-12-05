@@ -11,6 +11,7 @@ Web
 Description
   Net client for communicating with remote mirror.
 */
+#if 0
 #ifndef SVNETCLIENTMIRROR_H
 #define SVNETCLIENTMIRROR_H
 
@@ -105,3 +106,4 @@ class SvNetClientMirror : public SvNetClientFile
   };
 
 #endif // SVNETCLIENTMIRROR_H
+#endif

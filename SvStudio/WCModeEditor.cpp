@@ -432,55 +432,52 @@ void WCModeEditor::parsingComplete()
 //            Раздел списка задач
 //==================================================================
 //При изменении задач
-void WCModeEditor::onTaskChanged()
+void WCModeEditor::onTaskChanged(int taskIndex, int ip, int sp, int bp, int tm, int baseSp, int mthrow, int debugRun)
   {
+  Q_UNUSED(baseSp)
+  Q_UNUSED(mthrow)
   //Обновить список задач
   if( svMirrorManager->mirror() == nullptr )
     return;
 
-  for( int i = 0; i < SV_MAX_TASK; i++ ) {
-    SvVmVpuState taskInfo;
-    if( svMirrorManager->mirror()->taskInfo( i, taskInfo ) ) {
-      //Задача присутствует, обновить информацию
-      //Заголовок
-      mTasks->item( i, DE_TASK_TASK )->setText( QString::number(i) );
-      if( taskInfo.mDebugRun ) {
-        //Задача исполняется
-        mTasks->item( i, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskRun.png") );
-        //Очистить регистры
-        mTasks->item( i, DE_TASK_IP )->setText( QString() );
-        mTasks->item( i, DE_TASK_SP )->setText( QString() );
-        mTasks->item( i, DE_TASK_TM )->setText( QString() );
-        mTasks->item( i, DE_TASK_BP )->setText( QString() );
-        }
-      else {
-        //Задача заторможена
-        if( taskInfo.mIp )
-          mTasks->item( i, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskPause.png") );
-        else
-          mTasks->item( i, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskStop.png") );
-        //Если ip изменился с предыдущего значения, то позиционировать курсор редактора к данной строке
-        if( mTasks->item( i, DE_TASK_IP )->text() != QString::number( taskInfo.mIp ) ) {
-          //Получить имя файла, где находится текущая точка исполнения
-          QString fname = svMirrorManager->mirror()->getProgramm()->getFileName( taskInfo.mIp );
-          int line = svMirrorManager->mirror()->getProgramm()->getLine( taskInfo.mIp );
-          trackToFileLine( fname, line );
-          }
-        mTasks->item( i, DE_TASK_IP )->setText( QString::number( taskInfo.mIp ) );
-        mTasks->item( i, DE_TASK_SP )->setText( QString::number( taskInfo.mSp ) );
-        mTasks->item( i, DE_TASK_TM )->setText( QString::number( taskInfo.mTm ) );
-        mTasks->item( i, DE_TASK_BP )->setText( QString::number( taskInfo.mBp ) );
-        }
+  if( taskIndex < SV_MAX_TASK ) {
+    //Задача присутствует, обновить информацию
+    //Заголовок
+    mTasks->item( taskIndex, DE_TASK_TASK )->setText( QString::number(taskIndex) );
+    if( debugRun ) {
+      //Задача исполняется
+      mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskRun.png") );
+      //Очистить регистры
+      mTasks->item( taskIndex, DE_TASK_IP )->setText( QString() );
+      mTasks->item( taskIndex, DE_TASK_SP )->setText( QString() );
+      mTasks->item( taskIndex, DE_TASK_TM )->setText( QString() );
+      mTasks->item( taskIndex, DE_TASK_BP )->setText( QString() );
       }
     else {
-      //Задачи с таким номером нету
-      mTasks->item( i, DE_TASK_TASK )->setText( QString() );
-      mTasks->item( i, DE_TASK_RUN )->setIcon( QIcon() );
-      mTasks->item( i, DE_TASK_IP )->setText( QString() );
-      mTasks->item( i, DE_TASK_SP )->setText( QString() );
-      mTasks->item( i, DE_TASK_TM )->setText( QString() );
-      mTasks->item( i, DE_TASK_BP )->setText( QString() );
+      //Задача заторможена
+      if( ip )
+        mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskPause.png") );
+      else
+        mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskStop.png") );
+      //Если ip изменился с предыдущего значения, то позиционировать курсор редактора к данной строке
+      if( mTasks->item( taskIndex, DE_TASK_IP )->text() != QString::number( ip ) ) {
+        //Получить имя файла, где находится текущая точка исполнения
+        trackToFileLine( mProgramm->getFileName( ip ), mProgramm->getLine( ip ) );
+        }
+      mTasks->item( taskIndex, DE_TASK_IP )->setText( QString::number( ip ) );
+      mTasks->item( taskIndex, DE_TASK_SP )->setText( QString::number( sp ) );
+      mTasks->item( taskIndex, DE_TASK_TM )->setText( QString::number( tm ) );
+      mTasks->item( taskIndex, DE_TASK_BP )->setText( QString::number( bp ) );
       }
+    }
+  else {
+    //Задачи с таким номером нету
+    mTasks->item( taskIndex, DE_TASK_TASK )->setText( QString() );
+    mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon() );
+    mTasks->item( taskIndex, DE_TASK_IP )->setText( QString() );
+    mTasks->item( taskIndex, DE_TASK_SP )->setText( QString() );
+    mTasks->item( taskIndex, DE_TASK_TM )->setText( QString() );
+    mTasks->item( taskIndex, DE_TASK_BP )->setText( QString() );
     }
   }
 

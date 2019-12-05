@@ -73,6 +73,7 @@ class WCModeEditor : public QSplitter
     //Ячейка с отлаживаемыми переменными
     WDebugTable        *mDebugVar;        //Окно со списком мониторенных переменных
 
+    SvProgrammPtr      mProgramm;        //Debuged programm
     SvPeriodicParser  *mParser;          //Периодический разборщик для обеспечения адекватной подсветки синтаксиса
     SvErrorList        mErrorList;       //Список ошибок
 
@@ -163,7 +164,7 @@ class WCModeEditor : public QSplitter
 
     //Слоты для связи с отладчиком
     //При изменении задач
-    void onTaskChanged();
+    void onTaskChanged( int taskIndex, int ip, int sp, int bp, int tm, int baseSp, int mthrow, int debugRun );
 
     //При изменении памяти
    // void onMemoryChanged();

@@ -36,13 +36,16 @@ class SvMirrorManager : public QObject
   {
     Q_OBJECT
 
-    QMap<int,SvMirrorFabric>  mMirrorFabric; //Доступ к фабрикам зеркал
     QThread                  *mThread;       //Поток, в котором исполняется зеркало
     QTimer                   *mTimer;        //Таймер для периодического вызова функции обработки в зеркале
     QElapsedTimer            *mElapsedTimer; //Таймер для отсчета временных интервалов в зеркале
+    QMap<int,SvMirrorFabric>  mMirrorFabric; //Доступ к фабрикам зеркал
     SvMirrorPtr               mMirror;       //Активное в настоящий момент зеркало
     int                       mMirrorTypeId; //Идентификатор типа зеркала
-    quint8                    padding[4];
+    bool                      mNeedInit;     //! After mirror creation it placed into the execution thread mThread.
+                                             //! Before start any operations mirror must be initialised from inside thread.
+                                             //! This flag used to call special init method of mirror to perform this job.
+    quint8                    padding[3];
   public:
     explicit SvMirrorManager(QObject *parent = nullptr);
 
@@ -71,12 +74,13 @@ class SvMirrorManager : public QObject
     void        mirrorChanged( int id, SvMirrorPtr mirrorPtr );
 
   public slots:
+    void        setMirror(SvMirrorPtr newMirror, int id);
     //!
-    //! \brief setMirror Используется для смены активного зеркала. На основе идентификатора зеркала
-    //!                  строится новое зеркало и делается текущим. Старое зеркало ставится на удаление
-    //! \param id        Идентификатор зеркала, которое необходимо установить
+    //! \brief setMirrorById Используется для смены активного зеркала. На основе идентификатора зеркала
+    //!                      строится новое зеркало и делается текущим. Старое зеркало ставится на удаление
+    //! \param id            Идентификатор зеркала, которое необходимо установить
     //!
-    void        setMirror( int id );
+    void        setMirrorById( int id );
 
 
     void        stop();

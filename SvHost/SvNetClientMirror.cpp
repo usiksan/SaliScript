@@ -11,6 +11,7 @@ Web
 Description
   Net client for communicating with remote mirror.
 */
+#if 0
 #include "SvNetClientMirror.h"
 
 #include <QCoreApplication>
@@ -299,4 +300,5 @@ bool SvNetClientMirror::operation(const SvNetOperation &op, QString &opDescr)
   }
 
 
+#endif
 

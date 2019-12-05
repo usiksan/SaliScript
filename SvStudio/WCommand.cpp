@@ -7,7 +7,6 @@
 */
 #include "WCommand.h"
 #include "WMain.h"
-#include "SvDebugThread.h"
 #include <QMenu>
 #include <QCoreApplication>
 #include <QAction>
@@ -31,8 +30,6 @@ QAction
 *maFileOpenOver,
 *maFileRecentProject,
 *maFileRecentFile,
-*maFileSendProject,
-*maFileReceivProject,
 *maFileSave,
 *maFileSaveAll,
 *maFileSaveAs,

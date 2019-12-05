@@ -22,7 +22,6 @@
 #include <QMutex>
 #include <QMutexLocker>
 
-
 //Задание отладки для задачи
 struct SvDebugTask {
     int mCommand; //Команда отладки
@@ -32,127 +31,64 @@ struct SvDebugTask {
     void set( int cmd, int p1 = 0, int p2 = 0 ) { mCommand = cmd; mParam1 = p1; mParam2 = p2; }
   };
 
+
 class SvMirrorExtern : public SvMirror
   {
     Q_OBJECT
 
   protected:
-    SvVmVpuState  *mVpuState;    //Зеркало состояния виртуальных машин
-    SvDebugTask   *mVpuDebug;    //Команды отладочного управления
-    QMutex         mVpuMutex;    //Механизм защиты от сдвоенного доступа к командам управления
-    int            mVpuCount;    //Количество работающих VPU
-    int           *mMemory;      //Зеркало памяти
-    int            mMemorySize;  //Размер памяти данных
-    int            mMemoryCount; //Размер памяти глобальных переменных
+    //Копия скомпилированной программы
+    SvProgrammPtr         mProgramm;    //! Current programm [Скомпилированная программа]
+    QVector<SvVmVpuState> mVpuState;    //! Mirror of state of virtual machines (tasks) [Зеркало состояния виртуальных машин]
+    QVector<SvDebugTask>  mVpuDebug;    //! Debug commands for every virtual machines (tasks) [Команды отладочного управления]
+    QMutex                mVpuMutex;    //! Lock mech [Механизм защиты от сдвоенного доступа к командам управления]
+    int                   mVpuCount;    //Количество работающих VPU
+    QVector<int>          mMemory;      //Зеркало памяти
+//    int                   mMemorySize;  //Размер памяти данных
+    int                   mMemoryCount; //Размер памяти глобальных переменных
 
     //очередь переменных на запись в контроллер
-    QList<int>     mWriteQueue;  //Индексы переменных, значения которых нужно записать
-    QMap<int, int> mWriteValues; //Перечень записываемых значений индекс(ключ)-значение
-    QMutex         mWriteMutex;  //Механизм защиты от сдвоенного доступа
+    QList<int>            mWriteQueue;  //Индексы переменных, значения которых нужно записать
+    QMap<int, int>        mWriteValues; //Перечень записываемых значений индекс(ключ)-значение
+    QMutex                mWriteMutex;  //Механизм защиты от сдвоенного доступа
 
-    int mItemCount;
-    int mReceivTimeOut;
-    bool mFlash;
-    bool mReset;
-    bool mRun;
-    unsigned char mBuf[64];
-    char mLog[1024];
-    int  mLogLen;
   public:
-    SvMirrorExtern( bool scanTasks );
+    SvMirrorExtern();
     virtual ~SvMirrorExtern() override;
 
-    //===========================
-    //Task list section
-    //!
-    //! \brief taskCount Return current active tasks count
-    //! \return          Current active tasks count
-    //!
-    virtual int           taskCount() const override { return mVpuCount; }
 
     //!
-    //! \brief taskInfo      Get task information for task with id equals taskId
-    //! \param taskId        Index of task whose information need to get
-    //! \param destTaskInfo  Reference to VpuState - task information structure
-    //! \return              True if successfull or false in other cases
+    //! \brief addressOfName Return address of symbol or zero if name not defined
+    //! \param name          Name which address need to find
+    //! \return              Address of symbol name
     //!
-    virtual bool          taskInfo( qint32 taskId, SvVmVpuState &destTaskInfo ) const override;
-
-
-
-    //===========================
-    //Memory section
-    //!
-    //! \brief memoryGet Get mirror memory cell value
-    //! \param index     Cell index, whoes value need get
-    //! \return          Cell value
-    //!
-    virtual int           memoryGet( int index ) override;
+    virtual int  addressOfName( const QString name ) const override;
 
     //!
-    //! \brief memorySet Set mirror memory cell value
-    //! \param index     Cell index, whoes value need set
-    //! \param value     Value which set
+    //! \brief memoryGet Return value of memory cell with index
+    //! \param index     Cell index which value will be retrived
+    //! \return          Value of cell
     //!
-    virtual void          memorySet( int index, int value ) override;
-
-
-
-    //===========================
-    //Debug section
-    //!
-    //! \brief debug     Execute one debug command
-    //! \param taskId    Index of task on which must be executed debug command
-    //! \param debugCmd  Debug command code
-    //! \param start     Start address needed for debug
-    //! \param stop      Stop address needed for debug
-    //!
-    virtual void          debug( int taskId, int debugCmd, int start, int stop ) override;
-
+    virtual int  memoryGet( int index ) const override;
 
   public slots:
-    //===========================
-    //Control section
 
     //!
-    //! \brief restart    At first - reset, then root virtual machine creation and run from start address
-    //! \param runOrPause If true - run from start address, else - paused
+    //! \brief memorySet Set memory cell new value
+    //! \param index     Memory cell index
+    //! \param value     Memory cell value
     //!
-    virtual void          restart( bool runOrPause ) override;
+    virtual void memorySet( int index, int value ) override;
 
     //!
-    //! \brief setProgrammFlashRun Flash programm to controller and run it or paused
-    //! \param prog                Programm which flashed to controller
-    //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
+    //! \brief debug     Execute one debug command
+    //! \param taskId    Task index for which debug command
+    //! \param debugCmd  Debug command code
+    //! \param start     Start address (used some debug commands)
+    //! \param stop      Stop address (used some debug commands)
     //!
-    virtual void          setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause ) override;
+    virtual void debug( int taskId, int debugCmd, int start, int stop ) override;
 
-  protected:
-    //!
-    //! \brief processing Perform periodic mirror handle
-    //! \param tickOffset Time in ms between previous calling this function and this one
-    //!
-    virtual void          processing( int tickOffset ) override;
-
-    virtual void          send( const unsigned char *buf ) = 0;
-
-            void          onReceived(const unsigned char *buf );
-
-  protected:
-            void          parseVersion( const unsigned char *buf );
-            void          parseState( const unsigned char *buf );
-            void          parseVariables( const unsigned char *buf );
-            void          parseTask( const unsigned char *buf );
-            void          parseFlash( const unsigned char *buf );
-            void          parseFlashWriteOk( const unsigned char *buf );
-
-            void          queryMemory();
-            void          queryNextDebug();
-            void          queryNextFlash(int addr);
-            void          queryState();
-            void          queryReset();
-            void          queryFlashRead();
-            void          queryRestart();
   };
 
 #endif // SVMIRROREXTERN_H

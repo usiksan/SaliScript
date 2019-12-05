@@ -8,29 +8,13 @@
 
 #include "WCModeBoard.h"
 #include "WNetFileManager.h"
-#include "Host/SvNetClientMirror.h"
 
 #include <QVBoxLayout>
 
-WCModeBoard::WCModeBoard(QWidget *parent) : QWidget(parent)
+WCModeBoard::WCModeBoard(SvMirrorManager *manager, QWidget *parent) : QWidget(parent)
   {
   QVBoxLayout *vb = new QVBoxLayout();
-  vb->addWidget( new WNetFileManager( svNetClientMirror, this ) );
+  vb->addWidget( new WNetFileManager( manager, this ) );
   setLayout( vb );
-  }
-
-WCModeBoard::~WCModeBoard()
-  {
-
-  }
-
-void WCModeBoard::activateNode(int node)
-  {
-  Q_UNUSED(node)
-  }
-
-void WCModeBoard::onNodeListChanged()
-  {
-
   }
 

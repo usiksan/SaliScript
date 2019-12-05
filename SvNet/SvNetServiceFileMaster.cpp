@@ -1,5 +1,6 @@
 #include "SvNetServiceFileMaster.h"
 
+#if 0
 SvNetServiceFileMaster::SvNetServiceFileMaster()
   {
 
@@ -17,3 +18,4 @@ SvNetServiceFileMaster *SvNetServiceFileMaster::get()
     }
   return master;
   }
+#endif

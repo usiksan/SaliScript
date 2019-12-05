@@ -9,7 +9,7 @@
 #include "SvProject.h"
 #include "SvUtils.h"
 #include "WCommand.h"
-#include "Host/SvMirror.h"
+#include "SvHost/SvMirror.h"
 #include <QSettings>
 #include <QFile>
 #include <QFileInfo>

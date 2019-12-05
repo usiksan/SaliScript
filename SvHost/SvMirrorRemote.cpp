@@ -5,7 +5,7 @@
     Сибилев А.С.
   Описание
 */
-
+#if 0
 #include "SvMirrorRemote.h"
 #include "SvNetClientMirror.h"
 
@@ -17,8 +17,8 @@
 #include <QCryptographicHash>
 #include <QDataStream>
 
-SvMirrorRemote::SvMirrorRemote(bool scanTasks) :
-  SvMirrorExtern( scanTasks ),
+SvMirrorRemote::SvMirrorRemote(const QString remoteIp, int remotePort, const QString bridgeName, const QString bridgePassw) :
+  SvMirrorExtern( remoteIp ),
   mRemoteId(0),    //Id удаленной машины
   mRemotePassw(0), //Passw удаленной машины
   mTime(0)
@@ -314,3 +314,4 @@ void SvMirrorRemote::receivedVpuState(const QByteArray v)
   receivedVars( ar );
   }
 
+#endif

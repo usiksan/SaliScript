@@ -847,6 +847,7 @@ namespace SvCompiler6
       SvMark       mMark;        //Место в файле для данного значения
       int          mConstInt;    //Вычисленный результат
       bool         mConst;       //Флаг показывает константный результат
+      char         padding[7];
 
       SvValue( SvType *type, const SvMark &mark );
       virtual ~SvValue() {}
@@ -2440,6 +2441,9 @@ namespace SvCompiler6
                */
               void         Compile( const QString &fname );
 
+              //Таблица символов
+              bool         isGlobalSymbol( const QString &name );
+
     protected:
               QString      macroExpansion( const QString mac, const QString def );
 
@@ -2508,8 +2512,6 @@ namespace SvCompiler6
               //Компилятор часть 7 (таблицы)
               //Коментарий
               void         AddAsmRemark(const QString &sour);          //Добавить коментарий, ассемблерный код
-              //Таблица символов
-              bool         isGlobalSymbol( const QString &name );
 
               //Компилятор часть 8 (разбор выражений)
               SvType*      ConstExpression(int *intRes);

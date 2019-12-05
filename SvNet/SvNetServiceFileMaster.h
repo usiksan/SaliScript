@@ -14,7 +14,7 @@
 
 #include "SvNetService.h"
 
-
+#if 0
 class SvNetServiceFileMaster : public SvNetService
   {
     Q_OBJECT
@@ -44,5 +44,6 @@ class SvNetServiceFileMaster : public SvNetService
     //Return current master file service. If needed it build service
     static SvNetServiceFileMaster *get();
   };
+#endif
 
 #endif // SVNETSERVICEFILEMASTER_H
