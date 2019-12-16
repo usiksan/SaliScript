@@ -55,8 +55,7 @@ class WDebugTable: public QTableWidget
     //изменение значения в таблице
     void debugVariable(int row, int column);
     //изменение памяти на зеркале
-    void onMemoryChanged();
-    void onLinkStatusChanged(bool link, const QString linkStatus);
+    void onMemoryChanged( SvMirror *src );
 
   private:
     //отобразить значение

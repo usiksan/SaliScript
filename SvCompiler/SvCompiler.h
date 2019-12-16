@@ -591,32 +591,35 @@ namespace SvCompiler6
       SvTypeList();
       ~SvTypeList();
 
+      //Список имен типов
+      QStringList keys() const { return mHash.keys(); }
+
       //Очистить список типов
-      void    clear();
+      void        clear();
 
       //Проверить наличие типа с заданным именем
-      bool    isPresent( const QString &name ) const { return mHash.contains(name); }
+      bool        isPresent( const QString &name ) const { return mHash.contains(name); }
 
       //Получить тип по имени
-      SvType* getType( const QString &name ) { return mHash.value( name, nullptr ); }
+      SvType*     getType( const QString &name ) { return mHash.value( name, nullptr ); }
 
       //Получить тип по сигнатуре
-      SvType* getTypeBySignature( const QString &sign ) const { return mSign.value( sign, nullptr ); }
+      SvType*     getTypeBySignature( const QString &sign ) const { return mSign.value( sign, nullptr ); }
 
       //Получить указатель на тип
-      SvType* getTypePointer( SvType *base );
+      SvType*     getTypePointer( SvType *base );
 
       //Получить тип массив
-      SvType* getTypeArray(SvType *base, int numElem);
+      SvType*     getTypeArray(SvType *base, int numElem);
 
       //Добавить тип к списку
-      SvType* addType( SvType *type );
+      SvType*     addType( SvType *type );
 
       //Добавить имя для типа
-      void    addTypeName( SvType *type, const QString &name );
+      void        addTypeName( SvType *type, const QString &name );
 
       //Сформировать листинг типов
-      QString listing();
+      QString     listing();
     };
 
 
@@ -676,9 +679,10 @@ namespace SvCompiler6
       SvVariableList     mMemberList;     //! Список всех членов. При создании структуры в этот
                                           //! спислк копируется список членов из наследовуемой
                                           //! структуры
+      SvMark             mDefine;         //! Место определения структуры
 
       //Конструктор обычного класса
-      SvStruct( const QString name );
+      SvStruct( const QString name, SvMark def );
       ~SvStruct() override;
 
       //Для удобства использования

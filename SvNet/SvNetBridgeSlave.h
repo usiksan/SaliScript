@@ -17,7 +17,7 @@ class SvNetBridgeSlave : public QObject
     void linkStatusChanged( bool linked, const QString msg );
 
   public slots:
-    void setup( const QString bridgeIp, const QString id, const QString remotePassw );
+    //void setup( const QString bridgeIp, const QString id, const QString remotePassw );
   };
 
 #endif // SVNETBRIDGESLAVE_H

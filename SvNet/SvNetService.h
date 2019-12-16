@@ -25,7 +25,7 @@ class SvNetService : public QObject
     void sendBlock( SvNetChannel *ch, qint8 cmd, const QByteArray block );
 
   public slots:
-    virtual void onReceivedBlock( SvNetChannel *ch, qint8 cmd, QByteArray block );
+    virtual void onReceivedBlock( SvNetChannel *ch, qint8 cmd, QByteArray block ) = 0;
   };
 
 #endif // SVNETSERVICE_H

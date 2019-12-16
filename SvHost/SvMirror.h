@@ -51,16 +51,6 @@ inline QDataStream &operator >> ( QDataStream &is, SvVmVpuState &st ) {
   }
 
 
-struct SvControllerInfo {
-    bool    mLink = false;
-    QString mLinkStatus;
-    QString mType;
-    qint32  mVpuMax = 0;
-    qint32  mProgrammMaxSize = 0;
-    qint32  mVariableMaxCount = 0;
-    qint32  mVersion = 0;
-    QString mSignature;
-  };
 
 
 
@@ -89,10 +79,22 @@ class SvMirror : public QObject
     //! \return          Value of cell
     //!
     virtual int  memoryGet( int index ) const = 0;
+
+    //!
+    //! \brief memoryGetByName Return memory cell value by its name
+    //! \param name            Name of variable
+    //! \return                Value of variable cell
+    //!
+    int memoryGetByName( const QString name ) const { return memoryGet( addressOfName(name) ); }
   signals:
 
     void linkChanged( bool linked, const QString controllerType, const QString loadedProgramm );
 
+    //!
+    //! \brief transferProcess
+    //! \param complete
+    //! \param msg
+    //!
     void transferProcess( bool complete, const QString msg );
 
     //!

@@ -40,6 +40,7 @@
 
 WCModeEditor::WCModeEditor(WMain *parent) :
   QSplitter(parent),
+  mIps(SV_MAX_TASK,0),
   mParser(nullptr),
   mVarChangeLock(false),
   mAutoCompleteParenthesis(true),
@@ -416,7 +417,7 @@ void WCModeEditor::updateProjectFileList(const QStringList & list)
 
 void WCModeEditor::parsingComplete()
   {
-  emit compile();
+//  emit compile();
   }
 
 
@@ -442,6 +443,7 @@ void WCModeEditor::onTaskChanged(int taskIndex, int ip, int sp, int bp, int tm, 
 
   if( taskIndex < SV_MAX_TASK ) {
     //Задача присутствует, обновить информацию
+    mIps[taskIndex] = ip;
     //Заголовок
     mTasks->item( taskIndex, DE_TASK_TASK )->setText( QString::number(taskIndex) );
     if( debugRun ) {
@@ -908,12 +910,10 @@ void WCModeEditor::setupMirror(SvMirror *pMirror)
   //При поступлении loga
   connect( pMirror, &SvMirror::log, this, &WCModeEditor::onLog );
   //При изменении текстового статуса
-  connect( pMirror, &SvMirror::controllerInfoChanged, this, &WCModeEditor::onTextStatusChanged );
-
+  connect( pMirror, &SvMirror::linkChanged, this, &WCModeEditor::onTextStatusChanged );
 
   //Обновить текстовый статус
-  onTextStatusChanged();
-
+  onTextStatusChanged( false, QString{}, QString{} );
   }
 
 
@@ -1079,8 +1079,7 @@ void WCModeEditor::debugAddWatch()
 //Пуск VPU
 void WCModeEditor::debugRun()
   {
-  if( svMirrorManager->mirror() != nullptr )
-    svMirrorManager->mirror()->debugRun( task() );
+  emit debug( task(), SDC_RUN, 0, 0 );
   }
 
 
@@ -1088,8 +1087,8 @@ void WCModeEditor::debugRun()
 //Пуск всех VPU
 void WCModeEditor::debugRunAll()
   {
-  if( svMirrorManager->mirror() != nullptr )
-    svMirrorManager->mirror()->debugRunAll();
+  for( int i = 0; i < SV_MAX_TASK; i++ )
+    emit debug( i, SDC_RUN, 0, 0 );
   }
 
 
@@ -1098,8 +1097,14 @@ void WCModeEditor::debugRunAll()
 //Шаг программы
 void WCModeEditor::debugStep()
   {
-  if( svMirrorManager->mirror() != nullptr )
-    svMirrorManager->mirror()->debugStep( task() );
+  //Задача заторможена
+  int ip = mIps.at(task());
+  int line = mProgramm->getLine(ip);
+  int file = mProgramm->getFile(ip);
+  //Пропустить текущую строку
+  int ipe = ip + 1;
+  while( mProgramm->getLine(ipe) == line && mProgramm->getFile(ipe) == file ) ipe++;
+  emit debug( task(), SDC_RUN_STEP, ip, ipe );
   }
 
 
@@ -1108,8 +1113,14 @@ void WCModeEditor::debugStep()
 //Шаг программы с заходом в функцию
 void WCModeEditor::debugTrace()
   {
-  if( svMirrorManager->mirror() != nullptr )
-    svMirrorManager->mirror()->debugTrace( task() );
+  //Задача заторможена
+  int ip = mIps.at(task());
+  int line = mProgramm->getLine(ip);
+  int file = mProgramm->getFile(ip);
+  //Пропустить текущую строку
+  int ipe = ip + 1;
+  while( mProgramm->getLine(ipe) == line && mProgramm->getFile(ipe) == file ) ipe++;
+  emit debug( task(), SDC_RUN_TRACE, ip, ipe );
   }
 
 
@@ -1118,8 +1129,7 @@ void WCModeEditor::debugTrace()
 //Пауза VPU
 void WCModeEditor::debugPause()
   {
-  if( svMirrorManager->mirror() != nullptr )
-    svMirrorManager->mirror()->debugPause( task() );
+  emit debug( task(), SDC_RUN_UNTIL, 0, mProgramm->codeCount() );
   }
 
 
@@ -1127,8 +1137,8 @@ void WCModeEditor::debugPause()
 //Пауза всех VPU
 void WCModeEditor::debugPauseAll()
   {
-  if( svMirrorManager->mirror() != nullptr )
-    svMirrorManager->mirror()->debugPauseAll();
+  for( int i = 0; i < SV_MAX_TASK; i++ )
+    emit debug( i, SDC_RUN_UNTIL, 0, mProgramm->codeCount() );
   }
 
 
@@ -1136,10 +1146,12 @@ void WCModeEditor::debugPauseAll()
 
 
 //При изменении текстового статуса
-void WCModeEditor::onTextStatusChanged()
+void WCModeEditor::onTextStatusChanged(bool linked, const QString controllerType, const QString loadedProgramm)
   {
-  if( svMirrorManager->mirror() != nullptr )
-    mTextStatus->setText( svMirrorManager->mirror()->controllerInfo().mLinkStatus );
+  if( linked )
+    mTextStatus->setText( tr("Linked to %1. Programm: %1").arg( controllerType ).arg( loadedProgramm ) );
+  else
+    mTextStatus->setText( tr("Not connected") );
   }
 
 

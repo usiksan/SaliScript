@@ -17,11 +17,12 @@
 using namespace SvCompiler6;
 
 //Конструктор обычного класса
-SvStruct::SvStruct(const QString name) :
+SvStruct::SvStruct(const QString name, SvMark def) :
   SvType( name, CLASS_STRUCT, 0, nullptr ),
   mDefined(false),    //Структура определена
   mBaseStruct(nullptr),      //Базовый тип
-  mMemberList(tsrMember)
+  mMemberList(tsrMember),
+  mDefine(def)
   {
 
   }

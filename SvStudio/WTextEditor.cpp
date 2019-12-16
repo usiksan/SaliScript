@@ -1,7 +1,8 @@
 ﻿#include "SvConfig.h"
 #include "WTextEditor.h"
 #include "Highlighter.h"
-#include "SvDebugThread.h"
+#include "WMain.h"
+
 #include <QKeyEvent>
 #include <QPainter>
 #include <QDir>
@@ -25,8 +26,8 @@ void ScrollBarWithMarkers::paintEvent(QPaintEvent *event)
   int rangeSize = height()-2*scrollBarWidth;
   auto i=0;
   foreach (auto position, mHighlightedLines) {
-    int y = scrollBarWidth + position.first*rangeSize;
-    int h = qMax(position.second*rangeSize, 1.0);
+    double y = scrollBarWidth + position.first*rangeSize;
+    double h = qMax(position.second*rangeSize, 1.0);
     if (i == mSelected)
       painter.fillRect(x, y, w, h, mSelectedMarkerColor);
     else
@@ -528,8 +529,15 @@ void TextEditor::refillAutoComplete()
   else {
     //Обычный идентификатор
     if( Highlighter::mCompiler ) {
-      srcList.append( Highlighter::mCompiler->mGlobalTable.keys() );
+      //Types
+      srcList.append( Highlighter::mCompiler->mTypeList.keys() );
+      //Variables
+      srcList.append( Highlighter::mCompiler->mVarGlobal.mHash.keys() );
+      //Functions
+      srcList.append( Highlighter::mCompiler->mFunGlobal.mHash.keys() );
+      //Macro names
       srcList.append( Highlighter::mCompiler->mMacroTable.keys() );
+      //Key words
       srcList.append( Highlighter::mCompiler->mKeyWords.keys() );
       }
     srcList.append( QString("#define") );
@@ -679,16 +687,33 @@ void TextEditor::toggleF2()
     //Возможно, стоим над идентификатором
     QString ident = getWordCursorOver();
     if( !ident.isEmpty() && Highlighter::mCompiler ) {
-      if( Highlighter::mCompiler->mGlobalTable.contains(ident) ) {
+      QString fname;
+      int line;
+
+      if( Highlighter::mCompiler->mVarGlobal.isPresent(ident) ) {
         //Выполнить переход к определению символа
-        SvVariablePtr vp = Highlighter::mCompiler->mGlobalTable.value(ident);
-        QString fname = Highlighter::mCompiler->mFileTable.value(vp->mMarkDefine.mFile);
-        int line = vp->mMarkDefine.mLine;
-        if( fname.compare( mFilePath, Qt::CaseInsensitive ) == 0 && line - 1 == textCursor().blockNumber() ) {
-          fname = Highlighter::mCompiler->mFileTable.value(vp->mMarkFirstDeclare.mFile);
-          line = vp->mMarkFirstDeclare.mLine;
-          }
+        SvCompiler6::SvVariablePtr vp = Highlighter::mCompiler->mVarGlobal.getVariable(ident);
+        fname = Highlighter::mCompiler->mFileTable.value(vp->mMarkDefine.mFile);
+        line = vp->mMarkDefine.mLine;
+//        if( fname.compare( mFilePath, Qt::CaseInsensitive ) == 0 && line - 1 == textCursor().blockNumber() ) {
+//          fname = Highlighter::mCompiler->mFileTable.value(vp->mMarkFirstDeclare.mFile);
+//          line = vp->mMarkFirstDeclare.mLine;
+//          }
         emit jump( fname, line );
+        }
+      else if( Highlighter::mCompiler->mFunGlobal.isPresent(ident) ) {
+        SvCompiler6::SvFunctionPtr fp = Highlighter::mCompiler->mFunGlobal.getFunction(ident);
+        fname = Highlighter::mCompiler->mFileTable.value(fp->mMarkDefine.mFile);
+        line = fp->mMarkDefine.mLine;
+        emit jump( fname, line );
+        }
+      else if( Highlighter::mCompiler->mTypeList.isPresent(ident) ) {
+        SvCompiler6::SvStruct *sp = Highlighter::mCompiler->mTypeList.getType(ident)->toStruct();
+        if( sp ) {
+          fname = Highlighter::mCompiler->mFileTable.value(sp->mDefine.mFile);
+          line = sp->mDefine.mLine;
+          emit jump( fname, line );
+          }
         }
       }
     }
@@ -1072,17 +1097,22 @@ void TextEditor::mouseMoveEvent(QMouseEvent *ev)
         QString help; //Строка с помощью
 
         //Получить значение
-        if( SvDebugThread::mClient && SvDebugThread::mClient->addressOfName(mOverWord) ) {
+        if( svMirrorManager && svMirrorManager->mirror()->addressOfName(mOverWord) ) {
           //Это идентификатор значение которого известно
-          help = QString("[%1:%2] ").arg(SvDebugThread::mClient->addressOfName(mOverWord)).arg(SvDebugThread::mClient->memoryGetByName(mOverWord) );
+          help = QString("[%1:%2] ").arg(svMirrorManager->mirror()->addressOfName(mOverWord)).arg(svMirrorManager->mirror()->memoryGetByName(mOverWord) );
           }
 
         //Установить текст помощи, соответствующий тексту ссылки
-        SvVariablePtr vp = Highlighter::mCompiler->mGlobalTable.value(mOverWord);
+        SvCompiler6::SvVariablePtr vp = Highlighter::mCompiler->mVarGlobal.getVariable(mOverWord);
         if( vp && !vp->mRemark.isEmpty() ) help.append( vp->mRemark );
         else if( Highlighter::mCompiler->mMacroTable.contains(mOverWord) ) {
           //Вместо помощи показываем содержимое макро
-          help = Highlighter::mCompiler->mMacroTable.value(mOverWord, QString() );
+          help = Highlighter::mCompiler->mMacroTable.value(mOverWord)->mExpander;
+          }
+        else if( Highlighter::mCompiler->mFunGlobal.isPresent(mOverWord) ) {
+          //Show function signature
+          SvCompiler6::SvFunctionPtr fp = Highlighter::mCompiler->mFunGlobal.getFunction(mOverWord);
+          help = fp->mType->mSignature + QChar('\n') + fp->mRemark;
           }
 
         if( !help.isEmpty() ) {
@@ -1113,13 +1143,7 @@ void TextEditor::mousePressEvent(QMouseEvent *e)
     mAutoComplete->hide();
   if( mControlPress && !mLink.isEmpty() ) {
     mControlPress = false;
-    SvVariablePtr vp = Highlighter::mCompiler->mGlobalTable.value(mLink);
-    if( vp ) {
-      emit jump( Highlighter::mCompiler->mFileTable.value(vp->mMarkDefine.mFile), vp->mMarkDefine.mLine );
-      }
-    mLink.clear();
-    emit setLink( mLink );
-    emit rehighlightBlock( mLinkBlock );
+    toggleF2();
     }
   else
     //Обработать нажатие мыши по умолчанию
@@ -1166,6 +1190,9 @@ TextEditor::setDebugLine(int line) {
   }
 
 
+
+
+
 void
 TextEditor::onCursorPositionChanged() {
   mBreakLine = textCursor().blockNumber() + 1;
@@ -1173,6 +1200,9 @@ TextEditor::onCursorPositionChanged() {
   highlightCurrentLine();
   updateHighlights();
   }
+
+
+
 
 
 void
@@ -1201,6 +1231,10 @@ TextEditor::locateLine(int line)
   //Обеспечить фокус
   setFocus();
   }
+
+
+
+
 
 QColor cHighlightedColor = QColor(Qt::green).lighter(160);
 QColor cSelectedHighlightedColor = QColor(Qt::yellow).darker(110);
@@ -1243,8 +1277,11 @@ void TextEditor::highlightSearchResults(const QList<TextSearchResults> & searchR
   //setTextCursor(prev);
   updateHighlights();
   mScrollBarMarker->setHighlights(highlightPositions, currentIndex);
-
   }
+
+
+
+
 
 //замена текста с индекса startIndex по endIndex
 void TextEditor::replace(int startIndex, int endIndex, const QString &text)
@@ -1256,8 +1293,10 @@ void TextEditor::replace(int startIndex, int endIndex, const QString &text)
   currentCursor.removeSelectedText();
   currentCursor.insertText(text);
   currentCursor.endEditBlock();
-
   }
+
+
+
 
 //замена текста по результатам поиска
 void TextEditor::replaceAll(const QList<TextSearchResults> &searchResults, const QString & text)
@@ -1287,6 +1326,9 @@ void TextEditor::replaceAll(const QList<TextSearchResults> &searchResults, const
   setTextCursor(currentCursor);
   }
 
+
+
+
 //автоотступ строк, содержащихся между позициями по символам startIndex и endIndex
 void TextEditor::autoIndent(int startIndex, int endIndex, bool registerUndo)
   {
@@ -1310,11 +1352,17 @@ void TextEditor::autoIndent(int startIndex, int endIndex, bool registerUndo)
     currentCursor.endEditBlock();
   }
 
+
+
+
 bool TextEditor:: isCommented(int index)const{
   auto cursort = textCursor();
   cursort.setPosition(index);
   return cursort.charFormat().foreground().color() == Qt::darkGreen;
   }
+
+
+
 
 const QStringList cBlockOperators({"if", "else", "while"});
 //получить оператор начала блока если такой встретился начиная с позиции j  в тексте text
@@ -1345,6 +1393,10 @@ QString foundBlockOperator(const QString & text, int j){
     }
   return "";
   }
+
+
+
+
 
 //обновить граф локальных блоков
 void TextEditor::updateBlockGraph(){

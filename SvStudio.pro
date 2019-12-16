@@ -57,7 +57,6 @@ HEADERS += \
   SvNet/SvNetBridgeMaster.h \
   SvNet/SvNetBridgeSlave.h \
   SvNet/SvNetChannel.h \
-  SvNet/SvNetChannelFile.h \
   SvNet/SvNetLocalMaster.h \
   SvNet/SvNetLocalSlave.h \
   SvNet/SvNetPacketInfo.h \
@@ -186,7 +185,6 @@ SOURCES += \
   SvStudio/WOscillograph.cpp \
   SvStudio/WTextEditor.cpp \
   SvStudio/WTextSearchPanel.cpp \
-  SvStudio/WVisualEditor.cpp \
   SvStudio/bug.cpp \
   SvStudio/main.cpp \
   SvVMachine/SvVMachine.cpp

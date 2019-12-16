@@ -39,7 +39,7 @@ WMain::WMain(QWidget *parent)
 
   //Создать основные режимы
   mCModeIntro  = new WCModeIntro();
-  mCModeBoard  = new WCModeBoard();
+  mCModeBoard  = new WCModeBoard( svMirrorManager );
   mCModeEditor = new WCModeEditor( this );
   mCModeHelp   = new WCModeHelp();
 
@@ -89,6 +89,7 @@ WMain::WMain(QWidget *parent)
   chm->addAction( maChannelSimulator );
   chm->addAction( maChannelUsb );
   chm->addAction( maChannelRemote );
+  chm->addAction( maChannelBridge );
   QToolButton *cb = dynamic_cast<QToolButton*> ( bar->widgetForAction(maDebugChannel) );
   if( cb ) {
     cb->setMenu( chm );
@@ -339,42 +340,6 @@ void WMain::fileRecentFile()
 
 
 
-void WMain::fileSendProject()
-  {
-  //Проверить наличие открытого проекта
-  if( svProject->mProjectName.isEmpty() )
-    //Проект не задан, выдать сообщение
-    QMessageBox::warning( this, tr("Error!"), tr("Project is't defined! Transfer impossible. First define project.") );
-  else {
-    //Подготовительные операции: сохранение текстовых файлов и генерация визуальных
-    mCModeEditor->fileSaveAll();
-
-    //Диалог операции
-    DProcess dprocess( true, this );
-    dprocess.exec();
-    }
-  }
-
-
-
-
-void WMain::fileReceivProject()
-  {
-  //Проверить наличие открытого проекта
-  if( svProject->mProjectName.isEmpty() )
-    //Проект не задан, выдать сообщение
-    QMessageBox::warning( this, tr("Error!"), tr("Project is't defined! Transfer impossible. First define project.") );
-  else {
-    //Подготовительные операции: сохранение текстовых файлов и генерация визуальных
-    mCModeEditor->fileSaveAll();
-
-    //Диалог операции
-    DProcess dprocess( false, this );
-    dprocess.exec();
-    }
-  }
-
-
 
 
 
@@ -447,6 +412,27 @@ void WMain::helpAbout()
   QMessageBox::about( this, tr("About Sali SvStudio"), tr("SaliLAB SaliScript is C programming language subset IDE\n Compiler %1\nVirtual machine %2\n SvStudio version %3").arg( TVERSION ).arg( SV_VMACHINE_VERSION ).arg( SV_VERSION ) );
   }
 
+void WMain::mirrorLocal()
+  {
+  emit setMirror( SMT_LOCAL );
+  }
+
+void WMain::mirrorUsb()
+  {
+  emit setMirror( SMT_USB );
+  }
+
+void WMain::mirrorRemote()
+  {
+  emit setMirror( SMT_REMOTE );
+  }
+
+void WMain::mirrorBridge()
+  {
+  emit setMirror( SMT_BRIDGE );
+  }
+
+
 
 
 
@@ -473,6 +459,11 @@ void WMain::onMirrorChanged(int id, SvMirrorPtr mirror)
         maDebugChannel->setIcon( maChannelRemote->icon() );
         maDebugChannel->setText( tr("Remote") );
         break;
+
+      case SMT_BRIDGE :
+        maDebugChannel->setIcon( maChannelBridge->icon() );
+        maDebugChannel->setText( tr("Bridge") );
+        break;
       }
 
 
@@ -497,7 +488,7 @@ void WMain::compile(bool link, bool flash , bool runOrPause)
     mCModeEditor->fileSaveAll();
 
     //Компилировать
-    SvProgrammPtr prog = SvCompiler6::SvVpuCompiler::build( svProject->mProjectPath, svProject->mProjectName );
+    SvProgrammPtr prog = SvCompiler6::SvVpuCompiler::build( svProject->mProjectPath, svProject->mMainScript );
 
     //Установить новый список ошибок
     mCModeEditor->setErrors( prog->mErrors );

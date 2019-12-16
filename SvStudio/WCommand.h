@@ -69,6 +69,7 @@ extern QAction
 *maChannelSimulator, //Симулятор
 *maChannelUsb,       //В аппаратуре
 *maChannelRemote,    //Удаленная отладка
+*maChannelBridge,    //Remote debug over internet bridge
 
 //Меню исполнения, отладки и симуляции
 *maDebug,

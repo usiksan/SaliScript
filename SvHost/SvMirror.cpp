@@ -165,14 +165,6 @@ int SvMirror::addressOfName(const QString &name) const
 
 
 
-void SvMirror::debugRun(int taskId)
-  {
-  debug( taskId, SDC_RUN, 0, 0 );
-  }
-
-
-
-
 //Отладка - пуск всех задач
 void SvMirror::debugRunAll()
   {
@@ -184,65 +176,8 @@ void SvMirror::debugRunAll()
 
 
 
-//Отладка - стоп (пауза)
-void SvMirror::debugPause(int taskId)
-  {
-  debug( taskId, SDC_RUN_UNTIL, 0, mProgramm->codeCount() );
-  }
 
 
-
-
-
-//Отладка - стоп (пауза) всех задач
-void SvMirror::debugPauseAll()
-  {
-  for( int i = 0; i < mControllerInfo.mVpuCount; i++ )
-    debugPause( i );
-  }
-
-
-
-
-
-void SvMirror::debugStep(int taskId)
-  {
-  if( taskId >= 0 && taskId < mControllerInfo.mVpuCount ) {
-    //Задача присутствует
-    SvVmVpuState st = taskInfo(taskId);
-    if( !st.mDebugRun && st.mIp != 0 ) {
-      //Задача заторможена
-      int line = mProgramm->getLine(st.mIp);
-      int file = mProgramm->getFile(st.mIp);
-      //Пропустить текущую строку
-      int ipe = st.mIp + 1;
-      while( mProgramm->getLine(ipe) == line && mProgramm->getFile(ipe) == file ) ipe++;
-      debug( taskId, SDC_RUN_STEP, st.mIp, ipe );
-      }
-    else debugPause( taskId );
-    }
-  }
-
-
-
-
-void SvMirror::debugTrace(int taskId)
-  {
-  if( taskId >= 0 && taskId < mControllerInfo.mVpuCount ) {
-    //Задача присутствует
-    SvVmVpuState st = taskInfo(taskId);
-    if( !st.mDebugRun && st.mIp != 0 ) {
-      //Задача заторможена
-      int line = mProgramm->getLine(st.mIp);
-      int file = mProgramm->getFile(st.mIp);
-      //Пропустить текущую строку
-      int ipe = st.mIp + 1;
-      while( mProgramm->getLine(ipe) == line && mProgramm->getFile(ipe) == file ) ipe++;
-      debug( taskId, SDC_RUN_TRACE, st.mIp, ipe );
-      }
-    else debugPause( taskId );
-    }
-  }
 
 
 

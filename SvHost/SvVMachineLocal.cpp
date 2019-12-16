@@ -22,6 +22,7 @@
 
 SvVMachineLocal::SvVMachineLocal(int ramSize, int vpuCount)
   {
+  mProgramm.reset( new SvProgramm() );
   //Распределить память
   mMemory = new int[ramSize];
   mMemorySize = ramSize;

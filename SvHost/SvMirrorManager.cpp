@@ -54,12 +54,17 @@ void SvMirrorManager::setMirrorById(int id)
 
 void SvMirrorManager::stop()
   {
-  if( mMirror )
+  if( mTimer ) {
+    //Остановить таймер
+    mTimer->stop();
+    delete mTimer;
+    }
+  if( mMirror ) {
     mMirror->deleteLater();
+    mMirror = nullptr;
+    }
   if( mElapsedTimer )
     delete mElapsedTimer;
-  if( mTimer )
-    delete mTimer;
   mThread->quit();
   mThread->wait();
   }

@@ -74,6 +74,7 @@ class WCModeEditor : public QSplitter
     WDebugTable        *mDebugVar;        //Окно со списком мониторенных переменных
 
     SvProgrammPtr      mProgramm;        //Debuged programm
+    QVector<int>       mIps;             //Ip values for every tasks
     SvPeriodicParser  *mParser;          //Периодический разборщик для обеспечения адекватной подсветки синтаксиса
     SvErrorList        mErrorList;       //Список ошибок
 
@@ -107,7 +108,43 @@ class WCModeEditor : public QSplitter
     void        connectVars( bool link );
 
   signals:
-    void    compile();
+    //!
+    //! \brief setProgrammFlashRun Flash programm to controller and run it or paused
+    //! \param prog                Programm which flashed to controller
+    //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
+    //!
+    void setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause );
+
+
+    //!
+    //! \brief compileFlashRun Perform script compilation and some other tasks defined by params
+    //! \param scriptPath      Full script path. We start compilation of this main script
+    //! \param runOrPause      If true then programm automaticly started after flash, else - it paused
+    //!
+    void compileFlashRun(const QString scriptPath, bool runOrPause );
+
+
+    //!
+    //! \brief startScript Perofrm script compilation, load to controller and start script to running
+    //! \param scriptPath  Full script path
+    //!
+    void startScript( const QString scriptPath );
+
+    //!
+    //! \brief memorySet Set memory cell new value
+    //! \param index     Memory cell index
+    //! \param value     Memory cell value
+    //!
+    void memorySet( int index, int value );
+
+    //!
+    //! \brief debug     Execute one debug command
+    //! \param taskId    Task index for which debug command
+    //! \param debugCmd  Debug command code
+    //! \param start     Start address (used some debug commands)
+    //! \param stop      Stop address (used some debug commands)
+    //!
+    void debug( int taskId, int debugCmd, int start, int stop );
 
   public slots:
     //Выполняет открытие файла в редакторе и обновляет список последних файлов
@@ -197,7 +234,7 @@ class WCModeEditor : public QSplitter
     void debugPauseAll();
 
     //При изменении текстового статуса
-    void onTextStatusChanged();
+    void onTextStatusChanged(bool linked, const QString controllerType, const QString loadedProgramm);
 
 
     int autoIndentSpaceCount()const;

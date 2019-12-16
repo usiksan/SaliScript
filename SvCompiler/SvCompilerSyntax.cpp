@@ -54,7 +54,7 @@ void SvCompiler::DoCBlock()
             ErrorEndSt( QObject::tr("Error. Need value") );
             break;
             }
-          array.append( mToken.mIValue );
+          array.append( static_cast<char>(mToken.mIValue) );
           NextToken();
           }
 
@@ -86,7 +86,7 @@ SvCompiler::DoStructure() {
   if( mToken == ttName ) {
     if( isGlobalSymbol(mToken.mString) )
       Error( QObject::tr("Error. Duplicate class name \"%1\"").arg(mToken.mString) );
-    type = mTypeList.addType( new SvStruct(mToken.mString) )->toStruct();
+    type = mTypeList.addType( new SvStruct(mToken.mString, mark() ) )->toStruct();
     NextToken();
 
     //Проверить наследование
@@ -143,7 +143,7 @@ SvCompiler::DoStructure() {
         //Записать тип переменной
         SvType *baseType = DoBaseType();
         //Должно быть имя типа
-        if( baseType == 0 ) {
+        if( baseType == nullptr ) {
           ErrorEndSt( QObject::tr("Error. Need struct member type.") );
           NextToken();
           continue;

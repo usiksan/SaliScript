@@ -14,7 +14,7 @@
 #include <QByteArray>
 #include <QList>
 #include <QDateTime>
-
+#if 0
 #define SVC_FILE_REQUEST            20 //Запрос на получение файла
                                        //data: CsFile
 #define CSC_FILE                     4 //Файл
@@ -208,3 +208,4 @@ class SvNetHandlerFile : public QObject
   };
 
 #endif // SVNETHANDLERFILE_H
+#endif

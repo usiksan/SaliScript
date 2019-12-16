@@ -31,9 +31,6 @@ class DProcess : public QDialog
 
     bool isCompleted() const { return mCompleted; }
   public slots:
-    //При запуске процесса (вызывается когда диалог построен)
-    void onStart();
-
     //При изменении состояния процесса
     void onTransferProcess( bool complete, const QString msg );
   protected:

@@ -133,6 +133,21 @@ void SvProgramm::save(const QString &fname)
 
 
 
+void SvProgramm::load(const QString &fname)
+  {
+  //Все стереть
+  clear();
+  //Образовать файл
+  QFile file(fname);
+  if( file.open(QIODevice::ReadOnly) ) {
+    //Образовать поток
+    QDataStream is( &file );
+    //Прочитать
+    read( is );
+    }
+  }
+
+
 
 
 //! Разместить сигнатуру

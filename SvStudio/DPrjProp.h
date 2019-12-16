@@ -20,7 +20,7 @@ class DPrjProp : public QDialog
     Q_OBJECT
 
   public:
-    explicit DPrjProp( const QString &okTitle, QWidget *parent = 0);
+    explicit DPrjProp( const QString &okTitle, QWidget *parent = nullptr);
     ~DPrjProp();
 
   public slots:

@@ -1,7 +1,7 @@
 #include "WDebugTable.h"
-#include "SvDebugThread.h"
 #include "IngDebugCalculator.h"
 #include "WOscillograph.h"
+#include "SvHost/SvMirror.h"
 #include <QDebug>
 #include <QRegExp>
 #include <QVariantList>
@@ -134,13 +134,9 @@ void WDebugTable::updateAddress(int row)
     varName = varName.left(leftBracketIndex);
     }
   if( mMirror ) {
-    if (mMirror->getLink()){
-      int addr = mMirror->addressOfName(varName) + arrayIndex;
-      //Установить новый адрес
-      item(row,DE_VAR_ADDR)->setText( QString::number( addr ) );
-      }
-    else
-      item(row,DE_VAR_ADDR)->setText( QString("") );
+    int addr = mMirror->addressOfName(varName) + arrayIndex;
+    //Установить новый адрес
+    item(row,DE_VAR_ADDR)->setText( QString::number( addr ) );
     }
   else {
     //Канал не установлен, адреса нету
@@ -210,22 +206,15 @@ void WDebugTable::debugVariable(int row, int column)
 
 
 
-void WDebugTable::onMemoryChanged()
-  {
-  if (sender() == nullptr){
-    return;
-    }
 
-  updateVariables();
+
+void WDebugTable::onMemoryChanged(SvMirror *src)
+  {
+  if( src )
+    updateVariables();
   }
 
 
-
-void WDebugTable::onLinkStatusChanged(bool link, const QString status)
-  {
-  Q_UNUSED(link)
-  Q_UNUSED(status)
-  }
 
 
 
@@ -363,12 +352,8 @@ void WDebugTable::setupMirror(SvMirror *pNewMirror)
   {
   mMirror = pNewMirror;
   //подключить сигналы
-  if( mMirror != nullptr ) {
+  if( mMirror != nullptr )
     connect( mMirror, &SvMirror::memoryChanged, this, &WDebugTable::onMemoryChanged);
-    connect( mMirror, &SvMirror::linkStatusChanged, this, &WDebugTable::onLinkStatusChanged);
-    // connect( mMirror, &SvMirror::destroyed, this, &WDebugTable::resetMirror);
-    onLinkStatusChanged(mMirror->getLink(), mMirror->getLinkStatus());
-    }
   //задать зеркало в расчет значений
   auto pProvider = dynamic_cast<IngDebugMirrorVarProvider*>( mDebugCalculator->valueProvider());
   if( pProvider != nullptr )

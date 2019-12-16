@@ -37,8 +37,9 @@ public:
 /// \brief The ScrollBarWithMarkers class полоса прокрутки с метками поиска
 /// mHighlightedLines - список <начало, высота>, значения от 0 до 1 (нормализовано по размеру документа в пискелях)
 ///
-class ScrollBarWithMarkers : public QScrollBar{
+class ScrollBarWithMarkers : public QScrollBar {
     Q_OBJECT
+
     QList<QPair<double, double>> mHighlightedLines;
     int    mSelected;
     QColor mMarkerColor;

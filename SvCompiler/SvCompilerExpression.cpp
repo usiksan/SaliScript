@@ -674,14 +674,19 @@ SvCompiler::B15( SvValuePtr &val ) {
 bool
 SvCompiler::BoWaitFunction( SvValuePtr &val) {
   if( mToken.mString == QString("svWait") ) {
+    //Доразобрать
     NextToken();
     if( mToken != tsOpen ) {
       ErrorEndSt( Need('(') );
+      //Установить заглушку
+      val = new SvValueError( mTypeVoid, mark() );
       return true;
       }
     NextToken();
     if( mToken != tsClose ) {
       ErrorEndSt( Need(')') );
+      //Установить заглушку
+      val = new SvValueError( mTypeVoid, mark() );
       return true;
       }
     //Генерировать
@@ -701,6 +706,8 @@ bool SvCompiler::BoCatchFunction(SvValuePtr &val)
     NextToken();
     if( mToken != tsOpen ) {
       ErrorEndSt( Need('(') );
+      //Установить заглушку
+      val = new SvValueError( mTypeVoid, mark() );
       return true;
       }
     NextToken();
@@ -708,10 +715,14 @@ bool SvCompiler::BoCatchFunction(SvValuePtr &val)
     B0( catchValue );
     if( catchValue == nullptr ) {
       ErrorEndSt( QObject::tr("Need catch mask") );
+      //Установить заглушку
+      val = new SvValueError( mTypeVoid, mark() );
       return true;
       }
     if( mToken != tsClose ) {
       ErrorEndSt( Need(')') );
+      //Установить заглушку
+      val = new SvValueError( mTypeVoid, mark() );
       return true;
       }
     //Генерировать
@@ -734,6 +745,8 @@ bool SvCompiler::BoThrowFunction(SvValuePtr &val)
     NextToken();
     if( mToken != tsOpen ) {
       ErrorEndSt( Need('(') );
+      //Установить заглушку
+      val = new SvValueError( mTypeVoid, mark() );
       return true;
       }
     NextToken();
@@ -741,10 +754,14 @@ bool SvCompiler::BoThrowFunction(SvValuePtr &val)
     B0( throwValue );
     if( throwValue == nullptr ) {
       ErrorEndSt( QObject::tr("Need throw signal value") );
+      //Установить заглушку
+      val = new SvValueError( mTypeVoid, mark() );
       return true;
       }
     if( mToken != tsClose ) {
       ErrorEndSt( Need(')') );
+      //Установить заглушку
+      val = new SvValueError( mTypeVoid, mark() );
       return true;
       }
     //Генерировать
@@ -768,11 +785,15 @@ bool SvCompiler::BoExceptionFunction(SvValuePtr &val)
     NextToken();
     if( mToken != tsOpen ) {
       ErrorEndSt( Need('(') );
+      //Установить заглушку
+      val = new SvValueError( mTypeVoid, mark() );
       return true;
       }
     NextToken();
     if( mToken != tsClose ) {
       ErrorEndSt( Need(')') );
+      //Установить заглушку
+      val = new SvValueError( mTypeVoid, mark() );
       return true;
       }
     //Генерировать

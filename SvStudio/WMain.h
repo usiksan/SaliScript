@@ -56,8 +56,6 @@ class WMain : public QMainWindow
     void fileNewProject();
     void fileRecentProject();
     void fileRecentFile();
-    void fileSendProject();
-    void fileReceivProject();
     void fileSaveProject();
     void fileCloseAll();
     void fileClose();
@@ -89,6 +87,11 @@ class WMain : public QMainWindow
     void helpContens();
     void helpWeb();
     void helpAbout();
+
+    void mirrorLocal();
+    void mirrorUsb();
+    void mirrorRemote();
+    void mirrorBridge();
 
     //Установлен новый тип зеркала
     void onMirrorChanged( int id, SvMirrorPtr mirror );

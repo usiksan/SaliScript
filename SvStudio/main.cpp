@@ -12,8 +12,8 @@
 #include "WMain.h"
 #include "SvProject.h"
 #include "SvHost/SvMirrorManager.h"
+#include "SvHost/SvMirrorLocal.h"
 #include "SvCompiler/SvVpuCompiler.h"
-#include "Host/SvNetClientMirror.h"
 #include <QApplication>
 #include <QSettings>
 
@@ -34,14 +34,15 @@ int main(int argc, char *argv[])
 
   //Создать менеджер зеркал
   svMirrorManager = new SvMirrorManager();
+  svMirrorManager->addMirrorFabric( SMT_LOCAL, [] () { return new SvMirrorLocal( new SvVMachineLocal() ); } );
 
   QSettings s;
 
-  svNetClientMirror = new SvNetClientMirror( nullptr,
-                                             0, //s.value( QStringLiteral(CFG_BRIDGE_PASSW) ).toInt(),
-                                             0, //s.value( QStringLiteral(CFG_BRIDGE_ID) ).toInt(),
-                                             s.value( QStringLiteral(CFG_BRIDGE_IP), QString(DEFAULT_INTERNET_IP) ).toString(),
-                                             s.value( QStringLiteral(CFG_BRIDGE_PORT), DEFAULT_REMOTE_PORT ).toInt() );
+//  svNetClientMirror = new SvNetClientMirror( nullptr,
+//                                             0, //s.value( QStringLiteral(CFG_BRIDGE_PASSW) ).toInt(),
+//                                             0, //s.value( QStringLiteral(CFG_BRIDGE_ID) ).toInt(),
+//                                             s.value( QStringLiteral(CFG_BRIDGE_IP), QString(DEFAULT_INTERNET_IP) ).toString(),
+//                                             s.value( QStringLiteral(CFG_BRIDGE_PORT), DEFAULT_REMOTE_PORT ).toInt() );
 
   //Создание главного окна приложения
   WMain w;
@@ -50,10 +51,9 @@ int main(int argc, char *argv[])
   else
     w.show();
 
-  //w.restorePositions();
 
   //Запустить отладчик на исполнение
-  svMirrorManager->start();
+//  svMirrorManager->start();
 
   int res = a.exec();
 
@@ -61,15 +61,15 @@ int main(int argc, char *argv[])
   svMirrorManager->stop();
 
   //Остановить работу удаленного управления
-  svNetClientMirror->stopClient();
+//  svNetClientMirror->stopClient();
 
   //Сохранить настройки удаленного управления
-  s.setValue( QStringLiteral(CFG_BRIDGE_PASSW), svNetClientMirror->getPassw() );
-  s.setValue( QStringLiteral(CFG_BRIDGE_ID),    svNetClientMirror->getId() );
-  s.setValue( QStringLiteral(CFG_BRIDGE_IP),    svNetClientMirror->getIp() );
-  s.setValue( QStringLiteral(CFG_BRIDGE_PORT),  svNetClientMirror->getPort() );
+//  s.setValue( QStringLiteral(CFG_BRIDGE_PASSW), svNetClientMirror->getPassw() );
+//  s.setValue( QStringLiteral(CFG_BRIDGE_ID),    svNetClientMirror->getId() );
+//  s.setValue( QStringLiteral(CFG_BRIDGE_IP),    svNetClientMirror->getIp() );
+//  s.setValue( QStringLiteral(CFG_BRIDGE_PORT),  svNetClientMirror->getPort() );
 
-  delete svNetClientMirror;
+//  delete svNetClientMirror;
 
   return res;
   }

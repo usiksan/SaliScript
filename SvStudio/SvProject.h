@@ -37,7 +37,7 @@
 #define SMT_LOCAL  0 //Локальный контроллер
 #define SMT_USB    1 //Контроллер, подключенный по USB
 #define SMT_REMOTE 2 //Удаленное зеркало
-
+#define SMT_BRIDGE 3 //Remote mirror over internet through bridge
 
 
 //Представляет собой проект

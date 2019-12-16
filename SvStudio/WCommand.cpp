@@ -68,7 +68,7 @@ QAction
 *maChannelSimulator, //Симулятор
 *maChannelUsb,       //В аппаратуре
 *maChannelRemote,    //Удаленная отладка
-*maChannelInternet,  //Отладка через интернет
+*maChannelBridge,    //Remote debug over internet bridge
 
 //Меню исполнения, отладки и симуляции
 *maDebug,
@@ -145,9 +145,6 @@ CommandCreateActions(WMain *p, QMenuBar *bar) {
     }
 
   menu->addSeparator();
-  maFileReceivProject = menu->addAction( QIcon(QString(":/pic/folder-import.png")), p->tr("Receiv project"), p, SLOT( fileReceivProject() ) );
-  maFileSendProject   = menu->addAction( QIcon(QString(":/pic/folder-export.png")), p->tr("Send project"), p, SLOT( fileSendProject() ) );
-  menu->addSeparator();
   maFileSave = menu->addAction( QIcon(QString(":/pic/save.png")), p->tr("Save"), p, SLOT(fileSave()), QString("Ctrl+S") );
   maFileSaveAs = menu->addAction( QIcon(QString(":/pic/save_as.png")), p->tr("Save as..."), p, SLOT(fileSaveAs()) );
   maFileClose = menu->addAction( QIcon(QString(":/pic/closeFile.png")), p->tr("Close"), p, SLOT(fileClose()) );
@@ -193,9 +190,11 @@ CommandCreateActions(WMain *p, QMenuBar *bar) {
 
 
   QMenu *chm = new QMenu( p->tr("Channel") );
-  maChannelSimulator = chm->addAction( QIcon(QString(":/pic/computer_desktop.png")), p->tr("Execute on simulator"), SvDebugThread::mThread, SLOT(setDebugSimulate()) );
-  maChannelUsb       = chm->addAction( QIcon(QString(":/pic/chip.png")), p->tr("Execute on hardware"), SvDebugThread::mThread, SLOT(setDebugUsb()) );
-  maChannelRemote    = chm->addAction( QIcon(QString(":/pic/chip.png")), p->tr("Execute on remote"), SvDebugThread::mThread, SLOT(setDebugRemote()) );
+  maChannelSimulator = chm->addAction( QIcon(QString(":/pic/computer_desktop.png")), p->tr("Execute on simulator"), p, &WMain::mirrorLocal );
+  maChannelUsb       = chm->addAction( QIcon(QString(":/pic/chip.png")), p->tr("Execute on hardware"), p, &WMain::mirrorUsb );
+  maChannelRemote    = chm->addAction( QIcon(QString(":/pic/chip.png")), p->tr("Execute on remote"), p, &WMain::mirrorRemote );
+  maChannelBridge    = chm->addAction( QIcon(QString(":/pic/chip.png")), p->tr("Execute over bridge"), p, &WMain::mirrorBridge );
+
 
   menu = new QMenu( p->tr("Build") );
   maBuild = bar->addMenu( menu );
