@@ -468,8 +468,8 @@ void SvVpuCompiler::gOperatorDoWhile(SvProgramm *prog, SvOperatorDoWhile *svDoWh
     gValue( prog, svDoWhile->mCondition, true, false );
 
     //Переход на ложное условие
-    prog->addCodeParam24( VBC4_FALSE_JUMP, start, svDoWhile->mMark );
-    codePrintEoln( QString("VBC4_FALSE_JUMP LAB%1 //do while to body").arg(start) );
+    prog->addCodeParam24( VBC4_TRUE_JUMP, start, svDoWhile->mMark );
+    codePrintEoln( QString("VBC4_TRUE_JUMP LAB%1 //do while to body").arg(start) );
     }
 
   svDoWhile->mExitAddress = prog->codeCount();

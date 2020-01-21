@@ -28,6 +28,7 @@ struct SvVmVpu : public SvVmVpuState {
       mIp = start;
       mBp = mSp = mBaseSp = stack;
       mTm = mThrow = 0;
+      mDebugRun = true;
       }
 
     //Исполнять без остановки

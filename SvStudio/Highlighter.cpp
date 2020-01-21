@@ -87,7 +87,7 @@ void Highlighter::setLink(const QString link)
 int
 Highlighter::SkipQuotation(const QString &text, int index, int count) {
   index++;
-  while( index < count && !(text[index] == QChar('"') && text[index - 1] == QChar('\\'))  )
+  while( index < count && !(text[index] == QChar('"') && text[index - 1] != QChar('\\'))  )
     index++;
   return index < count ? index + 1 : index;
   }
@@ -138,6 +138,12 @@ Highlighter::highlightBlock(const QString &text) {
         setFormat( index, count - index, mSingleLineCommentFormat );
         return;
         }
+      }
+
+    //Проверяем строки
+    if( text[index] == QChar('"') ) {
+      index = SkipQuotation( text, index, count );
+      continue;
       }
 
     //Проверяем идентификаторы

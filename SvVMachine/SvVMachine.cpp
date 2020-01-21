@@ -73,6 +73,7 @@ bool SvVMachine::executeMethod(SvVmVpu *vpu, int methodId)
         mStack -= VPU_GET_FUN_PARAM(0);
         //Вернуть id VPU
         VPU_SET_FUN_RESULT( 2, mVpuCount++ );
+        SV_DEBUG(qDebug() << "**** task created" << mVpuCount;)
         }
       else {
         //Места под новую задачу нет, вернуть 0
@@ -413,7 +414,7 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
         break;
 
       case VBC4_PUSH_GLOBAL :     //stack[--sp] = global[param]
-        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_PUSH_GLOBAL" << VAL(PARAM24);)
+        SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC4_PUSH_GLOBAL" << PARAM24 << VAL(PARAM24);)
         MEM(--(vpu->mSp), VAL(PARAM24) );
         vpu->mIp += 4;
         break;
