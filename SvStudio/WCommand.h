@@ -33,7 +33,7 @@ extern QAction
 *maFileReceivProject,
 *maFileSave,
 *maFileSaveAll,
-*maFileSaveAs,
+*maFileSaveProjectAs,
 *maFileSaveProject,
 *maFileClose,
 *maFileCloseAll,

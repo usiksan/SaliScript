@@ -32,7 +32,7 @@ QAction
 *maFileRecentFile,
 *maFileSave,
 *maFileSaveAll,
-*maFileSaveAs,
+*maFileSaveProjectAs,
 *maFileSaveProject,
 *maFileClose,
 *maFileCloseAll,
@@ -146,7 +146,7 @@ CommandCreateActions(WMain *p, QMenuBar *bar) {
 
   menu->addSeparator();
   maFileSave = menu->addAction( QIcon(QString(":/pic/save.png")), p->tr("Save"), p, SLOT(fileSave()), QString("Ctrl+S") );
-  maFileSaveAs = menu->addAction( QIcon(QString(":/pic/save_as.png")), p->tr("Save as..."), p, SLOT(fileSaveAs()) );
+  maFileSaveProjectAs = menu->addAction( QIcon(QString(":/pic/save_as.png")), p->tr("Save as..."), p, SLOT(fileSaveAs()) );
   maFileClose = menu->addAction( QIcon(QString(":/pic/closeFile.png")), p->tr("Close"), p, SLOT(fileClose()) );
   maFileCloseAll = menu->addAction( QIcon(QString(":/pic/save_as.png")), p->tr("Close all"), p, SLOT(fileCloseAll()) );
 

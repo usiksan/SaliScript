@@ -362,7 +362,7 @@ void WCModeEditor::updateCommand()
   bool editorPresent = mEditorTab->count() != 0;
   maFileClose->setEnabled( editorPresent );
   maFileCloseAll->setEnabled( editorPresent );
-  maFileSaveAs->setEnabled( editorPresent );
+  maFileSaveProjectAs->setEnabled( editorPresent );
   }
 
 

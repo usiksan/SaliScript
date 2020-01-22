@@ -23,8 +23,25 @@ RESOURCES += \
 
 
 SOURCES += \
+  SvDebug/SvSymbol.cpp \
+  SvDebug/SvUtils.cpp \
+  SvDebug/WCommand.cpp \
+  SvDebug/WDebugTable.cpp \
+  SvDebug/WMain.cpp \
+  SvDebug/WOscillograph.cpp \
   SvDebug/bug.cpp \
-  SvDebug/main.cpp
+  SvDebug/main.cpp \
+  SvHost/SvDir.cpp
 
 
 DISTFILES +=
+
+HEADERS += \
+  SvDebug/SvConfig.h \
+  SvDebug/SvSymbol.h \
+  SvDebug/SvUtils.h \
+  SvDebug/WCommand.h \
+  SvDebug/WDebugTable.h \
+  SvDebug/WMain.h \
+  SvDebug/WOscillograph.h \
+  SvHost/SvDir.h
