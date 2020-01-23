@@ -42,15 +42,14 @@ class WMain : public QMainWindow
      //Ячейка с отлаживаемыми переменными
      WDebugTable      *mDebugVar;        //Окно со списком мониторенных переменных
 
-     bool              mVarChangeLock;   //Блокировка от изменения ячейки внутренними средствами
+    QString            mElfPath;         //Путь к файлу elf
+    QDateTime          mElfTime;         //Время последней модификации elf файла
+    QString            mPrjPath;         //Путь к файлу проекта
+    QString            mSymPath;         //Путь к файлу с таблицей символов
 
-     QString           mElfPath;         //Путь к файлу elf
-     QDateTime         mElfTime;         //Время последней модификации elf файла
-     QString           mPrjPath;         //Путь к файлу проекта
-     QString           mSymPath;         //Путь к файлу с таблицей символов
-
-     SvSymbolMap       mSymbolMap;
-     QMap<int,quint32> mRowMap;
+    SvSymbolMap        mSymbolMap;       //Таблица символов
+    QMap<int,quint32>  mRowMap;          //Таблица соответствия адресов ряду в визуальной таблице монитора переменных
+    QTimer             mSerialTimer;     //Таймер для обеспечения подключения
 
   public:
     WMain( QWidget *parent = nullptr );
@@ -68,10 +67,13 @@ class WMain : public QMainWindow
 
     void debugClearLog();
 
+    void settings();
+
     void helpContens();
     void helpWeb();
     void helpAbout();
 
+    void serialTimer();
 
   private:
     //Установить заголовок в соотвествии с проектом

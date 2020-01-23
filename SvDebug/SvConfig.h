@@ -8,12 +8,13 @@
     22.01.2020 v0.2  Довел до безошибочной компиляции
                v0.3  Добавил колонку со списком доступных переменных
                v0.4  Добавил поддержку прежних проектов
+    23.01.2020 v0.5  Добавляю диалог настройки порта отладки
 */
 
 #ifndef SVCONFIG
 #define SVCONFIG
 
-#define SV_VERSION "v0.4"
+#define SV_VERSION "v0.5"
 
 #define PATH_HELP              ""
 #define EXTENSION_PROJECT      ".svdebug"
@@ -39,6 +40,9 @@
 #define CFG_BRIDGE_PORT       "bridge port"
 #define CFG_BRIDGE_ID         "bridge id"
 #define CFG_BRIDGE_PASSW      "bridge passw"
+
+#define CFG_DEBUG_PORT        "debug port"
+#define CFG_DEBUG_BAUDRATE    "debug baudrate"
 
 #define CFG_OSCIL_ROW_MAX     "osc row max"  //Максимальное количество выборок в осциллографе
 #define CFG_OSCIL_MODE        "osc mode"     //Режим работы

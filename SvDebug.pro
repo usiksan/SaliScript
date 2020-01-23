@@ -26,6 +26,7 @@ SOURCES += \
   SvDebug/SvSymbol.cpp \
   SvDebug/SvUtils.cpp \
   SvDebug/WCommand.cpp \
+  SvDebug/WDPortSettings.cpp \
   SvDebug/WDebugTable.cpp \
   SvDebug/WMain.cpp \
   SvDebug/WOscillograph.cpp \
@@ -42,7 +43,11 @@ HEADERS += \
   SvDebug/SvSymbol.h \
   SvDebug/SvUtils.h \
   SvDebug/WCommand.h \
+  SvDebug/WDPortSettings.h \
   SvDebug/WDebugTable.h \
   SvDebug/WMain.h \
   SvDebug/WOscillograph.h \
   SvHost/SvDir.h
+
+FORMS += \
+  SvDebug/WDPortSettings.ui

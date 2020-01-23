@@ -27,6 +27,9 @@ QAction
 *maDebug,
 *maDebugClearLog, //Очистить лог
 
+//Меню Настройки
+*maSettings,
+
 //Меню Справка
 *maHelp,
 *maHelpContens,
@@ -75,9 +78,12 @@ CommandCreateActions(WMain *p, QMenuBar *bar) {
 
   menu = new QMenu( p->tr("Debug") );
   maDebug = bar->addMenu( menu );
-  maDebugClearLog = menu->addAction( QIcon(QString(":/pic/clearLog32.png")), p->tr("Clear log list") );
+  maDebugClearLog = menu->addAction( QIcon(QString(":/pic/clearLog32.png")), p->tr("Clear log list"), p, &WMain::debugClearLog );
 
 
+  menu = new QMenu( p->tr("Settings") );
+  bar->addMenu( menu );
+  maSettings = menu->addAction( p->tr("Settings..."), p, &WMain::settings );
 
 
   menu = new QMenu( p->tr("Help") );

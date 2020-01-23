@@ -1,3 +1,11 @@
+/*
+  Проект "SvDebug"
+    IDE отладки проектов в динамике
+  Автор
+    Сибилев А.С.
+  Описание
+    Диалоговое окно настроек порта
+*/
 #ifndef WDPORTSETTINGS_H
 #define WDPORTSETTINGS_H
 
@@ -17,6 +25,10 @@ class WDPortSettings : public QDialog
 
   private:
     Ui::WDPortSettings *ui;
+
+    // QDialog interface
+  public slots:
+    virtual void accept() override;
   };
 
 #endif // WDPORTSETTINGS_H

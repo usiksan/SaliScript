@@ -11,6 +11,7 @@
 #include "WCommand.h"
 #include "SvHost/SvDir.h"
 #include "SvUtils.h"
+#include "WDPortSettings.h"
 
 #include <QToolBar>
 #include <QActionGroup>
@@ -34,7 +35,8 @@
 
 
 WMain::WMain(QWidget *parent)
-  : QMainWindow(parent)
+  : QMainWindow(parent),
+    mSerial(nullptr)
   {
   //Создать систему команд
   CommandCreateActions( this, menuBar() );
@@ -233,6 +235,22 @@ void WMain::debugClearLog()
 
 
 
+void WMain::settings()
+  {
+  WDPortSettings portSettings( this );
+  if( portSettings.exec() ) {
+    if( mSerial ) {
+      mSerial->close();
+      mSerial->deleteLater();
+      mSerial = nullptr;
+      }
+    }
+  }
+
+
+
+
+
 
 void WMain::helpContens()
   {
@@ -258,6 +276,11 @@ void WMain::helpAbout()
   {
   //Вывести диалог с версией
   QMessageBox::about( this, tr("About Sali SvDebug"), tr("SaliLAB SvDebug is realtime embedded variable monitoring tool. /nVersion %1").arg( SV_VERSION ) );
+  }
+
+void WMain::serialTimer()
+  {
+
   }
 
 

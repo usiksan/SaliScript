@@ -26,6 +26,9 @@ extern QAction
 *maDebug,
 *maDebugClearLog, //Очистить лог
 
+//Меню Настройки
+*maSettings,
+
 //Меню Справка
 *maHelp,
 *maHelpContens,

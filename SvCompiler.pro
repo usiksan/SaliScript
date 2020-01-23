@@ -70,3 +70,5 @@ SOURCES += \
   SvCompilerMain.cpp \
   SvHost/SvProgramm.cpp
 
+FORMS +=
+
