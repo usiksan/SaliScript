@@ -31,6 +31,7 @@ SOURCES += \
   SvDebug/WOscillograph.cpp \
   SvDebug/bug.cpp \
   SvDebug/main.cpp \
+  SvHost/7bit.cpp \
   SvHost/SvDir.cpp
 
 

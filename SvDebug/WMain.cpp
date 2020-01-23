@@ -10,6 +10,7 @@
 #include "WMain.h"
 #include "WCommand.h"
 #include "SvHost/SvDir.h"
+#include "SvUtils.h"
 
 #include <QToolBar>
 #include <QActionGroup>
@@ -28,6 +29,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QProcess>
+#include <QProgressDialog>
 #include <QDebug>
 
 
@@ -77,6 +79,8 @@ WMain::WMain(QWidget *parent)
   connect( mSymbolTable, &QListWidget::itemDoubleClicked, this, [this] (QListWidgetItem *item) {
     mDebugVar->debugAppend( item->text() );
     });
+
+  updateRecentProject();
   }
 
 
@@ -178,6 +182,32 @@ void WMain::fileProjectOpen(const QString fname)
 
   //Установить новый заголовок
   setupTitle();
+
+  //Добавить проект в список прежних проектов
+  QSettings s;
+  QStringList list;
+  if( s.contains(CFG_PROJECTS) ) {
+    //Получить список
+    list = s.value(CFG_PROJECTS).toStringList();
+    //Проверить, есть ли в списке нужный проект
+    int i = findInList( fname, list );
+    if( i >= 0 ) {
+      //Вынести наверх
+      list.removeAt( i );
+      }
+    else {
+      //Удалить последний
+      while( list.count() >= MAX_RECENT_PROJECT )
+        list.removeLast();
+      }
+    list.insert( 0, fname );
+    }
+  else list.append( fname );
+
+  s.setValue( CFG_PROJECTS, list );
+
+  updateRecentProject();
+
   }
 
 
@@ -248,6 +278,11 @@ void WMain::setupTitle()
 //Обновить таблицу символов
 void WMain::updateSymbolTable()
   {
+  QProgressDialog progress("Parsing available variables...", "Abort parsing", 0, 1000, this);
+  progress.setWindowModality(Qt::WindowModal);
+  progress.setMinimumDuration(10);
+  progress.setValue( 1 );
+
   //Выполнить вывод таблицы символов
   QProcess readelf;
   readelf.start( "readelf", QStringList() << "-s" << "-W" << mElfPath );
@@ -263,6 +298,7 @@ void WMain::updateSymbolTable()
   mSymbolMap.clear();
   mSymbolTable->clear();
 
+  int count = 2;
   QTextStream is( result );
   //Теперь парсим построчно данную таблицу
   while( !is.atEnd() ) {
@@ -275,9 +311,39 @@ void WMain::updateSymbolTable()
       QString symbol = line.mid( 51 ).simplified();
       mSymbolMap.insert( symbol, sm );
       mSymbolTable->addItem( symbol );
+      progress.setValue( count++ );
       //qDebug() << symbol << sm.mAddress << sm.mLenght;
       }
     }
+  }
+
+
+
+
+
+
+//Обновить список последних загруженных проектов
+void WMain::updateRecentProject()
+  {
+  QSettings s;
+  QStringList list;
+  if( s.contains(CFG_PROJECTS) )
+    //Получить список
+    list = s.value(CFG_PROJECTS).toStringList();
+
+
+  //Изменить меню прежних проектов
+  for( int i = 0; i < MAX_RECENT_PROJECT; ++i )
+    if( i < list.count() ) {
+      QFileInfo info( list.at(i) );
+      maRecentProject[i]->setText( info.completeBaseName() );
+      maRecentProject[i]->setData( list.at(i) );
+      maRecentProject[i]->setToolTip( list.at(i) );
+      maRecentProject[i]->setVisible(true);
+      }
+    else maRecentProject[i]->setVisible(false);
+
+  maFileRecentProject->setEnabled( list.count() != 0 );
   }
 
 

@@ -80,6 +80,9 @@ class WMain : public QMainWindow
     //Обновить таблицу символов
     void updateSymbolTable();
 
+    //Обновить список последних загруженных проектов
+    void updateRecentProject();
+
     // QWidget interface
   protected:
     virtual void closeEvent(QCloseEvent *ev);

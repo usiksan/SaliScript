@@ -7,12 +7,13 @@
     21.01.2020 v0.1  Начал проект
     22.01.2020 v0.2  Довел до безошибочной компиляции
                v0.3  Добавил колонку со списком доступных переменных
+               v0.4  Добавил поддержку прежних проектов
 */
 
 #ifndef SVCONFIG
 #define SVCONFIG
 
-#define SV_VERSION "v0.3"
+#define SV_VERSION "v0.4"
 
 #define PATH_HELP              ""
 #define EXTENSION_PROJECT      ".svdebug"
