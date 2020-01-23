@@ -12,12 +12,13 @@
                v0.6  Добавлено чтение из порта отладки
                      Сделал формирование лога
                      Сделал запросы на состояние переменной и дешифровку ответов
+               v0.7  Не делаю запросы на состояние переменной если переменная редактируется
 */
 
 #ifndef SVCONFIG
 #define SVCONFIG
 
-#define SV_VERSION "v0.6"
+#define SV_VERSION "v0.7"
 
 #define PATH_HELP              ""
 #define EXTENSION_PROJECT      ".svdebug"

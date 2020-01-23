@@ -57,7 +57,7 @@ WDebugTable::WDebugTable(QWidget *parent):
 
   //Настроить таймер для опроса переменных
   connect( &mTimer, &QTimer::timeout, this, &WDebugTable::onTimer );
-  mTimer.start( 2000 );
+  mTimer.start( 20 );
   }
 
 
@@ -213,6 +213,15 @@ void WDebugTable::onTimer()
       item( mCurrentRow,DE_VAR_ADDR)->setText( QString("") );
       continue;
       }
+
+    //Если какая либо ячейка в данном ряду редактируется, то пропускаем данную переменную
+    bool edit = false;
+    for( int i = 0; i < DE_VAR_LAST && !edit; i++ )
+      if( isPersistentEditorOpen( model()->index( mCurrentRow, i ) ) )
+        edit = true;
+
+    if( edit ) continue;
+
     int arrayIndex = 0;
 
     std::tie(varName, arrayIndex) = nameParse( varName );
