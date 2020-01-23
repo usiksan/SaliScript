@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network
+QT       += core gui network serialport
 
 CONFIG += c++17
 
@@ -47,6 +47,7 @@ HEADERS += \
   SvDebug/WDebugTable.h \
   SvDebug/WMain.h \
   SvDebug/WOscillograph.h \
+  SvHost/7bit.h \
   SvHost/SvDir.h
 
 FORMS += \

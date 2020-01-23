@@ -12,6 +12,7 @@
 #include "SvHost/SvDir.h"
 #include "SvUtils.h"
 #include "WDPortSettings.h"
+#include "SvHost/7bit.h"
 
 #include <QToolBar>
 #include <QActionGroup>
@@ -32,6 +33,7 @@
 #include <QProcess>
 #include <QProgressDialog>
 #include <QDebug>
+#include <QtSerialPort/QSerialPortInfo>
 
 
 WMain::WMain(QWidget *parent)
@@ -83,6 +85,13 @@ WMain::WMain(QWidget *parent)
     });
 
   updateRecentProject();
+
+  //Таймер подключения
+  connect( &mSerialTimer, &QTimer::timeout, this, &WMain::serialTimer );
+  mSerialTimer.start(1000);
+
+  connect( mDebugVar, &WDebugTable::queryVariable, this, &WMain::queryVariable );
+  connect( mDebugVar, &WDebugTable::setVariableValue, this, &WMain::setVariable );
   }
 
 
@@ -278,9 +287,184 @@ void WMain::helpAbout()
   QMessageBox::about( this, tr("About Sali SvDebug"), tr("SaliLAB SvDebug is realtime embedded variable monitoring tool. /nVersion %1").arg( SV_VERSION ) );
   }
 
+
+
+
+
+
 void WMain::serialTimer()
   {
+  //Если порта еще нет, то подключиться
+  if( mSerial == nullptr ) {
+    QSettings s;
+    mSerial = new QSerialPort( s.value( CFG_DEBUG_PORT, QStringLiteral("/dev/ttyUSB0") ).toString() );
+    if( mSerial->open( QIODevice::ReadWrite ) ) {
+      mSerial->setBaudRate( s.value( CFG_DEBUG_BAUDRATE, QStringLiteral("115200") ).toString().toInt() );
+      connect( mSerial, &QSerialPort::readyRead, this, &WMain::serialRead );
 
+      mLogList->addItem( tr("Serial port %1 baudrate %2").arg(mSerial->portName()).arg(mSerial->baudRate()) );
+      }
+    else {
+      mSerial->deleteLater();
+      mSerial = nullptr;
+      }
+    }
+  }
+
+
+
+
+void WMain::serialRead()
+  {
+  //Пока доступны строки - читаем эти строки
+  while( mSerial->canReadLine() ) {
+
+    //Прочитать строку одновременно удалив из нее спецсимволы
+    QByteArray data( mSerial->readLine().simplified() );
+
+    char cmd = data[0];
+    switch( cmd & 0xc0 ) {
+      case 0x40 :
+        if( data.length() == 9 ) {
+          //Данные с 32-разрядным словом
+          quint32 addr = 0;
+          qint32 val = 0;
+          addr = data[4] & 0x7;
+          addr <<= 7;
+          addr |= data[3] & 0x7f;
+          addr <<= 7;
+          addr |= data[2] & 0x7f;
+          addr <<= 7;
+          addr |= data[1] & 0x7f;
+          addr <<= 6;
+          addr |= data[0] & 0x3f;
+          addr <<= 2;
+          //Данные
+          val = data[8] & 0x7f;
+          val <<= 7;
+          val |= data[7] & 0x7f;
+          val <<= 7;
+          val |= data[6] & 0x7f;
+          val <<= 7;
+          val |= data[5] & 0x7f;
+          val <<= 4;
+          val |= (data[4] >> 3) & 0xf;
+          if( mRowMap.contains(addr) )
+            mDebugVar->onVariableValue( mRowMap.value(addr), addr, val );
+          }
+        break;
+      case 0x80 :
+        if( data.length() == 7 ) {
+          //Данные с 16-разрядным словом
+          quint32 addr = 0;
+          qint16 val = 0;
+          addr = data[4] & 0xf;
+          addr <<= 7;
+          addr |= data[3] & 0x7f;
+          addr <<= 7;
+          addr |= data[2] & 0x7f;
+          addr <<= 7;
+          addr |= data[1] & 0x7f;
+          addr <<= 6;
+          addr |= data[0] & 0x3f;
+          addr <<= 1;
+          //Данные
+          val = data[6] & 0x3f;
+          val <<= 7;
+          val |= data[5] & 0x7f;
+          val <<= 3;
+          val |= (data[4] >> 4) & 0x7;
+          if( mRowMap.contains(addr) )
+            mDebugVar->onVariableValue( mRowMap.value(addr), addr, val );
+          }
+        break;
+      case 0xc0 :
+        if( data.length() == 6 ) {
+          //Данные с 8-разрядным словом
+          quint32 addr = 0;
+          qint8 val = 0;
+          addr = data[4] & 0x1f;
+          addr <<= 7;
+          addr |= data[3] & 0x7f;
+          addr <<= 7;
+          addr |= data[2] & 0x7f;
+          addr <<= 7;
+          addr |= data[1] & 0x7f;
+          addr <<= 6;
+          addr |= data[0] & 0x3f;
+          //Данные
+          val = data[5] & 0x3f;
+          val <<= 2;
+          val |= (data[4] >> 5) & 0x3;
+          if( mRowMap.contains(addr) )
+            mDebugVar->onVariableValue( mRowMap.value(addr), addr, val );
+          }
+        break;
+      default :
+        //Это простое текстовое сообщение - добавим в лог
+        mLogList->addItem( QString::fromLatin1(data) );
+        //Едем в конец списка
+        mLogList->scrollToItem( mLogList->item( mLogList->count() - 1) );
+        if( mLogList->count() > 2000 )
+          mLogList->model()->removeRow( 0 );
+        break;
+      }
+    }
+
+  }
+
+
+
+
+void WMain::queryVariable(int row, const QString name, int arrayIndex)
+  {
+  if( mSymbolMap.contains(name) && mSerial ) {
+    //Переменная есть в таблице
+    SvSymbol sym = mSymbolMap.value(name);
+    char data[20];
+    quint32 addr = sym.mAddress + arrayIndex;
+    if( sym.mLenght == 4 )
+      r32to7( addr, data );
+    else if( sym.mLenght == 2 )
+      r16to7( addr, data );
+    else if( sym.mLenght == 1 )
+      r8to7( addr, data );
+    else {
+      mDebugVar->onVariableValue( row, 0, 0 );
+      return;
+      }
+    mRowMap.insert( addr, row );
+    qDebug() << data;
+    mSerial->write( data );
+    }
+  else {
+    //Переменной нету в таблице
+    mDebugVar->onVariableValue( row, 0, 0 );
+    }
+  }
+
+
+
+
+void WMain::setVariable(const QString name, int arrayIndex, int value)
+  {
+  if( mSymbolMap.contains(name) && mSerial ) {
+    //Переменная есть в таблице
+    SvSymbol sym = mSymbolMap.value(name);
+    char data[20];
+    quint32 addr = sym.mAddress + arrayIndex;
+    if( sym.mLenght == 4 )
+      w32to7( addr, value, data );
+    else if( sym.mLenght == 2 )
+      w16to7( addr, static_cast<short>(value), data );
+    else if( sym.mLenght == 1 )
+      w8to7( addr, static_cast<char>(value), data );
+    else {
+      return;
+      }
+    qDebug() << data;
+    mSerial->write( data );
+    }
   }
 
 

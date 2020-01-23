@@ -37,7 +37,7 @@ class WDebugTable: public QTableWidget
 
     void    queryVariable( int row, const QString name, int arrayIndex );
 
-    void    setVariable( const QString name, int arrayIndex, int value );
+    void    setVariableValue( const QString name, int arrayIndex, int value );
 
   public slots:
     void    clearVariables();

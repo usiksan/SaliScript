@@ -48,7 +48,7 @@ class WMain : public QMainWindow
     QString            mSymPath;         //Путь к файлу с таблицей символов
 
     SvSymbolMap        mSymbolMap;       //Таблица символов
-    QMap<int,quint32>  mRowMap;          //Таблица соответствия адресов ряду в визуальной таблице монитора переменных
+    QMap<quint32,int>  mRowMap;          //Таблица соответствия адресов ряду в визуальной таблице монитора переменных
     QTimer             mSerialTimer;     //Таймер для обеспечения подключения
 
   public:
@@ -74,6 +74,11 @@ class WMain : public QMainWindow
     void helpAbout();
 
     void serialTimer();
+    void serialRead();
+
+    void queryVariable( int row, const QString name, int arrayIndex );
+
+    void setVariable( const QString name, int arrayIndex, int value );
 
   private:
     //Установить заголовок в соотвествии с проектом

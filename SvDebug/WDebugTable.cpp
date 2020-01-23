@@ -57,7 +57,7 @@ WDebugTable::WDebugTable(QWidget *parent):
 
   //Настроить таймер для опроса переменных
   connect( &mTimer, &QTimer::timeout, this, &WDebugTable::onTimer );
-  mTimer.start( 20 );
+  mTimer.start( 2000 );
   }
 
 
@@ -176,7 +176,7 @@ void WDebugTable::debugVariable(int row, int column)
       value = val.toInt();
 
     //Отправить запрос на изменение переменной
-    emit setVariable( varName, arrayIndex, value );
+    emit setVariableValue( varName, arrayIndex, value );
     }
   else if( column == DE_VAR_AXIZ ) {
     //Изменен номер оси, поменять цвет
