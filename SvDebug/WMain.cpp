@@ -54,6 +54,8 @@ WMain::WMain(QWidget *parent)
   //============================================
   //Колонка 2 таблица доступных символов
   mSymbolTable = new QListWidget();
+  //Будем сортировать таблицу символов, а то там хрен-чего найдешь
+  mSymbolTable->setSortingEnabled(true);
   mCentral->addWidget( mSymbolTable );
 
   //============================================
