@@ -309,6 +309,15 @@ void WMain::serialTimer()
       mSerial = nullptr;
       }
     }
+
+  //Проверить дату выходного файла, при необходимости обновить таблицу символов
+  QFileInfo info( mElfPath );
+  if( info.lastModified() > mElfTime ) {
+    //Сохранить время последнего изменения
+    mElfTime = info.lastModified();
+    //Обновить таблицу символов
+    updateSymbolTable();
+    }
   }
 
 
