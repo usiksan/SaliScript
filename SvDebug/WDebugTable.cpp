@@ -57,7 +57,7 @@ WDebugTable::WDebugTable(QWidget *parent):
 
   //Настроить таймер для опроса переменных
   connect( &mTimer, &QTimer::timeout, this, &WDebugTable::onTimer );
-  mTimer.start( 20 );
+  mTimer.start( 40 );
   }
 
 
