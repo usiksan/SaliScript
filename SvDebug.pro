@@ -33,7 +33,10 @@ SOURCES += \
   SvDebug/bug.cpp \
   SvDebug/main.cpp \
   SvHost/7bit.cpp \
-  SvHost/SvDir.cpp
+  SvHost/SvDir.cpp \
+  SvHost/SvTextStream.cpp \
+  SvHost/SvTextStreamIn.cpp \
+  SvHost/SvTextStreamOut.cpp
 
 
 DISTFILES +=
@@ -48,7 +51,10 @@ HEADERS += \
   SvDebug/WMain.h \
   SvDebug/WOscillograph.h \
   SvHost/7bit.h \
-  SvHost/SvDir.h
+  SvHost/SvDir.h \
+  SvHost/SvTextStream.h \
+  SvHost/SvTextStreamIn.h \
+  SvHost/SvTextStreamOut.h
 
 FORMS += \
   SvDebug/WDPortSettings.ui
