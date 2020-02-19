@@ -43,6 +43,7 @@ HEADERS += \
   SvCompiler/SvCompiler.h \
   SvCompiler/SvVpuCompiler.h \
   SvHost/SvDir.h \
+  SvHost/SvHandler.h \
   SvHost/SvMirror.h \
   SvHost/SvMirrorCom.h \
   SvHost/SvMirrorExtern.h \
@@ -57,6 +58,9 @@ HEADERS += \
   SvNet/SvNetBridgeMaster.h \
   SvNet/SvNetBridgeSlave.h \
   SvNet/SvNetChannel.h \
+  SvNet/SvNetHandler.h \
+  SvNet/SvNetHandlerFile.h \
+  SvNet/SvNetHandlerMirror.h \
   SvNet/SvNetLocalMaster.h \
   SvNet/SvNetLocalSlave.h \
   SvNet/SvNetPacketInfo.h \
@@ -138,6 +142,7 @@ SOURCES += \
   SvCompiler/SvVpuCompiler1.cpp \
   SvCompiler/SvVpuCompiler2.cpp \
   SvHost/SvDir.cpp \
+  SvHost/SvHandler.cpp \
   SvHost/SvMirror.cpp \
   SvHost/SvMirrorCom.cpp \
   SvHost/SvMirrorExtern.cpp \
@@ -151,6 +156,9 @@ SOURCES += \
   SvNet/SvNetBridgeMaster.cpp \
   SvNet/SvNetBridgeSlave.cpp \
   SvNet/SvNetChannel.cpp \
+  SvNet/SvNetHandler.cpp \
+  SvNet/SvNetHandlerFile.cpp \
+  SvNet/SvNetHandlerMirror.cpp \
   SvNet/SvNetLocalMaster.cpp \
   SvNet/SvNetLocalSlave.cpp \
   SvNet/SvNetPacketInfo.cpp \

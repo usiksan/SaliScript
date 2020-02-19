@@ -52,9 +52,27 @@ class SvMirrorExtern : public SvMirror
     QMap<int, int>        mWriteValues; //Перечень записываемых значений индекс(ключ)-значение
     QMutex                mWriteMutex;  //Механизм защиты от сдвоенного доступа
 
+    QString               mControllerType;
+    QString               mProgrammName;
+    bool                  mNeedFlash;
+    bool                  mRunOrPause;
   public:
     SvMirrorExtern();
     virtual ~SvMirrorExtern() override;
+
+    //!
+    //! \brief controllerType Return current linked controller type name string
+    //! \return Current linked controller type name string. If no controller linked
+    //!         then empty string returned
+    //!
+    virtual QString controllerType() const override { return mControllerType; }
+
+
+    //!
+    //! \brief programmName Return programm name loaded into controller
+    //! \return Programm name loaded into controller
+    //!
+    virtual QString programmName() const override { return mProgrammName; }
 
 
     //!

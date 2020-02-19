@@ -31,6 +31,18 @@ class SvMirrorLocal : public SvMirror
     SvMirrorLocal(SvVMachineLocal *controller);
     virtual ~SvMirrorLocal() override;
 
+    //!
+    //! \brief controllerType Return current linked controller type name string
+    //! \return Current linked controller type name string. If no controller linked
+    //!         then empty string returned
+    //!
+    virtual QString controllerType() const override;
+
+    //!
+    //! \brief programmName Return programm name loaded into controller
+    //! \return Programm name loaded into controller
+    //!
+    virtual QString programmName() const override;
 
     //!
     //! \brief addressOfName Return address of symbol or zero if name not defined

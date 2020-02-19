@@ -5,9 +5,8 @@
     Сибилев А.С.
   Описание
 */
-#if 0
 #include "SvMirrorRemote.h"
-#include "SvNetClientMirror.h"
+#include "SvNet/SvNetHandlerMirror.h"
 
 #include <QHostAddress>
 #include <QDir>
@@ -17,35 +16,34 @@
 #include <QCryptographicHash>
 #include <QDataStream>
 
-SvMirrorRemote::SvMirrorRemote(const QString remoteIp, int remotePort, const QString bridgeName, const QString bridgePassw) :
-  SvMirrorExtern( remoteIp ),
-  mRemoteId(0),    //Id удаленной машины
-  mRemotePassw(0), //Passw удаленной машины
-  mTime(0)
+enum {
+  FSM_IDLE,
+  FSM_WAIT_RECONNECT,
+  FSM_CONNECT,
+  FSM_WAIT_CONNECTION,
+  FSM_QUERY_INFO,
+  FSM_WAIT_INFO,
+  FSM_SEND_PROGRAMM,
+  FSM_WAIT_PROGRAMM,
+  FSM_SEND_VARIABLES,
+  FSM_WAIT_ACK_VARIABLES,
+  FSM_QUERY_VARIABLES,
+  FSM_WAIT_VARIABLES,
+  FSM_QUERY_LOG,
+  FSM_WAIT_LOG,
+  FSM_SEND_DEBUG,
+  FSM_WAIT_ACK_DEBUG,
+  FSM_QUERY_TASK,
+  FSM_WAIT_TASK
+  };
+
+
+
+SvMirrorRemote::SvMirrorRemote() :
+  SvMirrorExtern(),
+  mChannel(nullptr),
+  mFsmCurrent(FSM_IDLE)
   {
-  if( svNetClientMirror ) {
-    connect( this, &SvMirrorRemote::linkToBridge, svNetClientMirror, &SvNetClientMirror::linkToBridge );
-    connect( this, &SvMirrorRemote::linkTo, svNetClientMirror, &SvNetClientMirror::linkTo );
-    connect( svNetClientMirror, &SvNetClientMirror::linkStatus, this, &SvMirrorRemote::linkStatus );
-    connect( this, &SvMirrorRemote::getProjectDir, svNetClientMirror, &SvNetClientMirror::getProjectDir );
-    connect( svNetClientMirror, &SvNetClientMirror::receivedProjectDir, this, [this] ( const QString dir ) {
-      mRemoteDir = dir;
-      });
-    connect( svNetClientMirror, &SvNetClientMirror::queueOperation, this, [this] ( int count, const QString descr ) {
-      setProcess( descr, count != 0 );
-      });
-    connect( svNetClientMirror, &SvNetClientMirror::blockTransfer, this, [this] ( int pos, int range ) {
-      Q_UNUSED(range)
-      setProcess( tr("Transfer %1 bytes").arg(pos) );
-      });
-    connect( this, &SvMirrorRemote::pushList, svNetClientMirror, &SvNetClientMirror::pushList );
-    connect( this, &SvMirrorRemote::sendCompileFlashRun, svNetClientMirror, &SvNetClientMirror::compileFlashRun );
-    connect( this, &SvMirrorRemote::sendVpuStateGet, svNetClientMirror, &SvNetClientMirror::sendVpuStateGet );
-    connect( svNetClientMirror, &SvNetClientMirror::receivedVpuState, this, &SvMirrorRemote::receivedVpuState );
-    connect( this, &SvMirrorRemote::sendVars, svNetClientMirror, &SvNetClientMirror::sendVars );
-    connect( this, &SvMirrorRemote::sendRestart, svNetClientMirror, &SvNetClientMirror::restart );
-    connect( svNetClientMirror, &SvNetClientMirror::receivedLog, this, &SvMirrorRemote::receivedLog );
-    }
   }
 
 
@@ -57,6 +55,171 @@ SvMirrorRemote::~SvMirrorRemote()
 
 
 
+void SvMirrorRemote::linkTo(const QString ipOrUsb, int port, const QString controllerName, const QString controllerPassw)
+  {
+  mIp   = ipOrUsb;
+  mPort = port;
+  reconnect();
+  }
+
+
+
+
+void SvMirrorRemote::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause)
+  {
+  mProgramm   = prog;
+  mRunOrPause = runOrPause;
+  mNeedFlash  = true;
+  }
+
+
+
+
+void SvMirrorRemote::processing(int tickOffset)
+  {
+  switch( mFsmCurrent ) {
+    case FSM_IDLE :
+      //Do nothing
+      break;
+
+
+
+    case FSM_WAIT_RECONNECT :
+      mTimeOut -= tickOffset;
+      if( mTimeOut < 0 )
+        mFsmCurrent = FSM_CONNECT;
+      break;
+
+
+
+    case FSM_CONNECT :
+      //Need connection
+      if( mIp.isEmpty() || mPort == 0 )
+        mFsmCurrent = FSM_IDLE;
+      else if( mChannel->getSocket()->state() == QAbstractSocket::UnconnectedState ) {
+
+        //Try to connect with current ip and port settings
+        mChannel->getSocket()->connectToHost( QHostAddress(mIp), mPort );
+
+        //Connection timeout
+        mTimeOut = 1000;
+        mFsmCurrent = FSM_WAIT_CONNECTION;
+        }
+      break;
+
+
+    case FSM_WAIT_CONNECTION :
+      if( mChannel->getSocket()->state() == QAbstractSocket::ConnectedState ) {
+        //Connection established
+        mFsmCurrent = FSM_QUERY_INFO;
+        }
+      else if( mTimeOut < 0 ) {
+        //Connection failure
+        mTimeOut = 1000;
+        mFsmCurrent = FSM_WAIT_RECONNECT;
+        }
+      break;
+
+
+
+    case FSM_QUERY_INFO :
+      mChannel->sendBlock( mChannel, SVC_MIRROR_INFO, SvNetMirrorInfo( QString{}, QString{} ).buildBlock() );
+      mFsmCurrent = FSM_WAIT_INFO;
+      mTimeOut = 1000;
+      break;
+
+
+    case FSM_WAIT_PROGRAMM :
+    case FSM_WAIT_INFO :
+      mTimeOut -= tickOffset;
+      if( mTimeOut < 0 )
+        reconnect();
+      break;
+
+
+
+    case FSM_SEND_PROGRAMM :
+      if( mNeedFlash ) {
+        mChannel->sendBlock( mChannel, SVC_MIRROR_PROGRAMM, SvNetMirrorProgramm::buildBlock( mRunOrPause, mProgramm->toArray() ) );
+        mFsmCurrent = FSM_WAIT_PROGRAMM;
+        mTimeOut = 3000;
+        }
+      else
+        mFsmCurrent = FSM_SEND_VARIABLES;
+      break;
+
+
+
+    case FSM_SEND_VARIABLES :
+      if( mWriteQueue.count() ) {
+        //There are values for write
+        //Блокиратор сдвоенного доступа к очереди
+        QMutexLocker locker(&mWriteMutex);
+
+        mChannel->sendBlock( mChannel, SVC_MIRROR_PROGRAMM, SvNetMirrorWrite::buildBlock( mWriteQueue, mWriteValues ) );
+        mFsmCurrent = FSM_WAIT_ACK_VARIABLES;
+        mTimeOut = 3000;
+        }
+
+
+    ,
+    FSM_QUERY_VARIABLES,
+    FSM_WAIT_VARIABLES,
+    FSM_QUERY_LOG,
+    FSM_WAIT_LOG,
+    FSM_SEND_DEBUG,
+    FSM_WAIT_ACK_DEBUG,
+    FSM_QUERY_TASK,
+    FSM_WAIT_TASK
+
+    }
+
+  mTimeOut -= tickOffset;
+  if( mTimeOut < 0 ) {
+    mTimeOut = 1000;
+      //Socket not connected yet
+
+      else
+        //Socket in connection process phase
+        mTimeOut = 0;
+      return;
+      }
+
+    //Socket connected
+
+    //Request controller type and loaded programm
+
+    //Request flash programm
+
+    //Request variables set
+
+    //Request variables get
+
+    //Request task state
+    }
+  }
+
+
+
+void SvMirrorRemote::init()
+  {
+  mChannel = new SvNetChannel( new QTcpSocket() );
+//  connect( mChannel->getSocket(), &QTcpSocket::connected, this, [this] {
+//    emit linkChanged( true,  )
+//    })
+  connect( mChannel->getSocket(), &QTcpSocket::disconnected, this, [this] {
+    emit linkChanged( false, QString{}, QString{} );
+    });
+  }
+
+void SvMirrorRemote::reconnect()
+  {
+  mChannel->getSocket()->disconnectFromHost();
+  mTimeOut = 1000;
+  mFsmCurrent = FSM_WAIT_RECONNECT;
+  }
+
+#if 0
 //Настроить зеркало
 void SvMirrorRemote::settings(const QString ip, int port, const QString globalName, const QString globalPassw, int vid, int pid)
   {
@@ -315,3 +478,7 @@ void SvMirrorRemote::receivedVpuState(const QByteArray v)
   }
 
 #endif
+
+
+
+

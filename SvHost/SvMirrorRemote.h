@@ -11,105 +11,74 @@
   Описание
     Зеркало для внешнего VPU, работающего через машину в локальной сети.
 */
-#if 0
 #ifndef SVMIRRORREMOTE_H
 #define SVMIRRORREMOTE_H
 
 #include "SvMirrorExtern.h"
 #include "SvNet/SvNetChannel.h"
 
-#include <QStringList>
 
 class SvMirrorRemote : public SvMirrorExtern
   {
     Q_OBJECT
   protected:
-    SvNetChannel *mChannel;
-    int         mRemoteId;    //Id удаленной машины
-    int         mRemotePassw; //Passw удаленной машины
-    int         mTime;
-    QString     mRemoteDir;   //Директорий проекта на удаленной машине
+    SvNetChannel *mChannel; //! Channel to connect to remote controller host
+    QString       mIp;      //! IP of remote controller host
+    int           mPort;    //! Port of remote controller host
+    int           mTimeOut;
+    int           mFsmCurrent;
+    QByteArray    mTransfer;
   public:
-    SvMirrorRemote( const QString remoteIp, int remotePort, const QString bridgeName = QString{}, const QString bridgePassw = QString{} );
+    SvMirrorRemote();
     ~SvMirrorRemote() override;
-
-
-    //Тип зеркала
-    virtual int         mirrorType() const override { return SMT_REMOTE; }
-
-    //Настроить зеркало
-    virtual void        settings( const QString ip, int port,
-                                  const QString globalName, const QString globalPassw,
-                                  int vid, int pid ) override;
-
-    //Выполнить обработку узла
-    virtual void        processing( int tickOffset ) override;
-
-  signals:
-    //Передать блок по каналу связи
-    void sendBlock( int cmd, QByteArray block );
-
-    //Подключиться к мосту
-    void linkToBridge();
-
-    //Подключиться к удаленному узлу
-    void linkTo( int id, int passw );
-
-    //Получить директорий проекта
-    void getProjectDir();
-
-    //Отправить запрос на получение переменных
-    void receivVars();
-
-    //Отправить запрос на получение информации текущего состояния vpu
-    void sendVpuStateGet();
-
-    //Отправить программу
-    void sendCompileFlashRun( bool link, bool flash, bool runOrPause );
-
-    //Передать массив переменных с адресами
-    void sendVars( const QByteArray ar );
-
-    //Передать старт
-    void sendRestart( bool run );
-
-  protected:
-    //Выполнить обмен с узлом
-    void changeData();
-
-    //Получить состояние задач
-    void receivTask();
 
     // SvMirror interface
   public slots:
-    //При приеме блока по каналу связи
-    void onReceivBlock( int cmd, QByteArray block );
+    //!
+    //! \brief linkTo Link to external controller host
+    //! \param ipOrUsb IP for local net.
+    //! \param port  Port for local server
+    //! \param controllerName Not used
+    //! \param passw Not used
+    //!
+    virtual void linkTo(const QString ipOrUsb, int port, const QString controllerName = QString{}, const QString controllerPassw = QString{} ) override;
 
-    //===========================
-    //Раздел управления
+    //!
+    //! \brief setProgrammFlashRun Flash programm to controller and run it or paused. Here we send programm over Ethernet
+    //!                            to controller
+    //! \param prog                Programm which flashed to controller
+    //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
+    //!
+    virtual void setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause) override;
 
-    //Сначала сброс, затем создание корневого виртуального процессора и пуск с начального адреса
-    virtual void        restart( bool runOrPause ) override;
+    //!
+    //! \brief processing Perform periodic mirror handle. Here we check queues and send appropriate queries
+    //! \param tickOffset Time in ms between previous calling this function and this one. Do'nt use there
+    //!
+    virtual void processing(int tickOffset) override;
 
-    //Компиляция, линковка, если равно, иначе прошивка и запуск
-    //Компиляция, прошивка и запуск
-    virtual void        compileFlashRun( bool link, bool flash, bool runOrPause ) override;
+    //!
+    //! \brief init Called automaticly from inside execution thread to init mirror after creation
+    //!
+    virtual void init() override;
 
-    //Изменение состояния связи
-    void linkStatus( int id, int passw, QString bridgeName, QString linkName );
+  private slots:
+    /*!
+       \brief receivedBlock Block received
+       \param ch            Channel which must send block or nullptr for all connected channels
+       \param cmd           Command for block
+       \param ar            Data block
 
-    //Переменные получены
-    void receivedVars( const QByteArray v );
+       This signal emited on completing block reaciving. In connected classes
+       in this function must be block data decoding.
+     */
+    void receivedBlock( SvNetChannel *ch, int cmd, const QByteArray block );
 
-    //Получен список состояний задач
-    void receivedTasks( const QByteArray v );
 
-    //Получен лог
-    void receivedLog( const QString msg );
+    void receivedAnswer( SvNetChannel *ch, int srcCmd, qint32 answerCode, const QString msg );
 
-    //Получено состояние vpu
-    void receivedVpuState( const QByteArray v );
+  private:
+    void reconnect();
   };
 
 #endif // SVMIRRORREMOTE_H
-#endif

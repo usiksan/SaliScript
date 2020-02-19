@@ -28,6 +28,7 @@
 #include <QList>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QPointer>
 
 
 #define SDC_NONE            0 //Нет команд управления для данного VPU
@@ -65,6 +66,19 @@ class SvMirror : public QObject
   public:
     SvMirror();
     virtual ~SvMirror();
+
+    //!
+    //! \brief controllerType Return current linked controller type name string
+    //! \return Current linked controller type name string. If no controller linked
+    //!         then empty string returned
+    //!
+    virtual QString controllerType() const = 0;
+
+    //!
+    //! \brief programmName Return programm name loaded into controller
+    //! \return Programm name loaded into controller
+    //!
+    virtual QString programmName() const = 0;
 
     //!
     //! \brief addressOfName Return address of symbol or zero if name not defined
@@ -131,6 +145,14 @@ class SvMirror : public QObject
 
   public slots:
 
+    //!
+    //! \brief linkTo Link to external controller or controller host
+    //! \param ipOrUsb IP for local net or bridge. USB file of port (ttyUSB0, com3 and so on)
+    //! \param port  Port for local server
+    //! \param controllerName Name for remote controller: registered name for bridge or name for USB
+    //! \param passw Password for controller iteraction
+    //!
+    virtual void linkTo( const QString ipOrUsb, int port, const QString controllerName, const QString controllerPassw );
 
     //!
     //! \brief setProgrammFlashRun Flash programm to controller and run it or paused
@@ -183,6 +205,6 @@ class SvMirror : public QObject
 
   };
 
-using SvMirrorPtr = SvMirror*;
+using SvMirrorPtr = QPointer<SvMirror>;
 
 #endif // SVMIRROR_H

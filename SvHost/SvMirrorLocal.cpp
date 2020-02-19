@@ -29,6 +29,30 @@ SvMirrorLocal::~SvMirrorLocal()
 
 
 
+QString SvMirrorLocal::controllerType() const
+  {
+  return tr("Local controller");
+  }
+
+
+
+
+QString SvMirrorLocal::programmName() const
+  {
+  //Extract signature from programm
+  char str[SVVMH_SIGNATURE_LENGHT+1];
+  for( int i = 0; i < SVVMH_SIGNATURE_LENGHT; i++ )
+    str[i] = static_cast<char>( mController->getProgramm()->getCode( SVVMH_SIGNATURE + i ) );
+
+  //Fill signature
+  str[SVVMH_SIGNATURE_LENGHT] = 0; //Close string
+
+  return QString::fromLatin1( str );
+  }
+
+
+
+
 int SvMirrorLocal::addressOfName(const QString name) const
   {
   return mController->getProgramm()->getAddr( name );
@@ -64,14 +88,7 @@ void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause)
 
   emit transferProcess( true, QString() );
 
-  //Extract signature from programm
-  char str[SVVMH_SIGNATURE_LENGHT+1];
-  for( int i = 0; i < SVVMH_SIGNATURE_LENGHT; i++ )
-    str[i] = static_cast<char>( prog->getCode( SVVMH_SIGNATURE + i ) );
-
-  //Fill signature
-  str[SVVMH_SIGNATURE_LENGHT] = 0; //Close string
-  emit linkChanged( true, tr("Local controller"), QString::fromLatin1( str ) );
+  emit linkChanged( true, controllerType(), programmName() );
   }
 
 

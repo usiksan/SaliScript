@@ -27,6 +27,15 @@ SvMirror::~SvMirror()
 
   }
 
+void SvMirror::linkTo(const QString ipOrUsb, int port, const QString controllerName, const QString controllerPassw)
+  {
+  //There do nothing
+  Q_UNUSED(ipOrUsb)
+  Q_UNUSED(port)
+  Q_UNUSED(controllerName)
+  Q_UNUSED(controllerPassw)
+  }
+
 
 
 
