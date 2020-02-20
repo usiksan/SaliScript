@@ -208,13 +208,6 @@ void WDebugTable::debugVariable(int row, int column)
 
 
 
-void WDebugTable::onMemoryChanged(SvMirror *src)
-  {
-  if( src )
-    updateVariables();
-  }
-
-
 
 
 
@@ -348,12 +341,9 @@ void WDebugTable::setEdgeValue(int row, int value)
 
 
 
-void WDebugTable::setupMirror(SvMirror *pNewMirror)
+void WDebugTable::setupMirror(SvMirrorPtr pNewMirror)
   {
   mMirror = pNewMirror;
-  //подключить сигналы
-  if( mMirror != nullptr )
-    connect( mMirror, &SvMirror::memoryChanged, this, &WDebugTable::onMemoryChanged);
   //задать зеркало в расчет значений
   auto pProvider = dynamic_cast<IngDebugMirrorVarProvider*>( mDebugCalculator->valueProvider());
   if( pProvider != nullptr )

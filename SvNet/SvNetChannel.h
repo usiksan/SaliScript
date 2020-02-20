@@ -15,8 +15,36 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QDataStream>
 
 #define SV_NET_CHANNEL_ANSWER_CMD 1
+
+struct SvNetAnswer {
+    qint32  mSrcCmd;
+    qint32  mAnswerCode;
+    QString mMessage;
+
+    SvNetAnswer( qint32 srcCmd, qint32 answerCode, QString msg ) : mSrcCmd(srcCmd), mAnswerCode(answerCode), mMessage(msg) {}
+
+    SvNetAnswer( const QByteArray ar ) { parseBlock(ar); }
+
+    QByteArray buildBlock() {
+      QByteArray ar;
+      QDataStream os( &ar, QIODevice::WriteOnly );
+      os << mSrcCmd
+         << mAnswerCode
+         << mMessage;
+      return ar;
+      }
+
+    void parseBlock( const QByteArray ar ) {
+      QDataStream is(ar);
+      is >> mSrcCmd
+         >> mAnswerCode
+         >> mMessage;
+      }
+
+  };
 
 /*!
    \brief The SvNetChannel class Object for low level information transfer
@@ -69,10 +97,6 @@ class SvNetChannel : public QObject
     void receivedBlock( SvNetChannel *ch, int cmd, const QByteArray block );
 
 
-    void receivedAnswer( SvNetChannel *ch, int srcCmd, qint32 answerCode, const QString msg );
-
-
-
   public slots:
     /*!
        \brief sendBlock Send block with appropriate command
@@ -88,6 +112,16 @@ class SvNetChannel : public QObject
     void sendBlock( SvNetChannel *ch, qint8 cmd, const QByteArray block );
 
 
+    /*!
+       \brief sendAnswer Helper function for send answer.
+       \param ch         Channel through which transmission must be done.
+       \param srcCmd     Source command for which answer generated.
+       \param answerCode Answer code
+       \param msg        Answer message
+
+       This function packs params into SvNetAnswer structure and send it over
+       net with SV_NET_CHANNEL_ANSWER_CMD command.
+     */
     void sendAnswer(SvNetChannel *ch, qint8 srcCmd, qint32 answerCode, const QString msg );
 
   private slots:

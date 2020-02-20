@@ -52,6 +52,7 @@ inline QDataStream &operator >> ( QDataStream &is, SvVmVpuState &st ) {
   }
 
 
+using SvVpuVector = QVector<SvVmVpuState>;
 
 
 
@@ -72,27 +73,39 @@ class SvMirror : public QObject
     //! \return Current linked controller type name string. If no controller linked
     //!         then empty string returned
     //!
-    virtual QString controllerType() const = 0;
+    virtual QString     controllerType() const = 0;
 
     //!
     //! \brief programmName Return programm name loaded into controller
     //! \return Programm name loaded into controller
     //!
-    virtual QString programmName() const = 0;
+    virtual QString     programmName() const = 0;
+
+    //!
+    //! \brief vpuVector Return all vpu current status
+    //! \return All vpu current status
+    //!
+    virtual SvVpuVector vpuVector() const = 0;
 
     //!
     //! \brief addressOfName Return address of symbol or zero if name not defined
     //! \param name          Name which address need to find
     //! \return              Address of symbol name
     //!
-    virtual int  addressOfName( const QString name ) const = 0;
+    virtual int         addressOfName( const QString name ) const = 0;
 
     //!
     //! \brief memoryGet Return value of memory cell with index
     //! \param index     Cell index which value will be retrived
     //! \return          Value of cell
     //!
-    virtual int  memoryGet( int index ) const = 0;
+    virtual int         memoryGet( int index ) const = 0;
+
+    //!
+    //! \brief memoryGlobalCount Return ram cell memory count for global variables
+    //! \return Ram cell memory count for global variables
+    //!
+    virtual qint32      memoryGlobalCount() const = 0;
 
     //!
     //! \brief memoryGetByName Return memory cell value by its name
@@ -125,19 +138,6 @@ class SvMirror : public QObject
     void memoryChanged( SvMirror *src );
 
     //!
-    //! \brief taskChanged Signal sended when task changed
-    //! \param taskIndex   Task index
-    //! \param ip          instruction pointer [указатель инструкций]
-    //! \param sp          stack pointer [указатель стека]
-    //! \param bp          function frame pointer [указатель базы в стеке локальных переменных для текущей функции (указывает на фрейм возврата из функции)]
-    //! \param tm          exception mask [маска обрабатываемых исключений]
-    //! \param baseSp      stack start [Начало стека для данного процессора]
-    //! \param mthrow      current exception [Текущее значение исключения]
-    //! \param debugRun    if eq 0 then in debug state else - in run state
-    //!
-    void taskChanged( int taskIndex, int ip, int sp, int bp, int tm, int baseSp, int mthrow, int debugRun );
-
-    //!
     //! \brief log Signal sended when log emited
     //! \param msg Log message
     //!
@@ -158,8 +158,9 @@ class SvMirror : public QObject
     //! \brief setProgrammFlashRun Flash programm to controller and run it or paused
     //! \param prog                Programm which flashed to controller
     //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
+    //! \param flash               If true then programm flashed into external controller, else - do nothing
     //!
-    virtual void setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause ) = 0;
+    virtual void setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause, bool flash ) = 0;
 
 
     //!

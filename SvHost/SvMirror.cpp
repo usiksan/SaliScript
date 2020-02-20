@@ -61,7 +61,7 @@ void SvMirror::compileFlashRun(const QString scriptPath, bool runOrPause)
     //Бинарник сохраняется автоматически при построении
     prog = SvCompiler6::SvVpuCompiler::build( prjPath, mainScript );
     }
-  setProgrammFlashRun( prog, runOrPause );
+  setProgrammFlashRun( prog, runOrPause, true );
   }
 
 

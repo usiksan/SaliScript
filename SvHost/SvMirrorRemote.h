@@ -27,10 +27,16 @@ class SvMirrorRemote : public SvMirrorExtern
     int           mPort;    //! Port of remote controller host
     int           mTimeOut;
     int           mFsmCurrent;
-    QByteArray    mTransfer;
   public:
     SvMirrorRemote();
     ~SvMirrorRemote() override;
+
+    //!
+    //! \brief controllerType Return current linked controller type name string
+    //! \return Current linked controller type name string. If no controller linked
+    //!         then empty string returned
+    //!
+    virtual QString     controllerType() const override;
 
     // SvMirror interface
   public slots:
@@ -48,8 +54,9 @@ class SvMirrorRemote : public SvMirrorExtern
     //!                            to controller
     //! \param prog                Programm which flashed to controller
     //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
+    //! \param flash               If true then programm flashed into external controller, else - do nothing
     //!
-    virtual void setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause) override;
+    virtual void setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause, bool flash ) override;
 
     //!
     //! \brief processing Perform periodic mirror handle. Here we check queues and send appropriate queries
@@ -73,9 +80,6 @@ class SvMirrorRemote : public SvMirrorExtern
        in this function must be block data decoding.
      */
     void receivedBlock( SvNetChannel *ch, int cmd, const QByteArray block );
-
-
-    void receivedAnswer( SvNetChannel *ch, int srcCmd, qint32 answerCode, const QString msg );
 
   private:
     void reconnect();

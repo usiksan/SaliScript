@@ -29,6 +29,8 @@ int main(int argc, char *argv[])
   //Создание приложения
   QApplication a(argc, argv);
 
+//  qRegisterMetaType<SvProgrammPtr>();
+
   //Создать рабочий проект
   svProject = new SvProject();
 

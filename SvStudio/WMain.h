@@ -39,7 +39,7 @@ class WMain : public QMainWindow
   signals:
     void setMirror( int mirrorType );
 
-    void setProgrammFlashRun( SvProgrammPtr prog, bool link, bool flash, bool runOrPause );
+    void setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause, bool flash );
 
   public slots:
     void modeIntro();

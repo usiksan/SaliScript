@@ -253,7 +253,7 @@ class SvVMachine
        \brief taskCount Возвращает количество активных задач
        \return Количество активных задач
      */
-    int             taskCount() const { return mVpuCount; }
+    int             vpuCount() const { return mVpuCount; }
 
 
 

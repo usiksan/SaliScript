@@ -1,0 +1,465 @@
+{
+    "A contens": "SaliLAB SV v0.2",
+    "CompilerType": "TVpu v3",
+    "CtrVersion": 0,
+    "DebugType": 0,
+    "FileList": [
+        "/home/asibilev/work/SaliScript/script/main.c"
+    ],
+    "GlobalID": "",
+    "MainScript": "main.c",
+    "RemoteIP": "127.0.0.1",
+    "RemotePort": 1971,
+    "USB PID": 6513,
+    "USB VID": 10051,
+    "VarList": [
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": "a"
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        },
+        {
+            "axiz": "",
+            "form": "",
+            "max": "",
+            "min": "",
+            "name": ""
+        }
+    ]
+}

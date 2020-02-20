@@ -67,10 +67,7 @@ void SvNetChannel::sendBlock(SvNetChannel *ch, qint8 cmd, const QByteArray block
 
 void SvNetChannel::sendAnswer(SvNetChannel *ch, qint8 srcCmd, qint32 answerCode, const QString msg)
   {
-  QByteArray ar;
-  QDataStream os( &ar, QIODevice::WriteOnly );
-  os << srcCmd << answerCode << msg;
-  sendBlock( ch, SV_NET_CHANNEL_ANSWER_CMD, ar );
+  sendBlock( ch, SV_NET_CHANNEL_ANSWER_CMD, SvNetAnswer( srcCmd, answerCode, msg ).buildBlock() );
   }
 
 
@@ -122,14 +119,5 @@ void SvNetChannel::onReceivBytes()
 
 void SvNetChannel::receiveBlockPrivate()
   {
-  if( mPacketInfo.command() == SV_NET_CHANNEL_ANSWER_CMD ) {
-    qint8 srcCmd;
-    qint32 answerCode;
-    QString msg;
-    QDataStream is( mBlock );
-    is >> srcCmd >> answerCode >> msg;
-    emit receivedAnswer( this, srcCmd, answerCode, msg );
-    }
-  else
-    emit receivedBlock( this, mPacketInfo.command(), mBlock );
+  emit receivedBlock( this, mPacketInfo.command(), mBlock );
   }

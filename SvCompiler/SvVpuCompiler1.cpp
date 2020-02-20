@@ -110,6 +110,10 @@ SvProgrammPtr SvVpuCompiler::make(const QString prjPath, const QString &mainScri
   QTextStream lst( &listFile );
   mList = &lst;
 
+  codePrintEoln( QStringLiteral("//====================================================================") );
+  codePrintEoln( QStringLiteral("//      SvCompiler " TVERSION ) );
+  codePrintEoln( QStringLiteral("//By A.Sibilev") );
+  codePrintEoln( QStringLiteral("//====================================================================") );
   pass( prog.data() );
 
 
@@ -336,8 +340,10 @@ void SvVpuCompiler::gOperatorBlock(SvProgramm *prog, SvOperatorBlock *svBlock)
   if( svBlock == nullptr ) return;
 
   //Генерировать все операторы блока
-  for( SvOperator *op : svBlock->mList )
+  for( SvOperator *op : svBlock->mList ) {
+    codePrint( QString("[%1:%2] ").arg(op->mMark.mFile).arg(op->mMark.mLine) );
     gOperator( prog, op );
+    }
   }
 
 

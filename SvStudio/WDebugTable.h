@@ -2,6 +2,7 @@
 #define WDEBUGTABLE_H
 
 #include "IngDebugCalculator.h"
+#include "SvHost/SvMirror.h"
 
 #include <QTableWidget>
 #include <QWidget>
@@ -17,7 +18,7 @@ class WDebugTable: public QTableWidget
     Q_OBJECT
 
     //зеркало, с которого берутся значения
-    SvMirror           *mMirror;
+    SvMirrorPtr         mMirror;
 
     //запрет на изменение значений
     bool                mVarChangeLock;
@@ -49,13 +50,11 @@ class WDebugTable: public QTableWidget
     //Установить контрольное (из архива) значение переменной, эти значения в специальном столбце
     void    setEdgeValue(int row, int value);
 
-    void    setupMirror(SvMirror* pNewMirror);
+    void    setupMirror(SvMirrorPtr pNewMirror);
 
   protected slots:
     //изменение значения в таблице
     void debugVariable(int row, int column);
-    //изменение памяти на зеркале
-    void onMemoryChanged( SvMirror *src );
 
   private:
     //отобразить значение

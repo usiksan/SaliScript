@@ -6,7 +6,7 @@
   Описание
 */
 #include "SvMirrorRemote.h"
-#include "SvNet/SvNetHandlerMirror.h"
+#include "SvNet/SvNetMirror.h"
 
 #include <QHostAddress>
 #include <QDir>
@@ -21,20 +21,11 @@ enum {
   FSM_WAIT_RECONNECT,
   FSM_CONNECT,
   FSM_WAIT_CONNECTION,
-  FSM_QUERY_INFO,
-  FSM_WAIT_INFO,
+  FSM_SEND_CONTROL,
+  FSM_WAIT_STATUS,
+  FSM_WAIT_PERIOD,
   FSM_SEND_PROGRAMM,
-  FSM_WAIT_PROGRAMM,
-  FSM_SEND_VARIABLES,
-  FSM_WAIT_ACK_VARIABLES,
-  FSM_QUERY_VARIABLES,
-  FSM_WAIT_VARIABLES,
-  FSM_QUERY_LOG,
-  FSM_WAIT_LOG,
-  FSM_SEND_DEBUG,
-  FSM_WAIT_ACK_DEBUG,
-  FSM_QUERY_TASK,
-  FSM_WAIT_TASK
+  FSM_WAIT_PROGRAMM
   };
 
 
@@ -53,10 +44,17 @@ SvMirrorRemote::~SvMirrorRemote()
 
   }
 
+QString SvMirrorRemote::controllerType() const
+  {
+  return tr("Remote ip %1 -> %2").arg(mIp).arg(mControllerType);
+  }
+
 
 
 void SvMirrorRemote::linkTo(const QString ipOrUsb, int port, const QString controllerName, const QString controllerPassw)
   {
+  Q_UNUSED(controllerName)
+  Q_UNUSED(controllerPassw)
   mIp   = ipOrUsb;
   mPort = port;
   reconnect();
@@ -65,11 +63,18 @@ void SvMirrorRemote::linkTo(const QString ipOrUsb, int port, const QString contr
 
 
 
-void SvMirrorRemote::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause)
+void SvMirrorRemote::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause, bool flash)
   {
+  //Assign new programm, apply run or pause and set flag that programm need to flash
   mProgramm   = prog;
   mRunOrPause = runOrPause;
-  mNeedFlash  = true;
+  mNeedFlash  = flash;
+  //Locker to value queue write
+  QMutexLocker locker(&mWriteMutex);
+  mWriteQueue.clear();
+  mWriteValues.clear();
+  //Clear debug
+  clearDebug();
   }
 
 
@@ -111,7 +116,7 @@ void SvMirrorRemote::processing(int tickOffset)
     case FSM_WAIT_CONNECTION :
       if( mChannel->getSocket()->state() == QAbstractSocket::ConnectedState ) {
         //Connection established
-        mFsmCurrent = FSM_QUERY_INFO;
+        mFsmCurrent = FSM_SEND_PROGRAMM;
         }
       else if( mTimeOut < 0 ) {
         //Connection failure
@@ -121,20 +126,43 @@ void SvMirrorRemote::processing(int tickOffset)
       break;
 
 
+    case FSM_SEND_CONTROL : {
+      SvNetMirrorControl control;
+      if( mWriteQueue.count() ) {
+        //There are values for write
+        //Блокиратор сдвоенного доступа к очереди
+        QMutexLocker locker(&mWriteMutex);
+        control.mWriteQueue = mWriteQueue;
+        control.mWriteValues = mWriteValues;
+        mWriteQueue.clear();
+        mWriteValues.clear();
+        }
+      control.mVpuDebug = mVpuDebug;
+      //Clear debug
+      clearDebug();
 
-    case FSM_QUERY_INFO :
-      mChannel->sendBlock( mChannel, SVC_MIRROR_INFO, SvNetMirrorInfo( QString{}, QString{} ).buildBlock() );
-      mFsmCurrent = FSM_WAIT_INFO;
-      mTimeOut = 1000;
+      mChannel->sendBlock( mChannel, SVC_MIRROR_CONTROL, control.buildBlock() );
+      mFsmCurrent = FSM_WAIT_STATUS;
+      mTimeOut = 3000;
+      }
       break;
 
 
     case FSM_WAIT_PROGRAMM :
-    case FSM_WAIT_INFO :
+    case FSM_WAIT_STATUS :
       mTimeOut -= tickOffset;
       if( mTimeOut < 0 )
         reconnect();
       break;
+
+
+
+    case FSM_WAIT_PERIOD :
+      mTimeOut -= tickOffset;
+      if( mTimeOut < 0 )
+        mFsmCurrent = FSM_SEND_CONTROL;
+      break;
+
 
 
 
@@ -145,72 +173,60 @@ void SvMirrorRemote::processing(int tickOffset)
         mTimeOut = 3000;
         }
       else
-        mFsmCurrent = FSM_SEND_VARIABLES;
+        mFsmCurrent = FSM_SEND_CONTROL;
       break;
-
-
-
-    case FSM_SEND_VARIABLES :
-      if( mWriteQueue.count() ) {
-        //There are values for write
-        //Блокиратор сдвоенного доступа к очереди
-        QMutexLocker locker(&mWriteMutex);
-
-        mChannel->sendBlock( mChannel, SVC_MIRROR_PROGRAMM, SvNetMirrorWrite::buildBlock( mWriteQueue, mWriteValues ) );
-        mFsmCurrent = FSM_WAIT_ACK_VARIABLES;
-        mTimeOut = 3000;
-        }
-
-
-    ,
-    FSM_QUERY_VARIABLES,
-    FSM_WAIT_VARIABLES,
-    FSM_QUERY_LOG,
-    FSM_WAIT_LOG,
-    FSM_SEND_DEBUG,
-    FSM_WAIT_ACK_DEBUG,
-    FSM_QUERY_TASK,
-    FSM_WAIT_TASK
-
-    }
-
-  mTimeOut -= tickOffset;
-  if( mTimeOut < 0 ) {
-    mTimeOut = 1000;
-      //Socket not connected yet
-
-      else
-        //Socket in connection process phase
-        mTimeOut = 0;
-      return;
-      }
-
-    //Socket connected
-
-    //Request controller type and loaded programm
-
-    //Request flash programm
-
-    //Request variables set
-
-    //Request variables get
-
-    //Request task state
     }
   }
+
+
 
 
 
 void SvMirrorRemote::init()
   {
   mChannel = new SvNetChannel( new QTcpSocket() );
-//  connect( mChannel->getSocket(), &QTcpSocket::connected, this, [this] {
-//    emit linkChanged( true,  )
-//    })
   connect( mChannel->getSocket(), &QTcpSocket::disconnected, this, [this] {
-    emit linkChanged( false, QString{}, QString{} );
+    mControllerType.clear();
+    mProgrammName.clear();
+    emit linkChanged( false, controllerType(), programmName() );
     });
+  connect( mChannel, &SvNetChannel::receivedBlock, this, &SvMirrorRemote::receivedBlock );
   }
+
+
+
+
+
+void SvMirrorRemote::receivedBlock(SvNetChannel *ch, int cmd, const QByteArray block)
+  {
+  Q_UNUSED(ch)
+  if( cmd == SVC_MIRROR_STATUS ) {
+    SvNetMirrorStatus status( block );
+    if( mControllerType != status.mControllerType || mProgrammName != status.mProgrammName ) {
+      mControllerType = status.mControllerType;
+      mProgrammName   = status.mProgrammName;
+      emit linkChanged( true, controllerType(), programmName() );
+      }
+    mVpuState = status.mVpuState;
+    mMemory   = status.mMemory;
+    for( auto msg : status.mLog )
+      emit log( msg );
+    emit memoryChanged( this );
+    mFsmCurrent = FSM_SEND_PROGRAMM;
+    }
+  else if( cmd == SV_NET_CHANNEL_ANSWER_CMD ) {
+    SvNetAnswer answer( block );
+    if( answer.mSrcCmd == SVC_MIRROR_PROGRAMM ) {
+      //Acknowledge to programm load
+      mTimeOut = 200;
+      mFsmCurrent = FSM_WAIT_PERIOD;
+      }
+    }
+  }
+
+
+
+
 
 void SvMirrorRemote::reconnect()
   {
@@ -218,267 +234,4 @@ void SvMirrorRemote::reconnect()
   mTimeOut = 1000;
   mFsmCurrent = FSM_WAIT_RECONNECT;
   }
-
-#if 0
-//Настроить зеркало
-void SvMirrorRemote::settings(const QString ip, int port, const QString globalName, const QString globalPassw, int vid, int pid)
-  {
-  SvMirrorExtern::settings( ip, port, globalName, globalPassw, vid, pid );
-
-  mRemoteId    = globalName.toInt();
-  mRemotePassw = globalPassw.toInt( nullptr, 16);
-  //Если задано подключение
-  if( !ip.isEmpty() && port ) {
-    //Проверить адрес подключения удаленного управления
-    if( svNetClientMirror->getIp() != ip || svNetClientMirror->getPort() != port )
-      svNetClientMirror->setHost( ip, port );
-    emit linkToBridge();
-    }
-  else if( svNetClientMirror->isLinkBridge() )
-    emit linkTo( mRemoteId, mRemotePassw );
-  else
-    emit linkToBridge();
-  }
-
-
-
-
-//Выполнить обработку узла
-void SvMirrorRemote::processing(int tickOffset)
-  {
-  //Если не задано подключение, то ничего не делаем
-  if( mRemoteId == 0 )
-    return;
-
-  //Проверим наличие подключения к удаленному компьютеру
-  if( !svNetClientMirror->isLink() ) {
-    mTime -= tickOffset;
-    //Проверим подключение к мосту
-    if( !svNetClientMirror->isLinkBridge() ) {
-      //К мосту еще не подключен, подключить
-      if( mTime < 0 ) {
-        setLink( tr("Connect to bridge"), false );
-        mTime = 3000;
-        emit linkToBridge();
-        }
-      return;
-      }
-
-    //Подключить к удаленному
-    if( mTime < 0 ) {
-      mTime = 3000;
-      emit linkTo( mRemoteId, mRemotePassw );
-      }
-    return;
-    }
-
-  //Все подключено
-  changeData();
-  }
-
-
-
-
-//Выполнить обмен с узлом
-void SvMirrorRemote::changeData()
-  {
-  //Проверить необходимость отправки переменных
-  if( mWriteQueue.count() ) {
-    //Отправляем переменные
-    if( mLink ) {
-      //Блокиратор сдвоенного доступа к очереди
-      QMutexLocker locker(&mWriteMutex);
-
-      //Сформировать пакет на установку
-      QByteArray ar;
-      QDataStream os( &ar, QIODevice::WriteOnly );
-
-      qint32 count = mWriteQueue.size();
-      os << count;
-      for( int i = 0; i < count; i++ ) {
-        qint32 adr = mWriteQueue.at(i);
-        qint32 val = mWriteValues.value(adr);
-        os << adr << val;
-        }
-
-      emit sendVars( ar );
-
-      //Пакет поставлен в очередь на передачу успешно, убрать переданные переменные из массива
-      mWriteQueue.clear();
-      mWriteValues.clear();
-      }
-    }
-
-  //Выполняем чтение переменных
-  if( mLink ) {
-    //Проредим запросы
-    static int delay = 0;
-    if( delay++ > 10 ) {
-      //Отправить запрос на получение информации текущего состояния vpu
-      emit sendVpuStateGet();
-      delay = 0;
-      }
-    }
-  }
-
-
-
-
-
-
-
-void SvMirrorRemote::restart(bool runOrPause)
-  {
-  emit sendRestart( runOrPause );
-  }
-
-
-
-
-
-void SvMirrorRemote::compileFlashRun(bool link, bool flash, bool runOrPause)
-  {
-  //Если контроллер не подключен, то ничего не делаем
-  if( !mLink ) {
-    setProcess( tr("Error"), false, tr("Controller is not linked") );
-    return;
-    }
-
-  //Отправим сигнал о начале операции
-  setProcess( tr("Compile %1 in %2").arg(mMainScript).arg(mPrjPath) );
-
-  //Выполнить компиляцию
-  make();
-  if( mProgramm->mErrors.count() ) {
-    //При наличии ошибок прекращаем
-    setProcess( tr("Complete"), false, tr("Compile errors") );
-    return;
-    }
-
-  //Настроить зеркало
-
-
-  //Отправить проект
-  sendProject();
-
-  setProcess( tr("Transfer programm") );
-  emit sendCompileFlashRun( link, flash, runOrPause );
-  }
-
-
-
-void SvMirrorRemote::linkStatus(int id, int passw, QString bridgeName, QString linkName)
-  {
-  Q_UNUSED(id)
-  Q_UNUSED(passw)
-  if( bridgeName.isEmpty() )
-    setLink( tr("Can't connect to bridge."), false );
-  else {
-    if( linkName.isEmpty() )
-      setLink( tr("Bridge \"%1\".").arg(bridgeName), false );
-    else {
-      setLink( tr("Bridge \"%1\". Remote \"%2\".").arg(bridgeName).arg(linkName), true);
-      //Получить удаленный директорий с проектом
-      emit getProjectDir();
-      }
-    }
-  }
-
-
-
-
-
-//Переменные получены
-void SvMirrorRemote::receivedVars(const QByteArray v)
-  {
-  QDataStream is( v );
-  qint32 varCount;
-  is >> varCount;
-  bool ch = false;
-  for( int i = 0; i < varCount; i++ ) {
-    qint32 val;
-    is >> val;
-    if( i > 0 && i < mMemorySize )
-      if( mMemory[i] != val ) {
-        ch = true;
-        mMemory[i] = val;
-        }
-    }
-
-  qDebug() << "receivedVars" << varCount;
-
-  if( ch )
-    emit memoryChanged();
-  }
-
-
-
-//Получен список состояний задач
-void SvMirrorRemote::receivedTasks(const QByteArray v)
-  {
-  QDataStream is( v );
-  //Количество задач в списке
-  qint32 vpuCount;
-  is >> vpuCount;
-  bool tc = false;
-  for( int i = 0; i < vpuCount; i++ ) {
-    qint32 run, ip, sp, tm, bp;
-    is >> run >> ip >> sp >> tm >> bp;
-    if( i < mVpuCount ) {
-      if( mVpuState[i].mIsRun != run ) { mVpuState[i].mIsRun = run; tc = true; }
-      mVpuState[i].mIp = ip;
-      mVpuState[i].mSp = sp;
-      mVpuState[i].mTm = tm;
-      mVpuState[i].mBp = bp;
-      }
-    }
-
-  qDebug() << "receivedTasks" << vpuCount;
-
-  //Сообщить об изменении
-  if( tc )
-    emit taskChanged();
-  }
-
-
-
-
-//Получен лог
-void SvMirrorRemote::receivedLog(const QString msg)
-  {
-  emit log( msg );
-  }
-
-
-
-
-//Получено состояние vpu
-void SvMirrorRemote::receivedVpuState(const QByteArray v)
-  {
-  QDataStream is( v );
-  //Получить текущие настройки vpu
-  qint32 vpuMax;
-  qint32 vpuCount;
-  qint32 memMax;
-  qint32 memCount;
-  is >> vpuMax >> vpuCount >> memMax >> memCount;
-  qDebug() << "receivedVpuState" << vpuMax << vpuCount << memMax << memCount;
-  //Если настройки отличаются от текущих, то изменить
-  if( vpuMax != mVpuMax || memMax != mMemorySize )
-    setupMirror( vpuMax, vpuCount, memMax, memCount );
-
-  //Прочитать состояние задач
-  QByteArray ar;
-  is >> ar;
-  receivedTasks( ar );
-
-  //Прочитать состояние переменных
-  is >> ar;
-  receivedVars( ar );
-  }
-
-#endif
-
-
-
 

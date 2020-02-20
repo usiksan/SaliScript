@@ -107,28 +107,8 @@ class WCModeEditor : public QSplitter
     //Обновить связи отладчика
     void        connectVars( bool link );
 
+    void        setProgramm( SvProgrammPtr prog ) { mProgramm = prog; }
   signals:
-    //!
-    //! \brief setProgrammFlashRun Flash programm to controller and run it or paused
-    //! \param prog                Programm which flashed to controller
-    //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
-    //!
-    void setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause );
-
-
-    //!
-    //! \brief compileFlashRun Perform script compilation and some other tasks defined by params
-    //! \param scriptPath      Full script path. We start compilation of this main script
-    //! \param runOrPause      If true then programm automaticly started after flash, else - it paused
-    //!
-    void compileFlashRun(const QString scriptPath, bool runOrPause );
-
-
-    //!
-    //! \brief startScript Perofrm script compilation, load to controller and start script to running
-    //! \param scriptPath  Full script path
-    //!
-    void startScript( const QString scriptPath );
 
     //!
     //! \brief memorySet Set memory cell new value
@@ -188,7 +168,7 @@ class WCModeEditor : public QSplitter
 
 
     //при изменении зеркала
-    void setupMirror(SvMirror* pMirror);
+    void mirrorChanged(int id, SvMirrorPtr mirrorPtr);
 
     //Установить новый список ошибок
     void setErrors( const SvErrorList list );
@@ -200,11 +180,8 @@ class WCModeEditor : public QSplitter
     void trackToFileLine( const QString & fname, int line );
 
     //Слоты для связи с отладчиком
-    //При изменении задач
-    void onTaskChanged( int taskIndex, int ip, int sp, int bp, int tm, int baseSp, int mthrow, int debugRun );
-
     //При изменении памяти
-   // void onMemoryChanged();
+    void onMemoryChanged( SvMirror *mirror );
 
     //При поступлении loga
     void onLog(const QString msg );

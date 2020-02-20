@@ -36,27 +36,39 @@ class SvMirrorLocal : public SvMirror
     //! \return Current linked controller type name string. If no controller linked
     //!         then empty string returned
     //!
-    virtual QString controllerType() const override;
+    virtual QString     controllerType() const override;
 
     //!
     //! \brief programmName Return programm name loaded into controller
     //! \return Programm name loaded into controller
     //!
-    virtual QString programmName() const override;
+    virtual QString     programmName() const override;
+
+    //!
+    //! \brief vpuVector Return all vpu current status
+    //! \return All vpu current status
+    //!
+    virtual SvVpuVector vpuVector() const override;
 
     //!
     //! \brief addressOfName Return address of symbol or zero if name not defined
     //! \param name          Name which address need to find
     //! \return              Address of symbol name
     //!
-    virtual int  addressOfName( const QString name ) const override;
+    virtual int         addressOfName( const QString name ) const override;
 
     //!
     //! \brief memoryGet Return value of memory cell with index
     //! \param index     Cell index which value will be retrived
     //! \return          Value of cell
     //!
-    virtual int  memoryGet( int index ) const override;
+    virtual int         memoryGet( int index ) const override;
+
+    //!
+    //! \brief memoryGlobalCount Return ram cell memory count for global variables
+    //! \return Ram cell memory count for global variables
+    //!
+    virtual qint32      memoryGlobalCount() const override;
 
   public slots:
 
@@ -65,8 +77,9 @@ class SvMirrorLocal : public SvMirror
     //! \brief setProgrammFlashRun Flash programm to controller and run it or paused
     //! \param prog                Programm which flashed to controller
     //! \param runOrPause          If true then programm automaticly started after flash, else - it paused
+    //! \param flash               If true then programm flashed into external controller, else - do nothing
     //!
-    virtual void setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause ) override;
+    virtual void setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause, bool flash ) override;
 
 
     //!

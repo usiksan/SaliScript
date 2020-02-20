@@ -366,5 +366,7 @@ class SvProgramm
 
 typedef QSharedPointer<SvProgramm> SvProgrammPtr;
 
+Q_DECLARE_METATYPE(SvProgrammPtr)
+
 
 #endif // SVPROGRAMM_H

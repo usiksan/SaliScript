@@ -134,6 +134,8 @@ WMain::WMain(QWidget *parent)
   restorePositions();
 
   setupTitle();
+
+  onMirrorChanged( svMirrorManager->mirrorTypeId(), svMirrorManager->mirror() );
   }
 
 
@@ -467,9 +469,9 @@ void WMain::onMirrorChanged(int id, SvMirrorPtr mirror)
       }
 
 
-    mCModeEditor->setupMirror(mirror);
+    mCModeEditor->mirrorChanged( id, mirror );
 
-    connect( this, &WMain::setProgrammFlashRun, mirror, &SvMirror::setProgrammFlashRun );
+    connect( this, &WMain::setProgrammFlashRun, mirror.data(), &SvMirror::setProgrammFlashRun, Qt::QueuedConnection );
     }
 
   }
@@ -477,7 +479,7 @@ void WMain::onMirrorChanged(int id, SvMirrorPtr mirror)
 
 
 
-void WMain::compile(bool link, bool flash , bool runOrPause)
+void WMain::compile(bool link, bool flash, bool runOrPause)
   {
   //Проверить наличие открытого проекта
   if( svProject->mProjectName.isEmpty() )
@@ -490,6 +492,7 @@ void WMain::compile(bool link, bool flash , bool runOrPause)
     //Компилировать
     SvProgrammPtr prog = SvCompiler6::SvVpuCompiler::build( svProject->mProjectPath, svProject->mMainScript );
 
+    mCModeEditor->setProgramm( prog );
     //Установить новый список ошибок
     mCModeEditor->setErrors( prog->mErrors );
 
@@ -498,23 +501,19 @@ void WMain::compile(bool link, bool flash , bool runOrPause)
       //Вынести текстовый редактор на передний план
       activateModeEditor();
       }
-    else {
+    else if( link ) {
       //Ошибок нет, передаем программу
       //Диалог операции
       DProcess dprocess( this );
 
       //Отсроченная отправка программы
-      QTimer::singleShot( 30, this, [this, prog, link, flash, runOrPause] () {
-        emit setProgrammFlashRun( prog, link, flash, runOrPause );
+      QTimer::singleShot( 100, this, [this, prog, flash, runOrPause] () {
+        emit setProgrammFlashRun( prog, runOrPause, flash );
         });
 
       dprocess.exec();
       }
 
-    //Если есть программа, то сохраняем ее бинарник
-//    if( prog ) {
-//      prog->save( dsProject->mProjectPath + dsProject->mProjectName + QString(EXTENSION_BINARY) );
-//      }
     }
   }
 
@@ -730,7 +729,7 @@ void WMain::buildBuild()
 
 void WMain::buildAndRun()
   {
-  compile( false, true, true );
+  compile( true, true, true );
   //Обновить связи отладчика
   mCModeEditor->connectVars( true );
   }
@@ -740,7 +739,7 @@ void WMain::buildAndRun()
 
 void WMain::buildAndPause()
   {
-  compile( false, true, false );
+  compile( true, true, false );
   //Обновить связи отладчика
   mCModeEditor->connectVars( true );
   }

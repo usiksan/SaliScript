@@ -432,21 +432,24 @@ void WCModeEditor::parsingComplete()
 //==================================================================
 //            Раздел списка задач
 //==================================================================
-//При изменении задач
-void WCModeEditor::onTaskChanged(int taskIndex, int ip, int sp, int bp, int tm, int baseSp, int mthrow, int debugRun)
-  {
-  Q_UNUSED(baseSp)
-  Q_UNUSED(mthrow)
-  //Обновить список задач
-  if( svMirrorManager->mirror() == nullptr )
-    return;
 
-  if( taskIndex < SV_MAX_TASK ) {
+
+
+
+void WCModeEditor::onMemoryChanged(SvMirror *mirror)
+  {
+  //Update variables
+  mDebugVar->updateVariables();
+
+  //Update tasks
+  SvVpuVector vpus = mirror->vpuVector();
+  int taskCount = qMin( SV_MAX_TASK, vpus.count() );
+  for( int taskIndex = 0; taskIndex < taskCount; taskIndex++ ) {
     //Задача присутствует, обновить информацию
-    mIps[taskIndex] = ip;
+    mIps[taskIndex] = vpus.at(taskIndex).mIp;
     //Заголовок
     mTasks->item( taskIndex, DE_TASK_TASK )->setText( QString::number(taskIndex) );
-    if( debugRun ) {
+    if( vpus.at(taskIndex).mDebugRun ) {
       //Задача исполняется
       mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskRun.png") );
       //Очистить регистры
@@ -457,30 +460,34 @@ void WCModeEditor::onTaskChanged(int taskIndex, int ip, int sp, int bp, int tm, 
       }
     else {
       //Задача заторможена
-      if( ip )
+      if( vpus.at(taskIndex).mIp )
         mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskPause.png") );
       else
         mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskStop.png") );
       //Если ip изменился с предыдущего значения, то позиционировать курсор редактора к данной строке
-      if( mTasks->item( taskIndex, DE_TASK_IP )->text() != QString::number( ip ) ) {
+      if( mTasks->item( taskIndex, DE_TASK_IP )->text() != QString::number( vpus.at(taskIndex).mIp ) && !mProgramm.isNull() ) {
         //Получить имя файла, где находится текущая точка исполнения
-        trackToFileLine( mProgramm->getFileName( ip ), mProgramm->getLine( ip ) );
+        //Offset on 1 line is because in programm numbering start with 0 but in editor - with 1
+        trackToFileLine( mProgramm->getFileName( vpus.at(taskIndex).mIp ), mProgramm->getLine( vpus.at(taskIndex).mIp ) + 1 );
         }
-      mTasks->item( taskIndex, DE_TASK_IP )->setText( QString::number( ip ) );
-      mTasks->item( taskIndex, DE_TASK_SP )->setText( QString::number( sp ) );
-      mTasks->item( taskIndex, DE_TASK_TM )->setText( QString::number( tm ) );
-      mTasks->item( taskIndex, DE_TASK_BP )->setText( QString::number( bp ) );
+      mTasks->item( taskIndex, DE_TASK_IP )->setText( QString::number( vpus.at(taskIndex).mIp ) );
+      mTasks->item( taskIndex, DE_TASK_SP )->setText( QString::number( vpus.at(taskIndex).mSp ) );
+      mTasks->item( taskIndex, DE_TASK_TM )->setText( QString::number( vpus.at(taskIndex).mTm ) );
+      mTasks->item( taskIndex, DE_TASK_BP )->setText( QString::number( vpus.at(taskIndex).mBp ) );
       }
     }
-  else {
-    //Задачи с таким номером нету
-    mTasks->item( taskIndex, DE_TASK_TASK )->setText( QString() );
-    mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon() );
-    mTasks->item( taskIndex, DE_TASK_IP )->setText( QString() );
-    mTasks->item( taskIndex, DE_TASK_SP )->setText( QString() );
-    mTasks->item( taskIndex, DE_TASK_TM )->setText( QString() );
-    mTasks->item( taskIndex, DE_TASK_BP )->setText( QString() );
+
+  //Clear unused task cell
+  while( taskCount < SV_MAX_TASK ) {
+    mTasks->item( taskCount, DE_TASK_TASK )->setText( QString() );
+    mTasks->item( taskCount, DE_TASK_RUN )->setIcon( QIcon() );
+    mTasks->item( taskCount, DE_TASK_IP )->setText( QString() );
+    mTasks->item( taskCount, DE_TASK_SP )->setText( QString() );
+    mTasks->item( taskCount, DE_TASK_TM )->setText( QString() );
+    mTasks->item( taskCount, DE_TASK_BP )->setText( QString() );
+    taskCount++;
     }
+
   }
 
 
@@ -898,23 +905,27 @@ void WCModeEditor::textChanged()
 
 
 
-void WCModeEditor::setupMirror(SvMirror *pMirror)
+void WCModeEditor::mirrorChanged(int id, SvMirrorPtr mirrorPtr)
   {
-  //Подключить связи к редакторам
-  //При изменении задач
-  connect( pMirror, SIGNAL(taskChanged()), this, SLOT(onTaskChanged()) );
+  Q_UNUSED(id)
   //При изменении памяти
-
-  mDebugVar->setupMirror(pMirror);
-  //connect( pMirror, SIGNAL(memoryChanged()), this, SLOT(onMemoryChanged()) );
+  mDebugVar->setupMirror(mirrorPtr);
   //При поступлении loga
-  connect( pMirror, &SvMirror::log, this, &WCModeEditor::onLog );
+  connect( mirrorPtr, &SvMirror::log, this, &WCModeEditor::onLog );
   //При изменении текстового статуса
-  connect( pMirror, &SvMirror::linkChanged, this, &WCModeEditor::onTextStatusChanged );
+  connect( mirrorPtr, &SvMirror::linkChanged, this, &WCModeEditor::onTextStatusChanged );
+
+  connect( mirrorPtr, &SvMirror::memoryChanged, this, &WCModeEditor::onMemoryChanged );
+
+  connect( this, &WCModeEditor::debug, mirrorPtr, &SvMirror::debug );
 
   //Обновить текстовый статус
   onTextStatusChanged( false, QString{}, QString{} );
   }
+
+
+
+
 
 
 
@@ -1097,6 +1108,8 @@ void WCModeEditor::debugRunAll()
 //Шаг программы
 void WCModeEditor::debugStep()
   {
+  if( mProgramm.isNull() )
+    return;
   //Задача заторможена
   int ip = mIps.at(task());
   int line = mProgramm->getLine(ip);
@@ -1113,6 +1126,8 @@ void WCModeEditor::debugStep()
 //Шаг программы с заходом в функцию
 void WCModeEditor::debugTrace()
   {
+  if( mProgramm.isNull() )
+    return;
   //Задача заторможена
   int ip = mIps.at(task());
   int line = mProgramm->getLine(ip);
@@ -1129,6 +1144,8 @@ void WCModeEditor::debugTrace()
 //Пауза VPU
 void WCModeEditor::debugPause()
   {
+  if( mProgramm.isNull() )
+    return;
   emit debug( task(), SDC_RUN_UNTIL, 0, mProgramm->codeCount() );
   }
 
@@ -1137,6 +1154,8 @@ void WCModeEditor::debugPause()
 //Пауза всех VPU
 void WCModeEditor::debugPauseAll()
   {
+  if( mProgramm.isNull() )
+    return;
   for( int i = 0; i < SV_MAX_TASK; i++ )
     emit debug( i, SDC_RUN_UNTIL, 0, mProgramm->codeCount() );
   }
@@ -1159,7 +1178,10 @@ void WCModeEditor::onTextStatusChanged(bool linked, const QString controllerType
 //Получить номер активной задачи
 int WCModeEditor::task()
   {
-  return mTasks->currentRow();
+  int row = mTasks->currentRow();
+  if( row >= 0 && row < mIps.count() )
+    return row;
+  return 0;
   }
 
 

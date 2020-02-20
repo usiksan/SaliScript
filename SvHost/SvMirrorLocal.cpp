@@ -53,6 +53,19 @@ QString SvMirrorLocal::programmName() const
 
 
 
+SvVpuVector SvMirrorLocal::vpuVector() const
+  {
+//  int activeVpuCount = mController->vpuCount();
+  int vpuMax = mController->getVpuMax();
+  SvVpuVector state;
+  for( int i = 0; i < vpuMax; i++ )
+    state.append( *(mController->vpu(i)) );
+  return state;
+  }
+
+
+
+
 int SvMirrorLocal::addressOfName(const QString name) const
   {
   return mController->getProgramm()->getAddr( name );
@@ -70,9 +83,18 @@ int SvMirrorLocal::memoryGet(int index) const
 
 
 
-//Установка программы, прошивка и запуск
-void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause)
+
+qint32 SvMirrorLocal::memoryGlobalCount() const
   {
+  return mController->getProgramm()->globalCount();
+  }
+
+
+
+
+void SvMirrorLocal::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause, bool flash)
+  {
+  Q_UNUSED(flash)
   //Emit signal of start of operation [Отправим сигнал о начале операции]
   emit transferProcess( false, tr("Set programm") );
 
@@ -145,17 +167,6 @@ void SvMirrorLocal::processing(int tickOffset)
     mDivider = 0;
     //Emit memory changed
     emit memoryChanged( this );
-    //Emit task changed
-    if( mScanTasks ) {
-      for( int i = 0; i < mController->getVpuMax(); i++ ) {
-        const SvVmVpu *vpu = mController->vpu(i);
-        if( mVpuDebugRun[i] || vpu->mDebugRun ) {
-          mVpuDebugRun[i] = vpu->mDebugRun;
-          emit taskChanged( i, vpu->mIp, vpu->mSp, vpu->mBp, vpu->mTm, vpu->mBaseSp, vpu->mThrow, vpu->mDebugRun );
-          }
-        }
-      }
     }
-
   }
 

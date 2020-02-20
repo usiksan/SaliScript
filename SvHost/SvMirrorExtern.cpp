@@ -83,4 +83,15 @@ void SvMirrorExtern::debug(int taskId, int debugCmd, int start, int stop)
 
 
 
+//Clear debug
+void SvMirrorExtern::clearDebug()
+  {
+  //For each task we clear it
+  for( SvDebugTask &deb : mVpuDebug )
+    deb.clear();
+  }
+
+
+
+
 

@@ -59,8 +59,6 @@ void SvProject::openProject(const QString fname)
       mRemoteIp     = mProjectSrc.value( WPK_REMOTE_IP ).toString();    //IP адрес удаленной машины
       mRemotePort   = mProjectSrc.value( WPK_REMOTE_PORT ).toInt();         //Порт удаленной машины
       mGlobalId     = mProjectSrc.value( WPK_GLOBAL_ID ).toString();     //Глобальный идентификатор машины в интернете
-      mCompilerType = mProjectSrc.value( WPK_COMPILER_TYPE ).toString(); //Тип компилятора
-      mCtrVersion   = mProjectSrc.value( WPK_CTR_VERSION ).toInt();      //Исполнение контроллера
       mMainScript   = mProjectSrc.value( WPK_MAIN_SCRIPT ).toString();   //Основной скрипт узла
       mVid          = mProjectSrc.value( WPK_VID ).toInt();
       mPid          = mProjectSrc.value( WPK_PID ).toInt();
@@ -79,8 +77,6 @@ void SvProject::saveProject()
   mProjectSrc.insert( WPK_REMOTE_IP,      mRemoteIp );
   mProjectSrc.insert( WPK_REMOTE_PORT,    mRemotePort );
   mProjectSrc.insert( WPK_GLOBAL_ID,      mGlobalId );
-  mProjectSrc.insert( WPK_COMPILER_TYPE,  mCompilerType );
-  mProjectSrc.insert( WPK_CTR_VERSION,    mCtrVersion );
   mProjectSrc.insert( WPK_MAIN_SCRIPT,    mMainScript );
   mProjectSrc.insert( WPK_VID,            mVid );
   mProjectSrc.insert( WPK_PID,            mPid );
@@ -201,8 +197,6 @@ void SvProject::setDefaults()
   mPassw        = QString();
   mVid          = 0x2743;
   mPid          = 0x1971;
-  mCompilerType = QString(DEFAULT_COMPILER); //Тип компилятора
-  mCtrVersion   = 0;   //Исполнение контроллера
   mMainScript   = QString("main.c");   //Основной скрипт узла
   }
 
