@@ -17,19 +17,27 @@
 #include <QDebug>
 
 
-SvProject* svProject;
+SvProject* svProject; //! Global project pointer
+
+
+
 
 SvProject::SvProject() :
   QObject()
   {
-  //Установить поля проекта по-умолчанию
+  //! Set default project fields
   setDefaults();
   }
+
+
+
 
 SvProject::~SvProject()
   {
 
   }
+
+
 
 
 void SvProject::openProject(const QString fname)
@@ -55,13 +63,12 @@ void SvProject::openProject(const QString fname)
       if( !mProjectPath.endsWith( QChar('/') ) )
         mProjectPath.append(QChar('/'));
 
-      mDebugType    = mProjectSrc.value( WPK_DEBUG_TYPE ).toInt();    //Тип отладчика
-      mRemoteIp     = mProjectSrc.value( WPK_REMOTE_IP ).toString();    //IP адрес удаленной машины
-      mRemotePort   = mProjectSrc.value( WPK_REMOTE_PORT ).toInt();         //Порт удаленной машины
-      mGlobalId     = mProjectSrc.value( WPK_GLOBAL_ID ).toString();     //Глобальный идентификатор машины в интернете
-      mMainScript   = mProjectSrc.value( WPK_MAIN_SCRIPT ).toString();   //Основной скрипт узла
-      mVid          = mProjectSrc.value( WPK_VID ).toInt();
-      mPid          = mProjectSrc.value( WPK_PID ).toInt();
+      mDebugType       = mProjectSrc.value( WPK_DEBUG_TYPE ).toInt();    //Тип отладчика
+      mRemoteIp        = mProjectSrc.value( WPK_REMOTE_IP ).toString();    //IP адрес удаленной машины
+      mRemotePort      = mProjectSrc.value( WPK_REMOTE_PORT ).toInt();         //Порт удаленной машины
+      mControllerName  = mProjectSrc.value( WPK_CONTROLLER_NAME ).toString();     //Глобальный идентификатор машины в интернете
+      mControllerPassw = mProjectSrc.value( WPK_CONTROLLER_PASSW ).toString();
+      mMainScript      = mProjectSrc.value( WPK_MAIN_SCRIPT ).toString();   //Основной скрипт узла
       }
     }
   }
@@ -73,13 +80,12 @@ void SvProject::openProject(const QString fname)
 void SvProject::saveProject()
   {
   //Записать текущие данные
-  mProjectSrc.insert( WPK_DEBUG_TYPE,     mDebugType );
-  mProjectSrc.insert( WPK_REMOTE_IP,      mRemoteIp );
-  mProjectSrc.insert( WPK_REMOTE_PORT,    mRemotePort );
-  mProjectSrc.insert( WPK_GLOBAL_ID,      mGlobalId );
-  mProjectSrc.insert( WPK_MAIN_SCRIPT,    mMainScript );
-  mProjectSrc.insert( WPK_VID,            mVid );
-  mProjectSrc.insert( WPK_PID,            mPid );
+  mProjectSrc.insert( WPK_DEBUG_TYPE,       mDebugType );
+  mProjectSrc.insert( WPK_REMOTE_IP,        mRemoteIp );
+  mProjectSrc.insert( WPK_REMOTE_PORT,      mRemotePort );
+  mProjectSrc.insert( WPK_CONTROLLER_NAME,  mControllerName );
+  mProjectSrc.insert( WPK_CONTROLLER_PASSW, mControllerPassw );
+  mProjectSrc.insert( WPK_MAIN_SCRIPT,      mMainScript );
 
 
   QFile file(mProjectPath + mProjectName + EXTENSION_PROJECT);
@@ -187,16 +193,18 @@ void SvProject::createNew(const QString fname)
     }
   }
 
+
+
+
+
 //Заполнить поля проекта по-умолчанию
 void SvProject::setDefaults()
   {
-  mDebugType    = SMT_LOCAL;    //Тип отладчика
-  mRemoteIp     = QString("127.0.0.1");     //IP адрес удаленной машины
-  mRemotePort   = DEFAULT_REMOTE_PORT;   //Порт удаленной машины
-  mGlobalId     = QString();     //Глобальный идентификатор машины в интернете
-  mPassw        = QString();
-  mVid          = 0x2743;
-  mPid          = 0x1971;
-  mMainScript   = QString("main.c");   //Основной скрипт узла
+  mDebugType       = SMT_LOCAL;    //Тип отладчика
+  mRemoteIp        = QString("127.0.0.1");     //IP адрес удаленной машины
+  mRemotePort      = DEFAULT_REMOTE_PORT;   //Порт удаленной машины
+  mControllerName  = QString();     //Глобальный идентификатор машины в интернете
+  mControllerPassw = QString();
+  mMainScript      = QString("main.c");   //Основной скрипт узла
   }
 

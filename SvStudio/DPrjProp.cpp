@@ -34,22 +34,20 @@ DPrjProp::DPrjProp(const QString &okTitle, QWidget *parent) :
   ui->mPort->setText( QString::number(svProject->mRemotePort) );
   ui->mPort->setToolTip( tr("Port of connection on remote computer in net") );
 
-  ui->mId->setText( svProject->mGlobalId );
-  ui->mId->setToolTip( tr("Global id of remote computer. On connections via internet.") );
+  ui->mControllerName->setText( svProject->mControllerName );
+  ui->mControllerName->setToolTip( tr("Controller name through USB or global id of remote computer on connections via internet.") );
 
-  ui->mPassw->setText( svProject->mPassw );
-  ui->mPassw->setToolTip( tr("Password of remote computer. On connections via internet.") );
-
-  ui->mVid->setText( QString::number( svProject->mVid, 16 ) );
-  ui->mVid->setToolTip( tr("VID value. On USB connection.") );
-
-  ui->mPid->setText( QString::number( svProject->mPid, 16 ) );
-  ui->mPid->setToolTip( tr("PID value. On USB connection.") );
+  ui->mControllerPassw->setText( svProject->mControllerPassw );
+  ui->mControllerPassw->setToolTip( tr("Password of remote computer. On connections via internet.") );
 
   ui->mOk->setText( okTitle );
 
   //Связать выбор типа устройства с предустановленными свойствами
   connect( ui->mDebugRemote, &QRadioButton::clicked, this, &DPrjProp::selectedRemote );
+  connect( ui->mDebugBridge, &QRadioButton::clicked, this, [this] () {
+    ui->mIp->setText( DEFAULT_INTERNET_IP );
+    ui->mPort->setText( QString::number( DEFAULT_REMOTE_PORT ) );
+    });
 
   connect( ui->mCancel, SIGNAL(clicked()), this, SLOT(reject()) );
   connect( ui->mOk, SIGNAL(clicked()), this, SLOT(accept()) );
@@ -80,7 +78,7 @@ void DPrjProp::selectScript()
 //Выбран интерфейс по локальной сети
 void DPrjProp::selectedRemote()
   {
-  ui->mIp->setText( DEFAULT_INTERNET_IP );
+  ui->mIp->setText( QStringLiteral("127.0.0.1") );
   ui->mPort->setText( QString::number( DEFAULT_REMOTE_PORT ) );
   }
 
@@ -103,15 +101,14 @@ void DPrjProp::accept()
 
   svProject->mRemotePort = ui->mPort->text().toInt();
 
-  svProject->mGlobalId = ui->mId->text();
+  svProject->mControllerName = ui->mControllerName->text();
 
-  svProject->mPassw = ui->mPassw->text();
-
-  svProject->mVid = ui->mVid->text().toInt(0,16);
-  svProject->mPid = ui->mPid->text().toInt(0,16);
+  svProject->mControllerPassw = ui->mControllerPassw->text();
 
   QDialog::accept();
   }
+
+
 
 
 void DPrjProp::changeEvent(QEvent *e)

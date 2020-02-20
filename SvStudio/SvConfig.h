@@ -1,5 +1,6 @@
 ﻿/*
-  Проект "SvStudio"
+  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Подпроект  "SvStudio"
     IDE скриптового языка
   Автор
     Сибилев А.С.
@@ -12,12 +13,14 @@
                      Сделал обработчик для отладки через локальную сеть
                      Вернул возможность пошагового исполнения
                      Скорректировал позиционирование отлаживаемой строки
+               v0.4  Модифицировал проект для хранения настроек удаленного доступа
+               v0.5  Добавил возможность удаленного доступа по локальной сети
 */
 
 #ifndef SVCONFIG
 #define SVCONFIG
 
-#define SV_VERSION "v0.3"
+#define SV_VERSION "v0.5"
 
 #define PATH_HELP              ""
 #define EXTENSION_PROJECT      ".svproject"
@@ -29,7 +32,6 @@
 
 #define DEFAULT_REMOTE_PORT   1971              //Удаленный порт по умолчанию
 #define DEFAULT_INTERNET_IP   "62.109.11.83"    //
-#define DEFAULT_COMPILER      "TVpu v3"
 #define DEFAULT_HOME_WEB      "www.salilab.ru"
 
 //Разделы конфигурации

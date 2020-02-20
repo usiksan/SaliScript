@@ -1,10 +1,12 @@
 {
     "A contens": "SaliLAB SV v0.2",
     "CompilerType": "TVpu v3",
+    "ControllerName": "",
+    "ControllerPassw": "",
     "CtrVersion": 0,
-    "DebugType": 0,
+    "DebugType": 2,
     "FileList": [
-        "/home/asibilev/work/SaliScript/script/main.c"
+        "/home/salilab/work/SaliScript/script/main.c"
     ],
     "GlobalID": "",
     "MainScript": "main.c",

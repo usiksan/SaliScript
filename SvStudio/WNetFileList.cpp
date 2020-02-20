@@ -12,6 +12,7 @@ Description
 */
 #include "WNetFileList.h"
 
+#include <QKeyEvent>
 #include <QDebug>
 
 WNetFileList::WNetFileList(QWidget *parent) :

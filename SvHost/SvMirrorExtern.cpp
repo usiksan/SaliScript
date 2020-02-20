@@ -17,7 +17,9 @@ SvMirrorExtern::SvMirrorExtern() :
   mVpuMutex(),
   mVpuCount(0),    //Количество VPU
   mMemoryCount(0),
-  mWriteMutex()
+  mWriteMutex(),
+  mNeedFlash(false),
+  mRunOrPause(true)
   {
   }
 
@@ -33,6 +35,8 @@ SvMirrorExtern::~SvMirrorExtern()
 
 int SvMirrorExtern::addressOfName(const QString name) const
   {
+  if( mProgramm.isNull() )
+    return 0;
   return mProgramm->getAddr(name);
   }
 

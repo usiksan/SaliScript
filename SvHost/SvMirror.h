@@ -208,4 +208,6 @@ class SvMirror : public QObject
 
 using SvMirrorPtr = QPointer<SvMirror>;
 
+//Q_DECLARE_METATYPE(SvMirrorPtr)
+
 #endif // SVMIRROR_H

@@ -47,6 +47,8 @@ void SvMirrorManager::setMirrorById(int id)
     //Build new mirror and setup
     setMirror( mMirrorFabric.value(id)(), id );
     }
+  else
+    emit mirrorChanged( id, mMirror );
   }
 
 

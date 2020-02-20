@@ -41,6 +41,8 @@ class WMain : public QMainWindow
 
     void setProgrammFlashRun( SvProgrammPtr prog, bool runOrPause, bool flash );
 
+    void linkTo( const QString ip, int port, const QString controllerName, const QString controllerPassw );
+
   public slots:
     void modeIntro();
     void modeBoard();

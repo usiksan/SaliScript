@@ -115,6 +115,7 @@ WMain::WMain(QWidget *parent)
   connect( mCModeIntro, SIGNAL(openProject()), this, SLOT(fileOpenProject()) );
   connect( mCModeIntro, &WCModeIntro::projectOpen, this, &WMain::fileProjectOpen );
   connect( svMirrorManager, &SvMirrorManager::mirrorChanged, this, &WMain::onMirrorChanged );
+  connect( this, &WMain::setMirror, svMirrorManager, &SvMirrorManager::setMirrorById, Qt::QueuedConnection );
 
   //Обновить список проектов
   svProject->updateRecentProjects();
@@ -472,6 +473,9 @@ void WMain::onMirrorChanged(int id, SvMirrorPtr mirror)
     mCModeEditor->mirrorChanged( id, mirror );
 
     connect( this, &WMain::setProgrammFlashRun, mirror.data(), &SvMirror::setProgrammFlashRun, Qt::QueuedConnection );
+    connect( this, &WMain::linkTo, mirror, &SvMirror::linkTo );
+
+    emit linkTo( svProject->mRemoteIp, svProject->mRemotePort, svProject->mControllerName, svProject->mControllerPassw );
     }
 
   }

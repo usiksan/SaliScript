@@ -24,12 +24,9 @@
 #define WPK_DEBUG_TYPE       QString("DebugType")
 #define WPK_REMOTE_IP        QString("RemoteIP")
 #define WPK_REMOTE_PORT      QString("RemotePort")
-#define WPK_GLOBAL_ID        QString("GlobalID")
-#define WPK_COMPILER_TYPE    QString("CompilerType")
-#define WPK_CTR_VERSION      QString("CtrVersion")
+#define WPK_CONTROLLER_NAME  QString("ControllerName")
+#define WPK_CONTROLLER_PASSW QString("ControllerPassw")
 #define WPK_MAIN_SCRIPT      QString("MainScript")
-#define WPK_VID              QString("USB VID")
-#define WPK_PID              QString("USB PID")
 #define WPK_CHART_VARIABLES  QString("ChartVarialbes")
 #define WPK_CHART_AXES       QString("ChartAxes")
 
@@ -55,12 +52,8 @@ struct SvProject : public QObject
     qint32                  mDebugType;    //Тип отладчика
     QString                 mRemoteIp;     //IP адрес удаленной машины
     qint32                  mRemotePort;   //Порт удаленной машины
-    QString                 mGlobalId;     //Глобальный идентификатор машины в интернете
-    QString                 mPassw;        //Пароль машины в интернете
-    qint32                  mVid;          //VID usb
-    qint32                  mPid;          //PID usb
-    QString                 mCompilerType; //Тип компилятора
-    qint32                  mCtrVersion;   //Исполнение контроллера
+    QString                 mControllerName; //! Controller name in global network or in usb
+    QString                 mControllerPassw;        //Пароль машины в интернете
     QString                 mMainScript;   //Основной скрипт узла (без пути, только имя)
 
     QJsonObject             mProjectSrc;   //Нераспакованные данные

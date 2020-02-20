@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>405</width>
-    <height>378</height>
+    <height>323</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <x>10</x>
      <y>10</y>
      <width>381</width>
-     <height>111</height>
+     <height>121</height>
     </rect>
    </property>
    <property name="title">
@@ -47,13 +47,20 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QRadioButton" name="mDebugBridge">
+      <property name="text">
+       <string>Remote over Internet through bridge</string>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>130</y>
+     <y>140</y>
      <width>71</width>
      <height>16</height>
     </rect>
@@ -65,9 +72,9 @@
   <widget class="QLineEdit" name="mMainScript">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>130</y>
-     <width>231</width>
+     <x>120</x>
+     <y>140</y>
+     <width>191</width>
      <height>20</height>
     </rect>
    </property>
@@ -76,7 +83,7 @@
    <property name="geometry">
     <rect>
      <x>320</x>
-     <y>130</y>
+     <y>140</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -92,7 +99,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>160</y>
+     <y>170</y>
      <width>47</width>
      <height>13</height>
     </rect>
@@ -104,9 +111,9 @@
   <widget class="QLineEdit" name="mIp">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>160</y>
-     <width>161</width>
+     <x>120</x>
+     <y>170</y>
+     <width>191</width>
      <height>20</height>
     </rect>
    </property>
@@ -115,7 +122,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>190</y>
+     <y>200</y>
      <width>47</width>
      <height>13</height>
     </rect>
@@ -127,9 +134,9 @@
   <widget class="QLineEdit" name="mPort">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>190</y>
-     <width>161</width>
+     <x>120</x>
+     <y>200</y>
+     <width>191</width>
      <height>20</height>
     </rect>
    </property>
@@ -138,21 +145,21 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>220</y>
-     <width>61</width>
+     <y>230</y>
+     <width>111</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>Global id:</string>
+    <string>Controller name:</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="mId">
+  <widget class="QLineEdit" name="mControllerName">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>220</y>
-     <width>161</width>
+     <x>120</x>
+     <y>230</y>
+     <width>191</width>
      <height>20</height>
     </rect>
    </property>
@@ -160,8 +167,8 @@
   <widget class="QPushButton" name="mOk">
    <property name="geometry">
     <rect>
-     <x>320</x>
-     <y>350</y>
+     <x>310</x>
+     <y>290</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -177,7 +184,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>350</y>
+     <y>290</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -189,12 +196,12 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="QLineEdit" name="mPassw">
+  <widget class="QLineEdit" name="mControllerPassw">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>250</y>
-     <width>161</width>
+     <x>120</x>
+     <y>260</y>
+     <width>191</width>
      <height>20</height>
     </rect>
    </property>
@@ -203,59 +210,13 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>250</y>
-     <width>47</width>
-     <height>13</height>
+     <y>260</y>
+     <width>111</width>
+     <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>Passw:</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_6">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>280</y>
-     <width>47</width>
-     <height>13</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>VID:</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="mVid">
-   <property name="geometry">
-    <rect>
-     <x>80</x>
-     <y>280</y>
-     <width>161</width>
-     <height>20</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="mPid">
-   <property name="geometry">
-    <rect>
-     <x>80</x>
-     <y>310</y>
-     <width>161</width>
-     <height>20</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_7">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>310</y>
-     <width>47</width>
-     <height>13</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>PID:</string>
+    <string>Controller passw:</string>
    </property>
   </widget>
  </widget>

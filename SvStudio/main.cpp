@@ -13,7 +13,11 @@
 #include "SvProject.h"
 #include "SvHost/SvMirrorManager.h"
 #include "SvHost/SvMirrorLocal.h"
+#include "SvHost/SvMirrorRemote.h"
 #include "SvCompiler/SvVpuCompiler.h"
+#include "SvNet/SvNetServer.h"
+#include "SvNet/SvNetHandlerMirror.h"
+
 #include <QApplication>
 #include <QSettings>
 
@@ -29,7 +33,7 @@ int main(int argc, char *argv[])
   //Создание приложения
   QApplication a(argc, argv);
 
-//  qRegisterMetaType<SvProgrammPtr>();
+  qRegisterMetaType<SvMirrorPtr>("SvMirrorPtr");
 
   //Создать рабочий проект
   svProject = new SvProject();
@@ -37,14 +41,19 @@ int main(int argc, char *argv[])
   //Создать менеджер зеркал
   svMirrorManager = new SvMirrorManager();
   svMirrorManager->addMirrorFabric( SMT_LOCAL, [] () { return new SvMirrorLocal( new SvVMachineLocal() ); } );
+  svMirrorManager->addMirrorFabric( SMT_REMOTE, [] () { return new SvMirrorRemote(); } );
 
   QSettings s;
 
-//  svNetClientMirror = new SvNetClientMirror( nullptr,
-//                                             0, //s.value( QStringLiteral(CFG_BRIDGE_PASSW) ).toInt(),
-//                                             0, //s.value( QStringLiteral(CFG_BRIDGE_ID) ).toInt(),
-//                                             s.value( QStringLiteral(CFG_BRIDGE_IP), QString(DEFAULT_INTERNET_IP) ).toString(),
-//                                             s.value( QStringLiteral(CFG_BRIDGE_PORT), DEFAULT_REMOTE_PORT ).toInt() );
+  //Сервер для доступа к зеркалу по локальной сети
+  SvNetServer *localServer = new SvNetServer( 1971 );
+
+  //Обработчик сетевого управления
+  SvNetHandlerMirror *handlerMirror = new SvNetHandlerMirror();
+
+  //Соединения
+  localServer->connect( localServer, &SvNetServer::addChannel, handlerMirror, &SvNetHandlerMirror::addNetChannel );
+  handlerMirror->connect( svMirrorManager, &SvMirrorManager::mirrorChanged, handlerMirror, &SvNetHandlerMirror::mirrorChanged );
 
   //Создание главного окна приложения
   WMain w;
@@ -63,6 +72,8 @@ int main(int argc, char *argv[])
   svMirrorManager->stop();
 
   //Остановить работу удаленного управления
+  localServer->deleteLater();
+
 //  svNetClientMirror->stopClient();
 
   //Сохранить настройки удаленного управления
