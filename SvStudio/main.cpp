@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
   SvNetHandlerMirror *handlerMirror = new SvNetHandlerMirror();
 
   //Соединения
-  localServer->connect( localServer, &SvNetServer::addChannel, handlerMirror, &SvNetHandlerMirror::addNetChannel );
+  localServer->connect( localServer, &SvNetServer::addNetChannel, handlerMirror, &SvNetHandlerMirror::addNetChannel );
   handlerMirror->connect( svMirrorManager, &SvMirrorManager::mirrorChanged, handlerMirror, &SvNetHandlerMirror::mirrorChanged );
 
   //Создание главного окна приложения

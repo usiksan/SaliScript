@@ -32,7 +32,7 @@ class SvNetServer : public QTcpServer
     SvNetServer( int port );
 
   signals:
-    void addChannel( SvNetChannel *channel );
+    void addNetChannel( SvNetChannel *channel );
 
   };
 

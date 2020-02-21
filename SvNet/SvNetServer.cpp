@@ -40,7 +40,7 @@ SvNetServer::SvNetServer(int port) :
       connect( socket, &QTcpSocket::disconnected, channel, &SvNetChannel::deleteLater );
 
       //Оповестить о созданном канале
-      emit addChannel( channel );
+      emit addNetChannel( channel );
       }
     });
   }

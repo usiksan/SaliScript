@@ -64,6 +64,7 @@ HEADERS += \
   SvNet/SvNetLocalSlave.h \
   SvNet/SvNetMirror.h \
   SvNet/SvNetServer.h \
+  SvNet/SvNetServerLocal.h \
   SvNet/SvNetService.h \
   SvNet/SvNetConnector.h \
   SvStudio/DNetProcess.h \
@@ -160,6 +161,7 @@ SOURCES += \
   SvNet/SvNetLocalMaster.cpp \
   SvNet/SvNetLocalSlave.cpp \
   SvNet/SvNetServer.cpp \
+  SvNet/SvNetServerLocal.cpp \
   SvNet/SvNetService.cpp \
   SvNet/SvNetConnector.cpp \
   SvStudio/DNetProcess.cpp \
