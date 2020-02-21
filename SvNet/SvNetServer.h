@@ -1,10 +1,9 @@
 /*
-  Проект     "Скриптовый язык reduced c++ (rc++) v6"
+  Проект     "Скриптовый язык SaliScript: упрощенный c++"
   Подпроект  "SvNet управление скриптами по сети"
   Автор
     Alexander Sibilev
   Интернет
-    www.rc.saliLab.ru - домашний сайт проекта
     www.saliLab.ru
     www.saliLab.com
 

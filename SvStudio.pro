@@ -52,6 +52,7 @@ HEADERS += \
   SvHost/SvMirrorUsb10.h \
   SvHost/SvProgramm.h \
   SvHost/SvVMachineLocal.h \
+  SvNet/SvNetBlockInfo.h \
   SvNet/SvNetBridgeMaster.h \
   SvNet/SvNetBridgeSlave.h \
   SvNet/SvNetChannel.h \
@@ -61,7 +62,6 @@ HEADERS += \
   SvNet/SvNetLocalMaster.h \
   SvNet/SvNetLocalSlave.h \
   SvNet/SvNetMirror.h \
-  SvNet/SvNetPacketInfo.h \
   SvNet/SvNetServer.h \
   SvNet/SvNetService.h \
   SvNet/SvNetServiceFileMaster.h \
@@ -150,6 +150,7 @@ SOURCES += \
   SvHost/SvMirrorUsb10.cpp \
   SvHost/SvProgramm.cpp \
   SvHost/SvVMachineLocal.cpp \
+  SvNet/SvNetBlockInfo.cpp \
   SvNet/SvNetBridgeMaster.cpp \
   SvNet/SvNetBridgeSlave.cpp \
   SvNet/SvNetChannel.cpp \
@@ -158,7 +159,6 @@ SOURCES += \
   SvNet/SvNetHandlerMirror.cpp \
   SvNet/SvNetLocalMaster.cpp \
   SvNet/SvNetLocalSlave.cpp \
-  SvNet/SvNetPacketInfo.cpp \
   SvNet/SvNetServer.cpp \
   SvNet/SvNetService.cpp \
   SvNet/SvNetServiceFileMaster.cpp \

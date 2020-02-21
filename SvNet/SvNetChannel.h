@@ -1,17 +1,39 @@
 /*
-  Project "Net packet interchange over local net and internet bridge server"
+  Проект     "Скриптовый язык SaliScript: упрощенный c++"
+  Подпроект  "SvNet управление скриптами по сети"
   Автор
-    Sibilev A.S.
+    Alexander Sibilev
+  Интернет
+    www.saliLab.ru
+    www.saliLab.com
 
-    www.salilab.com
-    www.salilab.ru
-  Description
-    Object for low level information transfer
+  Описание
+    SvNetChannel - класс канала обмена
+    SvNetAnswer - структура для коротких ответов
+
+    Блок - основа обмена информацией. Блок содержит команду - некоторый код,
+    который однозначно определяет формат передаваемых данных и сами данных.
+    Сами данные передается как QByteArray, в который через QDataStream записываются
+    и считываются данные.
+
+    Для обеспечения согласованности записи и чтения данных в/из блока каждый тип
+    блока представляет собой структуру с согласованными функциями чтения и записи.
+    Размещение функций чтения и записи в одном месте обеспечивает наглядность и резко
+    снижает вероятность несогласованности операций чтения и записи.
+
+    Структура коротких ответов - часто используемый блок данных для коротких запросов и ответов.
+
+    Основная идея - обмен блоками. Минимальный объем передаваемой информации - это
+    блок переменной длины. Поскольку блок может быть достаточно большого размера,
+    то при передаче он автоматически разбивается на сетевые пакеты. Поэтому
+    на приемном канале информация появляется постепенно. В задачу класса канала
+    входит аккумулирование поступающих данных до тех пор, пока не будет принят весь
+    блок. После принятия блока целиком он сигналом отправляется на обработку.
 */
 #ifndef SVNETCHANNEL_H
 #define SVNETCHANNEL_H
 
-#include "SvNetPacketInfo.h"
+#include "SvNetBlockInfo.h"
 
 #include <QObject>
 #include <QTcpSocket>
@@ -19,15 +41,43 @@
 
 #define SV_NET_CHANNEL_ANSWER_CMD 1
 
-struct SvNetAnswer {
-    qint32  mSrcCmd;
-    qint32  mAnswerCode;
-    QString mMessage;
+/*!
+   \brief The SvNetAnswer struct Короткий ответ и иллюстрация построения блоков обмена.
 
+   Структура содержит данные для обмена, а также две функции для упаковки этих данных в
+   набор байтов и распаковки данных из набора байтов. Для целей упаковки и распаковки
+   должна использоваться QDataStream для обеспечения совместимости передаваемых данных
+   вне зависимости от соединяемых платформ.
+ */
+struct SvNetAnswer {
+    qint32  mSrcCmd;     //! Код исходной команды, на которую формируется ответ
+    qint32  mAnswerCode; //! Код ответа
+    QString mMessage;    //! Дополнительное сообщение
+
+
+
+    //!
+    //! \brief SvNetAnswer Конструктор строит блок данных из исходных полей. Данный конструктор удобен для передачи
+    //! \param srcCmd      Код исходной команды, на которую формируется ответ
+    //! \param answerCode  Код ответа
+    //! \param msg         Дополнительное сообщение
+    //!
     SvNetAnswer( qint32 srcCmd, qint32 answerCode, QString msg ) : mSrcCmd(srcCmd), mAnswerCode(answerCode), mMessage(msg) {}
 
+
+
+    //!
+    //! \brief SvNetAnswer Конструктор строит блок данных из набора упакованных данных. Данный конструктор удобен для приема
+    //! \param ar          Набор байтов
+    //!
     SvNetAnswer( const QByteArray ar ) { parseBlock(ar); }
 
+
+
+    //!
+    //! \brief buildBlock Упаковывает свои поля в набор байтов
+    //! \return           Набор байтов с упакованными в него полями
+    //!
     QByteArray buildBlock() {
       QByteArray ar;
       QDataStream os( &ar, QIODevice::WriteOnly );
@@ -37,6 +87,11 @@ struct SvNetAnswer {
       return ar;
       }
 
+
+    //!
+    //! \brief parseBlock Декодирование набора данных и восстановление полей
+    //! \param ar         Набор байтов с упакованными в него полями
+    //!
     void parseBlock( const QByteArray ar ) {
       QDataStream is(ar);
       is >> mSrcCmd
@@ -46,95 +101,114 @@ struct SvNetAnswer {
 
   };
 
-/*!
-   \brief The SvNetChannel class Object for low level information transfer
 
-   Main idea - block transfer. One piece of interchange is block transfer.
-   Block may be big size. So each block may be devided onto some packets
-   and transfer continuously. On received side all packets accumulate together
-   and transfer completed only when full block transfered.
+
+
+
+
+
+
+
+/*!
+   \brief The SvNetChannel class Сетевой канал - объект для низкоуровневого обмена информацией.
+
+   Основная идея - обмен блоками. Минимальный объем передаваемой информации - это
+   блок переменной длины. Поскольку блок может быть достаточно большого размера,
+   то при передаче он автоматически разбивается на сетевые пакеты. Поэтому
+   на приемном канале информация появляется постепенно. В задачу этого класса
+   входит аккумулирование поступающих данных до тех пор, пока не будет принят весь
+   блок. После принятия блока целиком он сигналом отправляется на обработку.
  */
 class SvNetChannel : public QObject
   {
     Q_OBJECT
 
-    QTcpSocket     *mSocket;     //! Socket, witch connection made with
+    QTcpSocket     *mSocket;     //! Сокет, через который осуществляется связь
   protected:
-    int             mReadOffset; //! Position of next received data portion
-    int             mReadSize;   //! Full read size
-    QByteArray      mBlock;      //! Receiving block
-    SvNetPacketInfo mPacketInfo; //! Packet info of receiving block
+    int             mReadOffset; //! Позиция следующей порции приемных данных
+    int             mReadSize;   //! Полный размер ожидаемых данных
+    QByteArray      mBlock;      //! Приемный блок
+    SvNetBlockInfo  mBlockInfo;  //! Информационная структура пакета для принимаемого блока
     quint8          padding[3];
   public:
+    //!
+    //! \brief SvNetChannel Конструктор
+    //! \param socket       Сокет, через который будет взаимодействовать канал
+    //! \param parent       Родительских объект
+    //!
     explicit SvNetChannel(QTcpSocket *socket, QObject *parent = nullptr);
 
     //====================================================================================
     //                         Обмен по локальной сети
     //!
-    //! \brief setSocket Connect new socket to channel
-    //! \param socket    Connected socket, previous socked is deleted if present.
-    //!                  Channel becomes owner for socket. Do'nt delete socket manualy.
+    //! \brief setSocket Установить для данного канала новый сокет
+    //! \param socket    Новый устанавливаемый сокет. Прежний сокет, если он есть, удаляется автоматически.
+    //!                  Канал становится владельцем сокета. Не удаляйте сокет вручную.
     //!
     void        setSocket( QTcpSocket *socket );
 
     //!
-    //! \brief getSocket Get current socket
-    //! \return          Current socket
+    //! \brief getSocket Возвращает текущий сокет канала
+    //! \return          Текущий сокет канала
     //!
     QTcpSocket *getSocket() { return mSocket; }
 
 
   signals:
     /*!
-       \brief receivedBlock Block received
-       \param ch            Channel which must send block or nullptr for all connected channels
-       \param cmd           Command for block
-       \param ar            Data block
+       \brief receivedBlock Сигнал о принятом блоке
+       \param ch            Канал, который принял блок (по сути this) и через который должен быть передан ответ, если он есть
+       \param cmd           Команда принятого блока
+       \param ar            Данные блока
 
-       This signal emited on completing block reaciving. In connected classes
-       in this function must be block data decoding.
+       Этот сигнал посылается, когда блок полностью принят. В подключенных классах должны
+       быть обеспечены декодирование и обработка принятого блока.
      */
-    void receivedBlock( SvNetChannel *ch, int cmd, const QByteArray block );
+    void        receivedBlock( SvNetChannel *ch, int cmd, const QByteArray block );
 
 
   public slots:
     /*!
-       \brief sendBlock Send block with appropriate command
-       \param ch        Channel which must send block or nullptr for all connected channels
-       \param cmd       Command for block
-       \param ar        Data block
+       \brief sendBlock Отправка блока с соответствующей командой
+       \param ch        Канал, через который должен быть отправлен блок или nullptr для всех каналов
+       \param cmd       Команда для блока
+       \param ar        Блок данных
 
-       Block is completed part of interchange data. Each block follow with
-       block command which descripting block data. Before block transfer it
-       prepare with CsPacketInfo struct which contains block command and
-       block size follows block data.
+       Блок - это минимальная еденица обмена. Каждому блоку соответствует команда,
+       которая описывает способ декодирования данных внутри этого блока. Перед
+       передачей блок предваряется структурой описания пакета SvNetBlockInfo,
+       которая содержит команду и длину данных. За этой структурой непосредственно
+       следует сам блок данных.
      */
-    void sendBlock( SvNetChannel *ch, qint8 cmd, const QByteArray block );
+    void        sendBlock( SvNetChannel *ch, qint8 cmd, const QByteArray block );
 
 
-    /*!
-       \brief sendAnswer Helper function for send answer.
-       \param ch         Channel through which transmission must be done.
-       \param srcCmd     Source command for which answer generated.
-       \param answerCode Answer code
-       \param msg        Answer message
-
-       This function packs params into SvNetAnswer structure and send it over
-       net with SV_NET_CHANNEL_ANSWER_CMD command.
-     */
-    void sendAnswer(SvNetChannel *ch, qint8 srcCmd, qint32 answerCode, const QString msg );
+    //!
+    //! \brief sendAnswer Вспомогательная функция для отправки структуры SvNetAnswer
+    //! \param ch         Канал, через который должна быть выполнена отправка
+    //! \param cmd        Команда, которой соответствует структура данных
+    //! \param srcCmd     Исходная команда для структуры SvNetAnswer
+    //! \param answerCode Код результата для структуры SvNetAnswer
+    //! \param msg        Дополнительное сообщение для структуры SvNetAnswer
+    //!
+    //! Значения для структуры SvNetAnswer заносятся в эту структуру, затем она с командой cmd
+    //! отправляется через sendBlock
+    void        sendAnswer(SvNetChannel *ch, qint8 cmd, qint8 srcCmd, qint32 answerCode, const QString msg );
 
   private slots:
-    /*!
-       \brief onReceivBytes On receiv bytes
-
-       Calling from socket when some data ready for read. With this function
-       collecting all packets for receiving block.
-     */
-    void onReceivBytes();
+    //!
+    //! \brief onReceivBytes Слот вызывается автоматически при поступлении новых данных
+    //!                      из сокета. Эта функция собирает из отдельных поступающих байтов
+    //!                      целые блоки
+    //!
+    void        onReceivBytes();
 
   private:
-    void receiveBlockPrivate();
+    //!
+    //! \brief receiveBlockPrivate Блок принят. Вызывается по завершении приема блока данных.
+    //!                            Просто отправляет сигнал о готовности блока receivedBlock
+    //!
+    void        receiveBlockPrivate();
   };
 
 #endif // SVNETCHANNEL_H
