@@ -43,7 +43,6 @@ HEADERS += \
   SvCompiler/SvCompiler.h \
   SvCompiler/SvVpuCompiler.h \
   SvHost/SvDir.h \
-  SvHost/SvHandler.h \
   SvHost/SvMirror.h \
   SvHost/SvMirrorCom.h \
   SvHost/SvMirrorExtern.h \
@@ -51,7 +50,6 @@ HEADERS += \
   SvHost/SvMirrorManager.h \
   SvHost/SvMirrorRemote.h \
   SvHost/SvMirrorUsb10.h \
-  SvHost/SvNetHandlerFile.h \
   SvHost/SvProgramm.h \
   SvHost/SvVMachineLocal.h \
   SvNet/SvNetBridgeMaster.h \
@@ -142,7 +140,6 @@ SOURCES += \
   SvCompiler/SvVpuCompiler1.cpp \
   SvCompiler/SvVpuCompiler2.cpp \
   SvHost/SvDir.cpp \
-  SvHost/SvHandler.cpp \
   SvHost/SvMirror.cpp \
   SvHost/SvMirrorCom.cpp \
   SvHost/SvMirrorExtern.cpp \
