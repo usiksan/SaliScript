@@ -212,13 +212,23 @@ class SvNetHandlerFile : public SvNetHandler
     //!
     virtual void receivedBlock( SvNetChannel *ch, qint8 cmd, QByteArray block ) override;
 
+    static SvNetDirInfo getDirInfo( const QString path );
   private:
-    void onDirListRequest( SvNetChannel *ch, const QByteArray bl );
+    void sendAnswer(SvNetChannel *ch, qint8 srcCmd, quint32 errCode, const QString msg );
 
-    void onFile( SvNetChannel *ch, const QByteArray bl );
+    void fileRequest( SvNetChannel *ch, const SvNetFile &src );
 
-    void onFileRequest( SvNetChannel *ch, const QByteArray bl );
+    void file( SvNetChannel *ch, const SvNetFile &src );
 
+    void dirRequest( SvNetChannel *ch, const SvNetDirInfo &src );
+
+    void makeDir( SvNetChannel *ch, const SvNetFileOper &oper );
+
+    void fileRemove( SvNetChannel *ch, const SvNetFileOper &oper );
+
+    void fileCopy( SvNetChannel *ch, const SvNetFileOper &oper );
+
+    void fileMove( SvNetChannel *ch, const SvNetFileOper &oper );
   };
 
 #endif // SVNETHANDLERFILE_H

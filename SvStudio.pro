@@ -64,8 +64,6 @@ HEADERS += \
   SvNet/SvNetMirror.h \
   SvNet/SvNetServer.h \
   SvNet/SvNetService.h \
-  SvNet/SvNetServiceFileMaster.h \
-  SvNet/SvNetServiceFileSlave.h \
   SvNet/SvNetConnector.h \
   SvStudio/DNetProcess.h \
   SvStudio/DNetProcessFileDirRequest.h \
@@ -161,8 +159,6 @@ SOURCES += \
   SvNet/SvNetLocalSlave.cpp \
   SvNet/SvNetServer.cpp \
   SvNet/SvNetService.cpp \
-  SvNet/SvNetServiceFileMaster.cpp \
-  SvNet/SvNetServiceFileSlave.cpp \
   SvNet/SvNetConnector.cpp \
   SvStudio/DNetProcess.cpp \
   SvStudio/DNetProcessFileDirRequest.cpp \

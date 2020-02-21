@@ -1,6 +1,8 @@
 #ifndef SVNETCONNECTOR_H
 #define SVNETCONNECTOR_H
 
+#include "SvNetChannel.h"
+
 #include <QObject>
 
 class SvNetConnector : public QObject
@@ -10,7 +12,7 @@ class SvNetConnector : public QObject
     explicit SvNetConnector(QObject *parent = nullptr);
 
   signals:
-
+    void addNetChannel( SvNetChannel *channel );
   };
 
 #endif // SVNETCONNECTOR_H
