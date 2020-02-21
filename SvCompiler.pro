@@ -32,8 +32,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 HEADERS += \
   SvCompiler/SvCompiler.h \
   SvCompiler/SvVpuCompiler.h \
-  SvHost/SvProgramm.h \
-  SvNet/SvNetConnector.h
+  SvHost/SvProgramm.h
 
 SOURCES += \
   SvCompiler/SvClass.cpp \
@@ -69,8 +68,7 @@ SOURCES += \
   SvCompiler/SvVpuCompiler1.cpp \
   SvCompiler/SvVpuCompiler2.cpp \
   SvCompilerMain.cpp \
-  SvHost/SvProgramm.cpp \
-  SvNet/SvNetConnector.cpp
+  SvHost/SvProgramm.cpp
 
 FORMS +=
 
