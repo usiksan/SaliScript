@@ -16,8 +16,8 @@ void DNetProcessFileDirRequest::receivedBlock(SvNetChannel *ch, int cmd, const Q
       done(1);
       }
     else if( cmd == SVC_FILE_ANSWER ) {
-      SvNetFileAnswer answer(block);
-      mError->setText( answer.mMsg );
+      SvNetAnswer answer(block);
+      mError->setText( answer.mMessage );
       mClose->setText( tr("Close error") );
       }
     }

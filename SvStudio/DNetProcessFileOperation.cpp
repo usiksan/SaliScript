@@ -1,4 +1,5 @@
 #include "DNetProcessFileOperation.h"
+#include "SvNet/SvNetHandlerFile.h"
 
 
 DNetProcessFileOperation::DNetProcessFileOperation(qint8 oper, const QString src, const QString dst, const QString descr, SvNetChannel *channel, QWidget *parent) :
@@ -13,9 +14,9 @@ DNetProcessFileOperation::DNetProcessFileOperation(qint8 oper, const QString src
 void DNetProcessFileOperation::receivedBlock(SvNetChannel *ch, int cmd, const QByteArray block)
   {
   if( mChannel == ch && cmd == SVC_FILE_ANSWER ) {
-    SvNetFileAnswer answer(block);
-    if( answer.mErrors ) {
-      mError->setText( answer.mMsg );
+    SvNetAnswer answer(block);
+    if( answer.mAnswerCode ) {
+      mError->setText( answer.mMessage );
       mClose->setText( tr("Close error") );
       }
     else done(1);

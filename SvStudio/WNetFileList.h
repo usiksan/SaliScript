@@ -13,7 +13,7 @@ Description
 #ifndef WNETFILELIST_H
 #define WNETFILELIST_H
 
-#include "SvNet/SvNetServiceFileSlave.h"
+#include "SvNet/SvNetHandlerFile.h"
 #include "SvHost/SvDir.h"
 
 #include <QTableWidget>

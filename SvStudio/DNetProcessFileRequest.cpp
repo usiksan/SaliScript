@@ -1,4 +1,5 @@
 #include "DNetProcessFileRequest.h"
+#include "SvNet/SvNetHandlerFile.h"
 
 DNetProcessFileRequest::DNetProcessFileRequest(const QString remoteFileName, const QString descr, SvNetChannel *channel, QWidget *parent) :
   DNetProcess( descr, channel, parent ),
@@ -16,8 +17,8 @@ void DNetProcessFileRequest::receivedBlock(SvNetChannel *ch, int cmd, const QByt
       done(1);
       }
     else if( cmd == SVC_FILE_ANSWER ) {
-      SvNetFileAnswer answer(block);
-      mError->setText( answer.mMsg );
+      SvNetAnswer answer(block);
+      mError->setText( answer.mMessage );
       mClose->setText( tr("Close error") );
       }
     }

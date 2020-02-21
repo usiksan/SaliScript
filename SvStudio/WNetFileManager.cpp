@@ -528,7 +528,7 @@ void WNetFileManager::setLeftDir(const QString dir)
     }
   else {
     //Получить директорий из локального компьютера
-    mLeftPanel->onDirList( dir, SvNetServiceFileSlave::getDirInfo(dir) );
+    mLeftPanel->onDirList( dir, SvNetHandlerFile::getDirInfo(dir) );
     mLocalDir = dir;
     }
   }
@@ -548,7 +548,7 @@ void WNetFileManager::setRightDir(const QString dir)
     }
   else {
     //Получить директорий из локального компьютера
-    mRightPanel->onDirList( dir, SvNetServiceFileSlave::getDirInfo(dir) );
+    mRightPanel->onDirList( dir, SvNetHandlerFile::getDirInfo(dir) );
     mLocalDir = dir;
     }
   }
@@ -649,7 +649,7 @@ void WNetFileManager::setRemoteDir(const QString dir)
 void WNetFileManager::setLocalDir(const QString dir)
   {
   mLocalDir = dir;
-  SvNetDirInfo list = SvNetServiceFileSlave::getDirInfo( dir );
+  SvNetDirInfo list = SvNetHandlerFile::getDirInfo( dir );
   //Установить локальные директории в панелях
   if( !mLeftRemote->isChecked() ) {
     mLeftDir->setText( dir );
@@ -670,7 +670,7 @@ void WNetFileManager::setLocalDir(const QString dir)
 void WNetFileManager::updateLocalDir(const QString dir)
   {
   mLocalDir = dir;
-  SvNetDirInfo list = SvNetServiceFileSlave::getDirInfo( dir );
+  SvNetDirInfo list = SvNetHandlerFile::getDirInfo( dir );
   //Установить локальные директории в панелях
   if( !mLeftRemote->isChecked() && mLeftDir->text() == dir )
     mLeftPanel->onDirList( dir, list );

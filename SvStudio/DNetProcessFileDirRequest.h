@@ -2,7 +2,7 @@
 #define DNETPROCESSFILEDIRREQUEST_H
 
 #include "DNetProcess.h"
-#include "SvNet/SvNetServiceFileSlave.h"
+#include "SvNet/SvNetHandlerFile.h"
 
 class DNetProcessFileDirRequest : public DNetProcess
   {

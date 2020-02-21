@@ -15,12 +15,13 @@
                      Скорректировал позиционирование отлаживаемой строки
                v0.4  Модифицировал проект для хранения настроек удаленного доступа
                v0.5  Добавил возможность удаленного доступа по локальной сети
+    21.02.2020 v0.6  Произвожу чистку проекта от шелухи
 */
 
 #ifndef SVCONFIG
 #define SVCONFIG
 
-#define SV_VERSION "v0.5"
+#define SV_VERSION "v0.6"
 
 #define PATH_HELP              ""
 #define EXTENSION_PROJECT      ".svproject"

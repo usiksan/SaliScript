@@ -53,20 +53,12 @@ HEADERS += \
   SvHost/SvProgramm.h \
   SvHost/SvVMachineLocal.h \
   SvNet/SvNetBlockInfo.h \
-  SvNet/SvNetBridgeMaster.h \
-  SvNet/SvNetBridgeSlave.h \
   SvNet/SvNetChannel.h \
-  SvNet/SvNetConnectorLocal.h \
   SvNet/SvNetHandler.h \
   SvNet/SvNetHandlerFile.h \
   SvNet/SvNetHandlerMirror.h \
-  SvNet/SvNetLocalMaster.h \
-  SvNet/SvNetLocalSlave.h \
   SvNet/SvNetMirror.h \
   SvNet/SvNetServer.h \
-  SvNet/SvNetServerLocal.h \
-  SvNet/SvNetService.h \
-  SvNet/SvNetConnector.h \
   SvStudio/DNetProcess.h \
   SvStudio/DNetProcessFileDirRequest.h \
   SvStudio/DNetProcessFileOperation.h \
@@ -151,19 +143,11 @@ SOURCES += \
   SvHost/SvProgramm.cpp \
   SvHost/SvVMachineLocal.cpp \
   SvNet/SvNetBlockInfo.cpp \
-  SvNet/SvNetBridgeMaster.cpp \
-  SvNet/SvNetBridgeSlave.cpp \
   SvNet/SvNetChannel.cpp \
-  SvNet/SvNetConnectorLocal.cpp \
   SvNet/SvNetHandler.cpp \
   SvNet/SvNetHandlerFile.cpp \
   SvNet/SvNetHandlerMirror.cpp \
-  SvNet/SvNetLocalMaster.cpp \
-  SvNet/SvNetLocalSlave.cpp \
   SvNet/SvNetServer.cpp \
-  SvNet/SvNetServerLocal.cpp \
-  SvNet/SvNetService.cpp \
-  SvNet/SvNetConnector.cpp \
   SvStudio/DNetProcess.cpp \
   SvStudio/DNetProcessFileDirRequest.cpp \
   SvStudio/DNetProcessFileOperation.cpp \

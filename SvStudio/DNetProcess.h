@@ -13,7 +13,6 @@ Description
 #ifndef DNETPROCESS_H
 #define DNETPROCESS_H
 
-#include "SvNet/SvNetServiceFileSlave.h"
 #include "SvNet/SvNetChannel.h"
 #include <QDialog>
 #include <QProgressBar>
