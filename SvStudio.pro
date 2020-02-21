@@ -56,6 +56,7 @@ HEADERS += \
   SvNet/SvNetBridgeMaster.h \
   SvNet/SvNetBridgeSlave.h \
   SvNet/SvNetChannel.h \
+  SvNet/SvNetConnectorLocal.h \
   SvNet/SvNetHandler.h \
   SvNet/SvNetHandlerFile.h \
   SvNet/SvNetHandlerMirror.h \
@@ -152,6 +153,7 @@ SOURCES += \
   SvNet/SvNetBridgeMaster.cpp \
   SvNet/SvNetBridgeSlave.cpp \
   SvNet/SvNetChannel.cpp \
+  SvNet/SvNetConnectorLocal.cpp \
   SvNet/SvNetHandler.cpp \
   SvNet/SvNetHandlerFile.cpp \
   SvNet/SvNetHandlerMirror.cpp \
