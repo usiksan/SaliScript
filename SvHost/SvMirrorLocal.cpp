@@ -182,7 +182,6 @@ void SvMirrorLocal::processing(int tickOffset)
     //Проверить наличие логов
     if( mController->mLog.count() ) {
       //Логи имеются, рассылаем
-      qDebug() << mController->mLog.count();
       for( auto s : mController->mLog )
         emit log( s );
       // и очищаем хранилище

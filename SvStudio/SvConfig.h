@@ -19,12 +19,13 @@
     24.02.2020 v0.7  Исправил ошибку в записи имени программы в SvProgramm
                      Добавил возможность задания имени локального контроллера
                v0.8  Исправил процесс переподключения при повторном запуске клиента
+               v0.9  Добавил передачу логов по сети
 */
 
 #ifndef SVCONFIG
 #define SVCONFIG
 
-#define SV_VERSION "v0.8"
+#define SV_VERSION "v0.9"
 
 #define PATH_HELP              ""
 #define EXTENSION_PROJECT      ".svproject"

@@ -57,7 +57,8 @@ void SvMirrorRemote::linkTo(const QString ipOrUsb, int port, const QString contr
   Q_UNUSED(controllerPassw)
   mIp   = ipOrUsb;
   mPort = port;
-  reconnect();
+  if( mChannel )
+    reconnect();
   }
 
 
@@ -195,6 +196,8 @@ void SvMirrorRemote::init()
     reconnect();
     });
   connect( mChannel, &SvNetChannel::receivedBlock, this, &SvMirrorRemote::receivedBlock );
+  if( !mIp.isEmpty() )
+    reconnect();
   }
 
 

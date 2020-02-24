@@ -1110,7 +1110,6 @@ void WCModeEditor::debugRunAll()
 //Шаг программы
 void WCModeEditor::debugStep()
   {
-  qDebug() << "debugStep" << mProgramm.isNull();
   if( mProgramm.isNull() )
     return;
   //Задача заторможена
