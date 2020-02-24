@@ -15,7 +15,6 @@
 SvMirrorExtern::SvMirrorExtern() :
   SvMirror(),
   mVpuMutex(),
-  mVpuCount(0),    //Количество VPU
   mMemoryCount(0),
   mWriteMutex(),
   mNeedFlash(false),
@@ -77,7 +76,7 @@ void SvMirrorExtern::memorySet(int index, int value)
 
 void SvMirrorExtern::debug(int taskId, int debugCmd, int start, int stop)
   {
-  if( 0 <= taskId && taskId < mVpuCount ) {
+  if( 0 <= taskId && taskId < mVpuDebug.count() ) {
     QMutexLocker locker( &mVpuMutex );
 
     mVpuDebug[taskId].set( debugCmd, start, stop );

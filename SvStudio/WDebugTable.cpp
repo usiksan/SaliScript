@@ -193,8 +193,8 @@ void WDebugTable::debugVariable(int row, int column)
   else if( column == DE_VAR_AXIZ ) {
     //Изменен номер оси, поменять цвет
     int iaxiz = item(row,DE_VAR_AXIZ)->text().toInt();
-    if( iaxiz ) item(row, DE_VAR_AXIZ)->setBackgroundColor( WOscillograph::axizColor(iaxiz) );
-    else item(row, DE_VAR_AXIZ)->setBackgroundColor( Qt::white );
+    if( iaxiz ) item(row, DE_VAR_AXIZ)->setBackground( WOscillograph::axizColor(iaxiz) );
+    else item(row, DE_VAR_AXIZ)->setBackground( Qt::white );
     emit repaintOscillograph();
     }
   else if( column == DE_VAR_MIN || column == DE_VAR_MAX ) {
@@ -316,8 +316,8 @@ void WDebugTable::setVariable(int index, const QString name, const QString form,
   item(index, DE_VAR_VALUE)->setText("");
   item(index, DE_VAR_AXIZ)->setText(axiz);
   int iaxiz = axiz.toInt();
-  if( iaxiz ) item(index, DE_VAR_AXIZ)->setBackgroundColor( WOscillograph::axizColor(iaxiz) );
-  else item(index, DE_VAR_AXIZ)->setBackgroundColor( Qt::white );
+  if( iaxiz ) item(index, DE_VAR_AXIZ)->setBackground( WOscillograph::axizColor(iaxiz) );
+  else item(index, DE_VAR_AXIZ)->setBackground( Qt::white );
   item(index, DE_VAR_MIN)->setText(mmin);
   item(index, DE_VAR_MAX)->setText(mmax);
   item(index, DE_VAR_EDGE)->setText(QString());

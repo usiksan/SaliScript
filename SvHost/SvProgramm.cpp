@@ -115,6 +115,12 @@ QByteArray SvProgramm::toArray()
   return array;
   }
 
+void SvProgramm::fromArray(const QByteArray &ar)
+  {
+  QDataStream is( ar );
+  read( is );
+  }
+
 
 
 
@@ -155,7 +161,7 @@ void SvProgramm::setSignature(const QString name)
   {
   QByteArray latin = name.toLatin1();
   for( int i = 0; i < SVVMH_SIGNATURE_LENGHT && i < latin.count(); i++ )
-    mCode[i] = latin[i];
+    mCode[SVVMH_SIGNATURE + i] = latin[i];
   }
 
 

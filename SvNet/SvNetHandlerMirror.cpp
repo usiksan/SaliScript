@@ -47,6 +47,23 @@ void SvNetHandlerMirror::receivedBlock(SvNetChannel *ch, qint8 cmd, QByteArray b
       emit sendBlock( ch, SVC_MIRROR_STATUS, state.buildBlock() );
       }
     }
+  else if( cmd == SVC_MIRROR_PROGRAMM ) {
+    //Принята программа для загрузки
+    if( mMirror ) {
+      //Декодировать программу
+      SvNetMirrorProgramm prg( block );
+      SvProgrammPtr prog( new SvProgramm() );
+      prog->fromArray( prg.mProgramm );
+
+      //Установить новую программу
+      mMirror->setProgrammFlashRun( prog, prg.mRunOrPause, true );
+
+      //Отправить ответ
+      emit sendBlock( ch, SV_NET_CHANNEL_ANSWER_CMD, SvNetAnswer( SVC_MIRROR_PROGRAMM, 0, QString{} ).buildBlock() );
+      }
+    else
+      emit sendBlock( ch, SV_NET_CHANNEL_ANSWER_CMD, SvNetAnswer( SVC_MIRROR_PROGRAMM, 1, tr("No mirror") ).buildBlock() );
+    }
   }
 
 

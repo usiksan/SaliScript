@@ -75,6 +75,7 @@ void SvMirrorRemote::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause, bo
   mWriteValues.clear();
   //Clear debug
   clearDebug();
+  emit transferProcess( false, tr("Transfer programm...") );
   }
 
 
@@ -98,6 +99,7 @@ void SvMirrorRemote::processing(int tickOffset)
 
 
     case FSM_CONNECT :
+      qDebug() << "connect";
       //Need connection
       if( mIp.isEmpty() || mPort == 0 )
         mFsmCurrent = FSM_IDLE;
@@ -109,6 +111,8 @@ void SvMirrorRemote::processing(int tickOffset)
         //Connection timeout
         mTimeOut = 1000;
         mFsmCurrent = FSM_WAIT_CONNECTION;
+
+        qDebug() << "try connection";
         }
       break;
 
@@ -118,10 +122,10 @@ void SvMirrorRemote::processing(int tickOffset)
         //Connection established
         mFsmCurrent = FSM_SEND_PROGRAMM;
         }
-      else if( mTimeOut < 0 ) {
+      else if( --mTimeOut < 0 ) {
         //Connection failure
-        mTimeOut = 1000;
-        mFsmCurrent = FSM_WAIT_RECONNECT;
+        qDebug() << "failure connection";
+        reconnect();
         }
       break;
 
@@ -168,7 +172,9 @@ void SvMirrorRemote::processing(int tickOffset)
 
     case FSM_SEND_PROGRAMM :
       if( mNeedFlash ) {
+        //Подготовить и отправить блок с программой
         mChannel->sendBlock( mChannel, SVC_MIRROR_PROGRAMM, SvNetMirrorProgramm::buildBlock( mRunOrPause, mProgramm->toArray() ) );
+        //Шаг ожидания завершения загрузки программы
         mFsmCurrent = FSM_WAIT_PROGRAMM;
         mTimeOut = 3000;
         }
@@ -189,6 +195,9 @@ void SvMirrorRemote::init()
     mControllerType.clear();
     mProgrammName.clear();
     emit linkChanged( false, controllerType(), programmName() );
+    //Попытаться подключиться через 1 сек
+    reconnect();
+    qDebug() << "disconnected";
     });
   connect( mChannel, &SvNetChannel::receivedBlock, this, &SvMirrorRemote::receivedBlock );
   }
@@ -212,6 +221,11 @@ void SvMirrorRemote::receivedBlock(SvNetChannel *ch, int cmd, const QByteArray b
     for( auto msg : status.mLog )
       emit log( msg );
     emit memoryChanged( this );
+    if( mVpuDebug.count() < mVpuState.count() ) {
+      //Дополнить количество отладочных ячеек до количества процессов
+      mVpuDebug.resize( mVpuState.count() );
+      clearDebug();
+      }
     mFsmCurrent = FSM_SEND_PROGRAMM;
     }
   else if( cmd == SV_NET_CHANNEL_ANSWER_CMD ) {
@@ -220,6 +234,8 @@ void SvMirrorRemote::receivedBlock(SvNetChannel *ch, int cmd, const QByteArray b
       //Acknowledge to programm load
       mTimeOut = 200;
       mFsmCurrent = FSM_WAIT_PERIOD;
+      mNeedFlash = false;
+      emit transferProcess( true, QString{} );
       }
     }
   }

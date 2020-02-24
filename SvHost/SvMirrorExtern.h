@@ -35,7 +35,6 @@ class SvMirrorExtern : public SvMirror
     SvVpuVector           mVpuState;    //! Mirror of state of virtual machines (tasks) [Зеркало состояния виртуальных машин]
     QVector<SvDebugTask>  mVpuDebug;    //! Debug commands for every virtual machines (tasks) [Команды отладочного управления]
     QMutex                mVpuMutex;    //! Lock mech [Механизм защиты от сдвоенного доступа к командам управления]
-    int                   mVpuCount;    //Количество работающих VPU
     QVector<int>          mMemory;      //Зеркало памяти
     int                   mMemoryCount; //Размер памяти глобальных переменных
 

@@ -359,6 +359,8 @@ class SvProgramm
     void       read( QDataStream &is );
 
     QByteArray toArray();
+    void       fromArray( const QByteArray &ar );
+
     void       save( const QString &fname );
     void       load( const QString &fname );
   };

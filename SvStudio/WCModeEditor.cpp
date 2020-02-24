@@ -911,13 +911,13 @@ void WCModeEditor::mirrorChanged(int id, SvMirrorPtr mirrorPtr)
   //При изменении памяти
   mDebugVar->setupMirror(mirrorPtr);
   //При поступлении loga
-  connect( mirrorPtr, &SvMirror::log, this, &WCModeEditor::onLog );
+  connect( mirrorPtr.data(), &SvMirror::log, this, &WCModeEditor::onLog );
   //При изменении текстового статуса
-  connect( mirrorPtr, &SvMirror::linkChanged, this, &WCModeEditor::onTextStatusChanged );
+  connect( mirrorPtr.data(), &SvMirror::linkChanged, this, &WCModeEditor::onTextStatusChanged );
 
-  connect( mirrorPtr, &SvMirror::memoryChanged, this, &WCModeEditor::onMemoryChanged );
+  connect( mirrorPtr.data(), &SvMirror::memoryChanged, this, &WCModeEditor::onMemoryChanged );
 
-  connect( this, &WCModeEditor::debug, mirrorPtr, &SvMirror::debug );
+  connect( this, &WCModeEditor::debug, mirrorPtr.data(), &SvMirror::debug );
 
   //Обновить текстовый статус
   onTextStatusChanged( false, QString{}, QString{} );
@@ -1108,6 +1108,7 @@ void WCModeEditor::debugRunAll()
 //Шаг программы
 void WCModeEditor::debugStep()
   {
+  qDebug() << "debugStep" << mProgramm.isNull();
   if( mProgramm.isNull() )
     return;
   //Задача заторможена
@@ -1168,7 +1169,7 @@ void WCModeEditor::debugPauseAll()
 void WCModeEditor::onTextStatusChanged(bool linked, const QString controllerType, const QString loadedProgramm)
   {
   if( linked )
-    mTextStatus->setText( tr("Linked to %1. Programm: %1").arg( controllerType ).arg( loadedProgramm ) );
+    mTextStatus->setText( tr("Linked to %1. Programm: %2").arg( controllerType ).arg( loadedProgramm ) );
   else
     mTextStatus->setText( tr("Not connected") );
   }

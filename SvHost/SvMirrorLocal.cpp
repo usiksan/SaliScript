@@ -10,13 +10,17 @@
 
 //#include <QDebug>
 
-SvMirrorLocal::SvMirrorLocal(SvVMachineLocal *controller ) :
+SvMirrorLocal::SvMirrorLocal(SvVMachineLocal *controller , const QString &ctrType) :
   SvMirror(),
   mController(controller),
   mDivider(0),
-  mVpuDebugRun( mController->getVpuMax(), 0 )
+  mVpuDebugRun( mController->getVpuMax(), 0 ),
+  mControllerType()
   {
-
+  if( ctrType.isEmpty() )
+    mControllerType = tr("Local controller");
+  else
+    mControllerType = ctrType;
   }
 
 
@@ -31,7 +35,7 @@ SvMirrorLocal::~SvMirrorLocal()
 
 QString SvMirrorLocal::controllerType() const
   {
-  return tr("Local controller");
+  return mControllerType;
   }
 
 
@@ -41,8 +45,15 @@ QString SvMirrorLocal::programmName() const
   {
   //Extract signature from programm
   char str[SVVMH_SIGNATURE_LENGHT+1];
-  for( int i = 0; i < SVVMH_SIGNATURE_LENGHT; i++ )
-    str[i] = static_cast<char>( mController->getProgramm()->getCode( SVVMH_SIGNATURE + i ) );
+  if( SVVMH_SIGNATURE + SVVMH_SIGNATURE_LENGHT < mController->getProgramm()->codeCount() ) {
+    //Код имеет достаточный размер для хранения имени программы
+    for( int i = 0; i < SVVMH_SIGNATURE_LENGHT; i++ )
+      str[i] = static_cast<char>( mController->getProgramm()->getCode( SVVMH_SIGNATURE + i ) );
+    }
+  else {
+    //Программа, скорее всего, не установлена
+    strcpy( str, "No programm" );
+    }
 
   //Fill signature
   str[SVVMH_SIGNATURE_LENGHT] = 0; //Close string

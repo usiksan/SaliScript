@@ -27,8 +27,9 @@ class SvMirrorLocal : public SvMirror
     SvVMachineLocal *mController;  //! Local controller
     int              mDivider;     //! Divider for change event thinning
     QVector<int>     mVpuDebugRun; //! Previous states of debug flag every task
+    QString          mControllerType; //! Тип контроллера, возвращаемый функцией controllerType
   public:
-    SvMirrorLocal(SvVMachineLocal *controller);
+    SvMirrorLocal(SvVMachineLocal *controller, const QString &ctrType = QString{} );
     virtual ~SvMirrorLocal() override;
 
     //!

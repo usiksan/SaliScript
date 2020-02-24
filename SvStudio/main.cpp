@@ -46,14 +46,14 @@ int main(int argc, char *argv[])
   QSettings s;
 
   //Сервер для доступа к зеркалу по локальной сети
-  SvNetServer *localServer = new SvNetServer( 1971 );
+  //SvNetServer *localServer = new SvNetServer( 1971 );
 
   //Обработчик сетевого управления
-  SvNetHandlerMirror *handlerMirror = new SvNetHandlerMirror();
+  //SvNetHandlerMirror *handlerMirror = new SvNetHandlerMirror();
 
   //Соединения
-  localServer->connect( localServer, &SvNetServer::addNetChannel, handlerMirror, &SvNetHandlerMirror::addNetChannel );
-  handlerMirror->connect( svMirrorManager, &SvMirrorManager::mirrorChanged, handlerMirror, &SvNetHandlerMirror::mirrorChanged );
+  //localServer->connect( localServer, &SvNetServer::addNetChannel, handlerMirror, &SvNetHandlerMirror::addNetChannel );
+  //handlerMirror->connect( svMirrorManager, &SvMirrorManager::mirrorChanged, handlerMirror, &SvNetHandlerMirror::mirrorChanged );
 
   //Создание главного окна приложения
   WMain w;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
   svMirrorManager->stop();
 
   //Остановить работу удаленного управления
-  localServer->deleteLater();
+  //localServer->deleteLater();
 
 //  svNetClientMirror->stopClient();
 
