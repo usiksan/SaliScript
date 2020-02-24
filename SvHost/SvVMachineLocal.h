@@ -27,6 +27,9 @@ class SvVMachineLocal : public SvVMachine
   protected:
     SvProgrammPtr mProgramm;
   public:
+    QStringList   mLog;
+
+
     SvVMachineLocal( int ramSize = 50000, int vpuCount = 32 );
     ~SvVMachineLocal() override;
 
@@ -47,6 +50,8 @@ class SvVMachineLocal : public SvVMachine
 
     //Установить новое состояние переменной по ее имени
     void          variableSet( int value, const QString name, int index = 0 );
+
+    virtual bool  executeMethod(SvVmVpu *vpu, int methodId) override;
   };
 
 #endif // SVVMACHINELOCAL_H

@@ -99,7 +99,6 @@ void SvMirrorRemote::processing(int tickOffset)
 
 
     case FSM_CONNECT :
-      qDebug() << "connect";
       //Need connection
       if( mIp.isEmpty() || mPort == 0 )
         mFsmCurrent = FSM_IDLE;
@@ -111,8 +110,6 @@ void SvMirrorRemote::processing(int tickOffset)
         //Connection timeout
         mTimeOut = 1000;
         mFsmCurrent = FSM_WAIT_CONNECTION;
-
-        qDebug() << "try connection";
         }
       break;
 
@@ -124,7 +121,6 @@ void SvMirrorRemote::processing(int tickOffset)
         }
       else if( --mTimeOut < 0 ) {
         //Connection failure
-        qDebug() << "failure connection";
         reconnect();
         }
       break;
@@ -197,7 +193,6 @@ void SvMirrorRemote::init()
     emit linkChanged( false, controllerType(), programmName() );
     //Попытаться подключиться через 1 сек
     reconnect();
-    qDebug() << "disconnected";
     });
   connect( mChannel, &SvNetChannel::receivedBlock, this, &SvMirrorRemote::receivedBlock );
   }

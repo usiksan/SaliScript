@@ -69,7 +69,8 @@ int main(int argc, char *argv[])
   int res = a.exec();
 
   //Остановить работу сети
-  svMirrorManager->stop();
+  svMirrorManager->deleteLater();
+  //svMirrorManager->stop();
 
   //Остановить работу удаленного управления
   //localServer->deleteLater();

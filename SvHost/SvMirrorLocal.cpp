@@ -8,7 +8,8 @@
 
 #include "SvMirrorLocal.h"
 
-//#include <QDebug>
+#include <QDebug>
+
 
 SvMirrorLocal::SvMirrorLocal(SvVMachineLocal *controller , const QString &ctrType) :
   SvMirror(),
@@ -178,6 +179,15 @@ void SvMirrorLocal::processing(int tickOffset)
     mDivider = 0;
     //Emit memory changed
     emit memoryChanged( this );
+    //Проверить наличие логов
+    if( mController->mLog.count() ) {
+      //Логи имеются, рассылаем
+      qDebug() << mController->mLog.count();
+      for( auto s : mController->mLog )
+        emit log( s );
+      // и очищаем хранилище
+      mController->mLog.clear();
+      }
     }
   }
 

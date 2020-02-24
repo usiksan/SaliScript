@@ -15,8 +15,8 @@
     Данная реализация обеспечивает локальную машину.
 */
 
+#include "SvVMachine/Sv6Sys.h"
 #include "SvVMachineLocal.h"
-//#include "SvMirror.h"
 
 #include <QDebug>
 
@@ -94,4 +94,25 @@ void SvVMachineLocal::variableSet(int value, const QString name, int index)
   {
   if( mProgramm )
     memSet( nullptr, mProgramm->getAddr(name) + index, value );
+  }
+
+
+bool SvVMachineLocal::executeMethod(SvVmVpu *vpu, int methodId)
+  {
+  if( methodId == VPS_LOG ) {
+    //                3           2       1       0
+    //void svLog( cstring title, int p1, int p2, int p3 );
+    //Получить строку
+    QString pat = mProgramm->mStrings.at( VPU_GET_FUN_PARAM(3) );
+    //Теперь добавляем параметры, если есть
+    if( pat.contains("%3") )
+      pat = pat.arg(VPU_GET_FUN_PARAM(2)).arg(VPU_GET_FUN_PARAM(1)).arg(VPU_GET_FUN_PARAM(0));
+    if( pat.contains("%2") )
+      pat = pat.arg(VPU_GET_FUN_PARAM(2)).arg(VPU_GET_FUN_PARAM(1));
+    if( pat.contains("%1") )
+      pat = pat.arg(VPU_GET_FUN_PARAM(2));
+    mLog.append( pat );
+    return true;
+    }
+  return SvVMachine::executeMethod( vpu, methodId );
   }

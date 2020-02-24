@@ -908,8 +908,10 @@ void WCModeEditor::textChanged()
 void WCModeEditor::mirrorChanged(int id, SvMirrorPtr mirrorPtr)
   {
   Q_UNUSED(id)
+//  qDebug() << "mirrorChanged" << id << mirrorPtr.data();
   //При изменении памяти
   mDebugVar->setupMirror(mirrorPtr);
+
   //При поступлении loga
   connect( mirrorPtr.data(), &SvMirror::log, this, &WCModeEditor::onLog );
   //При изменении текстового статуса
