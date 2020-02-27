@@ -467,8 +467,8 @@ void WCModeEditor::onMemoryChanged(SvMirror *mirror)
       //Если ip изменился с предыдущего значения, то позиционировать курсор редактора к данной строке
       if( mTasks->item( taskIndex, DE_TASK_IP )->text() != QString::number( vpus.at(taskIndex).mIp ) && !mProgramm.isNull() ) {
         //Получить имя файла, где находится текущая точка исполнения
-        //Offset on 1 line is because in programm numbering start with 0 but in editor - with 1
-        trackToFileLine( mProgramm->getFileName( vpus.at(taskIndex).mIp ), mProgramm->getLine( vpus.at(taskIndex).mIp ) + 1 );
+        qDebug() << "debug task" << taskIndex << "ip" << vpus.at(taskIndex).mIp << "fname" << mProgramm->getFileName( vpus.at(taskIndex).mIp ) << "line" << mProgramm->getLine( vpus.at(taskIndex).mIp );
+        trackToFileLine( mProgramm->getFileName( vpus.at(taskIndex).mIp ), mProgramm->getLine( vpus.at(taskIndex).mIp ) );
         }
       mTasks->item( taskIndex, DE_TASK_IP )->setText( QString::number( vpus.at(taskIndex).mIp ) );
       mTasks->item( taskIndex, DE_TASK_SP )->setText( QString::number( vpus.at(taskIndex).mSp ) );
@@ -1119,6 +1119,7 @@ void WCModeEditor::debugStep()
   //Пропустить текущую строку
   int ipe = ip + 1;
   while( mProgramm->getLine(ipe) == line && mProgramm->getFile(ipe) == file ) ipe++;
+  //qDebug() << "debugStep" << task() << ip << ipe;
   emit debug( task(), SDC_RUN_STEP, ip, ipe );
   }
 
@@ -1137,6 +1138,7 @@ void WCModeEditor::debugTrace()
   //Пропустить текущую строку
   int ipe = ip + 1;
   while( mProgramm->getLine(ipe) == line && mProgramm->getFile(ipe) == file ) ipe++;
+  //qDebug() << "debugTrace" << task() << ip << ipe;
   emit debug( task(), SDC_RUN_TRACE, ip, ipe );
   }
 

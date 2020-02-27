@@ -45,7 +45,7 @@ struct SvVmVpu : public SvVmVpuState {
       mDebugRun = false;
       }
 
-    //Исполнять, пока находится в диапазоне и bp меньше debugBp (step)
+    //Исполнять, пока находится в диапазоне или bp меньше debugBp (step)
     void  debugRunStep( int start, int stop ) {
       mDebugBreakStart = start;
       mDebugBreakStop = stop;
@@ -66,9 +66,10 @@ struct SvVmVpu : public SvVmVpuState {
     bool isRun() const {
       if( !mDebugRun ) {
         if( mDebugRunWhile ) {
-          //Выполнять, пока адреса находятся в заданном диапазоне
-          if( mIp < mDebugBreakStart || mIp > mDebugBreakStop )
-            return false;
+          //Выполнять, пока адреса находятся в заданном диапазоне или bp меньше debugBp
+          return (mIp >= mDebugBreakStart && mIp <= mDebugBreakStop) || mBp < mDebugBp;
+//          if( mIp < mDebugBreakStart || mIp > mDebugBreakStop )
+//            return false;
           }
         else {
           //Выполнять, пока адреса не очутятся в заданном диапазоне

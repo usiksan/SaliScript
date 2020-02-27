@@ -30,6 +30,9 @@ QString
 SvSource::ReadLine() {
   if( mInputStream ) {
     mLineCount++;
+//    QString line = mInputStream->readLine();
+//    qDebug() << "line" << mLineCount << line;
+//    return line;
     return mInputStream->readLine();
     }
   return QString();

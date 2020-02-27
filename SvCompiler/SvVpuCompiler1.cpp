@@ -49,6 +49,13 @@ SvProgrammPtr SvVpuCompiler::make(const QString prjPath, const QString &mainScri
   //Компиляция
   Compile( mainScript );
 
+  //Записать в программу список исходных файлов
+  prog->mFileList.append( QString() ); //Пустое имя для нулевого файла
+  for( int i = 1; i <= mFileIdCount; i++ )
+    prog->mFileList.append( mFileTable.value(i) );
+  qDebug() << prog->mFileList;
+
+
   //Вывести листинг в файл
   QFileInfo listingFileInfo( mainScript );
   QFile listingFile( prjPath + listingFileInfo.completeBaseName() + ".lst" );

@@ -313,10 +313,10 @@ SvCompiler::NextToken() {
         }
       }
     }
-  mFileId        = mToken.mFileId;
-  mLineIndex     = mToken.mLine;
   mToken.mFileId = mSourceStack.top()->FileId();
   mToken.mLine   = mSourceStack.top()->Line();
+  mFileId        = mToken.mFileId;
+  mLineIndex     = mToken.mLine;
   return true;
   }
 

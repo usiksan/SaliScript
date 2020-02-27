@@ -4,9 +4,9 @@
     "ControllerName": "",
     "ControllerPassw": "",
     "CtrVersion": 0,
-    "DebugType": 2,
+    "DebugType": 0,
     "FileList": [
-        "/home/salilab/work/SaliScript/script/main.c"
+        "/home/asibilev/work/SaliScript/script/main.c"
     ],
     "GlobalID": "",
     "MainScript": "main.c",
