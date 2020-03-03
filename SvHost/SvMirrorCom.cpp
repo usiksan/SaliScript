@@ -4,6 +4,7 @@
 #include "SvHost/SvTextStreamOut.h"
 
 #include <QtSerialPort/QSerialPortInfo>
+#include <QDebug>
 
 enum SvMirrorComStage {
   svStWaitAnswer,
@@ -94,9 +95,11 @@ void SvMirrorCom::processing(int tickOffset)
     else mFactPort = mPrefferedPort;
 
     mSerialPort.setPortName( mFactPort );
-    mSerialPort.open( QIODevice::ReadWrite );
-
-    stageGet( SV_CB_INFO_GET, svStWaitAnswer, 100 );
+    if( mSerialPort.open( QIODevice::ReadWrite ) ) {
+      mSerialPort.write( "primer" );
+      qDebug() << "primer sended";
+  //    stageGet( SV_CB_INFO_GET, svStWaitAnswer, 100 );
+      }
     }
   }
 
@@ -117,6 +120,7 @@ void SvMirrorCom::bytesRead()
     switch( in.getCmd() ) {
       case SV_CB_INFO :
         //Получена информация от контроллера
+        qDebug() << in.getInt32() << in.getInt32();
 
         //Отправить извещение о подключении
         emit linkChanged( true, controllerType(), programmName() );

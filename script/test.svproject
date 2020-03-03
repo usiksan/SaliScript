@@ -4,13 +4,13 @@
     "ControllerName": "",
     "ControllerPassw": "",
     "CtrVersion": 0,
-    "DebugType": 0,
+    "DebugType": 1,
     "FileList": [
-        "/home/asibilev/work/SaliScript/script/main.c"
+        "/home/salilab/work/SaliScript/script/main.c"
     ],
     "GlobalID": "",
     "MainScript": "main.c",
-    "RemoteIP": "127.0.0.1",
+    "RemoteIP": "",
     "RemotePort": 1971,
     "USB PID": 6513,
     "USB VID": 10051,
