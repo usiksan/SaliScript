@@ -4,11 +4,9 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network
+QT       += core gui network serialport
 
 CONFIG += c++17
-
-  DEFINES += ENABLE_USB10
 
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -28,20 +26,11 @@ FORMS += \
     SvStudio/DProcess.ui \
     SvStudio/DTextEditorSettings.ui
 
-unix: !macx {
-    CONFIG += link_pkgconfig
-    PKGCONFIG += libusb-1.0
-}
-
-INCLUDEPATH += $$PWD/../libusb-1.0
-INCLUDEPATH += ../SvNet
-DEPENDPATH += $$PWD/../libusb-1.0
-
-win32: LIBS += -L$$PWD/../libusb-1.0/ -llibusb-1.0.dll
 
 HEADERS += \
   SvCompiler/SvCompiler.h \
   SvCompiler/SvVpuCompiler.h \
+  SvHost/SvComBook.h \
   SvHost/SvDir.h \
   SvHost/SvMirror.h \
   SvHost/SvMirrorCom.h \
@@ -49,8 +38,9 @@ HEADERS += \
   SvHost/SvMirrorLocal.h \
   SvHost/SvMirrorManager.h \
   SvHost/SvMirrorRemote.h \
-  SvHost/SvMirrorUsb10.h \
   SvHost/SvProgramm.h \
+  SvHost/SvTextStreamIn.h \
+  SvHost/SvTextStreamOut.h \
   SvHost/SvVMachineLocal.h \
   SvNet/SvNetBlockInfo.h \
   SvNet/SvNetChannel.h \
@@ -89,7 +79,7 @@ HEADERS += \
   SvStudio/WTextEditor.h \
   SvStudio/WTextSearchPanel.h \
   SvVMachine/Sv6Plc.h \
-  SvVMachine/Sv6Sys.h \
+  SvVMachine/Sv7Sys.h \
   SvVMachine/SvVMachine.h \
   SvVMachine/SvVmByteCode.h \
   SvVMachine/SvVmCodeHeader.h \
@@ -139,8 +129,9 @@ SOURCES += \
   SvHost/SvMirrorLocal.cpp \
   SvHost/SvMirrorManager.cpp \
   SvHost/SvMirrorRemote.cpp \
-  SvHost/SvMirrorUsb10.cpp \
   SvHost/SvProgramm.cpp \
+  SvHost/SvTextStreamIn.cpp \
+  SvHost/SvTextStreamOut.cpp \
   SvHost/SvVMachineLocal.cpp \
   SvNet/SvNetBlockInfo.cpp \
   SvNet/SvNetChannel.cpp \

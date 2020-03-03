@@ -179,14 +179,25 @@ void SvMirrorLocal::processing(int tickOffset)
     mDivider = 0;
     //Emit memory changed
     emit memoryChanged( this );
-    //Проверить наличие логов
-    if( mController->mLog.count() ) {
-      //Логи имеются, рассылаем
-      for( auto s : mController->mLog )
-        emit log( s );
-      // и очищаем хранилище
-      mController->mLog.clear();
-      }
     }
+
+  //Проверить наличие логов
+  if( mController->mLog.count() ) {
+    //Логи имеются, рассылаем
+    for( auto s : mController->mLog )
+      emit log( s );
+    // и очищаем хранилище
+    mController->mLog.clear();
+    }
+
+  //Проверить наличие извещений
+  if( mController->mTicket[0] ) {
+    //Имеется извещение - переслать
+    emit ticket( mController->mTicket[0], mController->mTicket[1], mController->mTicket[2], mController->mTicket[3],
+                 mController->mTicket[4], mController->mTicket[5], mController->mTicket[6], mController->mTicket[7], mController->mTicket[8] );
+    //Объявить, что извещение получено
+    mController->mTicket[0] = 0;
+    }
+
   }
 

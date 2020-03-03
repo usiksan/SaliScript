@@ -14,7 +14,7 @@
     и набор виртуальных процессоров.
 */
 #include "SvVMachine/SvVMachine.h"
-#include "SvVMachine/Sv6Sys.h"
+#include "SvVMachine/Sv7Sys.h"
 #include "SvVMachine/SvVmByteCode.h"
 #include <string.h>
 #include <stdlib.h>
@@ -96,8 +96,80 @@ bool SvVMachine::executeMethod(SvVmVpu *vpu, int methodId)
     case VPS_VERSION :
       //0
       //int VpuVersion();
-      VPU_SET_FUN_RESULT( 0, VPU_VERSION6 );
+      VPU_SET_FUN_RESULT( 0, VPU_VERSION7 );
       break;
+
+    case VPS_TICKET00 :
+      //                 0
+      //void svTicket0( int ticketId );
+      if( mTicket[0] ) return true;
+      mTicket[0] = VPU_GET_FUN_PARAM(0);
+      break;
+
+    case VPS_TICKET10 :
+    case VPS_TICKET01 :
+      //                 1             0
+      //void svTicket1( int ticketId, int p0 );
+      //void svTicket0r1( int ticketId, int *r0 );
+      if( mTicket[0] ) return true;
+      mTicket[0] = VPU_GET_FUN_PARAM(1);
+      mTicket[1] = VPU_GET_FUN_PARAM(0);
+      break;
+
+    case VPS_TICKET20 :
+    case VPS_TICKET11 :
+      //                 2             1       0
+      //void svTicket2( int ticketId, int p0, int p1 );
+      //void svTicket1r1( int ticketId, int p0, int *r0 );
+      if( mTicket[0] ) return true;
+      mTicket[0] = VPU_GET_FUN_PARAM(2);
+      mTicket[1] = VPU_GET_FUN_PARAM(1);
+      mTicket[2] = VPU_GET_FUN_PARAM(0);
+      break;
+
+    case VPS_TICKET40 :
+    case VPS_TICKET22 :
+      //                 4             3       2       1       0
+      //void svTicket4( int ticketId, int p0, int p1, int p2, int p3 );
+      //void svTicket2r2( int ticketId, int p0, int p1, int *r0, int *r1 );
+      if( mTicket[0] ) return true;
+      mTicket[0] = VPU_GET_FUN_PARAM(4);
+      mTicket[1] = VPU_GET_FUN_PARAM(3);
+      mTicket[2] = VPU_GET_FUN_PARAM(2);
+      mTicket[3] = VPU_GET_FUN_PARAM(1);
+      mTicket[4] = VPU_GET_FUN_PARAM(0);
+      break;
+
+    case VPS_TICKET80 :
+    case VPS_TICKET44 :
+    case VPS_TICKET26 :
+      //                 8             7       6       5       4       3       2       1       0
+      //void svTicket8( int ticketId, int p0, int p1, int p2, int p3, int p4, int p5, int p6, int p7 );
+      //void svTicket4r4( int ticketId, int p0, int p1, int p2, int p3, int *r0, int *r1, int *r2, int *r3 );
+      //void svTicket2r6( int ticketId, int p0, int p1, int *r0, int *r1, int *r2, int *r3, int *r4, int *r5 );
+      if( mTicket[0] ) return true;
+      mTicket[0] = VPU_GET_FUN_PARAM(8);
+      mTicket[1] = VPU_GET_FUN_PARAM(7);
+      mTicket[2] = VPU_GET_FUN_PARAM(6);
+      mTicket[3] = VPU_GET_FUN_PARAM(5);
+      mTicket[4] = VPU_GET_FUN_PARAM(4);
+      mTicket[5] = VPU_GET_FUN_PARAM(3);
+      mTicket[6] = VPU_GET_FUN_PARAM(2);
+      mTicket[7] = VPU_GET_FUN_PARAM(1);
+      mTicket[8] = VPU_GET_FUN_PARAM(0);
+      break;
+
+    case VPS_WAIT_TIME_OUT :
+      //                     0
+      //void svWaitTimeOut( int time );
+      return (VPU_GET_FUN_PARAM(0) - memGet( vpu, 1 )) > 0;
+
+    case VPS_IS_TIME_OUT :
+      // 1                 0
+      //int  svIsTimeOut( int time );
+      VPU_SET_FUN_RESULT( 1, (VPU_GET_FUN_PARAM(0) - memGet( vpu, 1 )) > 0 ? 0 : 1 );
+      break;
+
 
     case VPS_IMIN :
       //2              1       0

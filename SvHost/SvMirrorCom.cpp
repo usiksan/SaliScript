@@ -1,321 +1,236 @@
-#if 0
+#include "SvComBook.h"
 #include "SvMirrorCom.h"
+#include "SvHost/SvTextStreamIn.h"
+#include "SvHost/SvTextStreamOut.h"
+
+#include <QtSerialPort/QSerialPortInfo>
+
+enum SvMirrorComStage {
+  svStWaitAnswer,
+  svStMemorySet,
+  svStMemoryGet,
+  svStLogGet,
+  svStVpuGet,
+  svStDebugSet
+  };
+
 
 
 SvMirrorCom::SvMirrorCom(const QString portName) :
-  SvMirrorExtern()
+  SvMirrorExtern(),
+  mSerialPort(),
+  mPrefferedPort(portName),
+  mIndex(0),
+  mStage(0),
+  mTimeOut(0),
+  mMemoryBlockIndex(0),
+  mVpuIndex(0)
   {
-
+  //Подключить порт к приемнику данных
+  connect( &mSerialPort, &QSerialPort::readyRead, this, &SvMirrorCom::bytesRead );
   }
 
-void SvMirrorCom::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause)
-  {
 
+
+
+QString SvMirrorCom::controllerType() const
+  {
+  if( mControllerType.isEmpty() )
+    return tr("USB not found");
+  return tr("USB %1 -> %2").arg(mFactPort).arg(mControllerType);
   }
 
 
 
 
-bool SvMirrorExtern::taskInfo(qint32 taskId, SvVmVpuState &destTaskInfo) const
+void SvMirrorCom::linkTo(const QString ipOrUsb, int port, const QString controllerName, const QString controllerPassw)
   {
-  if( taskId >= 0 && taskId < mVpuCount ) {
-    destTaskInfo = mVpuState[taskId];
-    return true;
+  Q_UNUSED(port)
+  Q_UNUSED(controllerPassw)
+  mPrefferedPort = ipOrUsb;
+  mControllerName = controllerName;
+  mSerialPort.close();
+  }
+
+
+
+
+void SvMirrorCom::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause, bool flash)
+  {
+  if( flash ) {
+    mRunOrPause = runOrPause;
+    mProgramm   = prog;
+    mNeedFlash  = true;
     }
-  return false;
   }
 
 
 
 
-
-
-
-//Раздел памяти данных
-int SvMirrorExtern::memoryGet(int index)
+void SvMirrorCom::processing(int tickOffset)
   {
-  if( index > 0 && index < mMemorySize )
-    return mMemory[index];
-  return 0;
-  }
+  mTimeOut -= tickOffset;
 
-
-
-
-
-
-void SvMirrorExtern::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause)
-  {
-  mReset = true;
-  mRun = runOrPause;
-  mProgramm = prog;
-  }
-
-
-
-
-void SvMirrorExtern::processing(int tickOffset)
-  {
-  mReceivTimeOut -= tickOffset;
-  if( mReceivTimeOut < 0 ) {
-    if( !mControllerInfo.mLink ) {
-      //Not linked yet
-      mReceivTimeOut = 1000;
-      //Query controller version
-      mBuf[0] = SVU_CMD_VERSION_GET;
-      send( mBuf );
-      }
-    else {
-      //Read time-out
-      mControllerInfo.mLink = false;
-      mReceivTimeOut = 1000;
+  if( mSerialPort.isOpen() ) {
+    //Порт открыт, продолжаем обмен
+    if( mStage == svStWaitAnswer ) {
+      if( mTimeOut < 0 )
+        portClose();
       }
     }
-  }
-
-
-
-
-void SvMirrorExtern::onReceived(const unsigned char *buf)
-  {
-  //For receiv time out
-  mReceivTimeOut = 100;
-
-  //If reset flag then query reset
-  if( mReset ) {
-    queryReset();
-    return;
-    }
-
-  switch( buf[0] ) {
-    case SVU_CMD_VERSION :
-      //Version received
-      parseVersion( buf );
-
-      //Get status
-      queryState();
-      break;
-
-    case SVU_CMD_STATE :
-      //State received
-      parseState( buf );
-      //If log received then retry state query until all log received
-      if( buf[2] )
-        //Query state for next log
-        queryState();
-      else
-        queryMemory();
-      break;
-
-    case SVU_CMD_VARS_WRITE_OK :
-      //Block of variables writed successfully, remove from queue
-      queryMemory();
-      break;
-
-    case SVU_CMD_VARS_BLOCK :
-      //Memory block received
-      //Update variables
-      parseVariables( buf );
-      break;
-
-    case SVU_CMD_VPU_STATE :
-      //Task info received
-      parseTask( buf );
-      break;
-
-    case SVU_CMD_DEBUG_OK :
-      queryNextDebug();
-      break;
-
-    case SVU_CMD_VPU_RESET_OK :
-      if( mFlash )
-        queryFlashRead();
-      else
-        queryRestart();
-      break;
-
-    case SVU_CMD_VPU_RESTART_OK :
-      queryMemory();
-      break;
-
-    case SVU_CMD_FLASH_BLOCK :
-      //Start flash block received
-      parseFlash(buf);
-      break;
-
-    case SVU_CMD_FLASH_ERASE_OK :
-      queryNextFlash( 0 );
-      break;
-
-    case SVU_CMD_FLASH_WRITE_OK :
-      parseFlashWriteOk( buf );
-      break;
-    }
-  }
-
-
-
-
-void SvMirrorExtern::parseVersion(const unsigned char *buf)
-  {
-  mLogLen = 0;
-  //Version received
-  mControllerInfo.mLink = true;
-  //data [1-4]   version number
-  mControllerInfo.mVersion = svIRead32( buf + 1 );
-  //     [5-8]   programm memory size
-  mControllerInfo.mProgrammMaxSize = svIRead32( buf + 5 );
-  //     [9-10]  data memory size
-  mControllerInfo.mVariableMaxCount = svIRead16( buf + 9 );
-  //     [11]    VPU max count
-  mControllerInfo.mVpuMax = svILimit( buf[11], 1, 256 );
-  //     [12-31] controller type
-  char str[21];
-  memcpy( str, buf + 12, 20 );
-  str[20] = 0;
-  mControllerInfo.mType = QString::fromLatin1( str );
-
-  QMutexLocker locker( &mVpuMutex );
-  if( mVpuState )
-    delete mVpuState;
-  mVpuState = new SvVmVpuState[static_cast<unsigned>(mControllerInfo.mVpuMax)];
-  memset( mVpuState, 0, sizeof(SvVmVpuState) * static_cast<unsigned>(mControllerInfo.mVpuMax) );
-
-  if( mVpuDebug )
-    delete mVpuDebug;
-  mVpuDebug = new SvDebugTask[static_cast<unsigned>(mControllerInfo.mVpuMax)];
-  memset( mVpuDebug, 0, sizeof(SvDebugTask) * static_cast<unsigned>(mControllerInfo.mVpuMax) );
-
-  if( mMemory )
-    delete mMemory;
-  mMemory = new int[static_cast<unsigned>(mControllerInfo.mVariableMaxCount)];
-  memset( mMemory, 0, sizeof(int) * static_cast<unsigned>(mControllerInfo.mVariableMaxCount) );
-  emit controllerInfoChanged( this );
-  }
-
-
-
-
-
-
-void SvMirrorExtern::parseState(const unsigned char *buf)
-  {
-  //data [1]    - active VPU count
-  mVpuCount = buf[1];
-  //     [2]    - log byte count
-  int logCount = buf[2];
-  //     [3-63] - log contents
-  if( logCount ) {
-    for( int i = 0; i < logCount; i++ ) {
-      if( buf[i + 3] == 0 || mLogLen > 1020 ) {
-        mLog[mLogLen] = 0;
-        emit log( QString::fromLatin1( mLog ) );
-        mLogLen = 0;
-        }
-      else mLog[mLogLen++] = static_cast<char>( buf[i + 3] );
-      }
-    }
-  }
-
-
-
-
-
-
-void SvMirrorExtern::parseVariables(const unsigned char *buf)
-  {
-  int addr = svIRead16( buf + 2 ) & 0xffff;
-  if( addr + buf[1] <= mControllerInfo.mVariableMaxCount ) {
-    for( int i = 0; i < buf[1]; i++ )
-      mMemory[addr++] = svIRead32( buf + 2 + 4 * i );
-
-    addr += buf[1];
-    if( addr < mProgramm->globalCount() ) {
-      //Query next memory block
-      int globalCount = svILimit( mProgramm->globalCount() - addr, 1, 15 );
-      mBuf[0] = SVU_CMD_VARS_READ;
-      //For variables time out
-      mReceivTimeOut = 100;
-      mBuf[1] = static_cast<unsigned char>(globalCount);
-      svIWrite16( mBuf + 2, addr );
-      send( mBuf );
-      return;
-      }
-
-    //All memory readed
-    emit memoryChanged();
-    }
-
-  if( mScanTasks )
-    queryNextDebug();
-  else
-    queryState();
-  }
-
-
-
-void SvMirrorExtern::parseTask(const unsigned char *buf)
-  {
-  //data [1]     - VPU index
-  int taskId = mBuf[1];
-  if( taskId < mControllerInfo.mVpuMax ) {
-    //     [2-5]   - ip
-    mVpuState[taskId].mIp = svIRead32( buf + 2 );
-    //     [6-9]   - sp
-    mVpuState[taskId].mSp = svIRead32( buf + 6 );
-    //     [10-13] - bp
-    mVpuState[taskId].mBp = svIRead32( buf + 10 );
-    //     [14-17] - tm
-    mVpuState[taskId].mTm = svIRead32( buf + 14 );
-    //     [18-21] - baseSp
-    mVpuState[taskId].mBaseSp = svIRead32( buf + 18 );
-    //     [22-25] - throw
-    mVpuState[taskId].mThrow = svIRead32( buf + 22 );
-    //     [26]    - run
-    mVpuState[taskId].mDebugRun = buf[26];
-
-    taskId++;
-    if( taskId < mVpuCount ) {
-      //Query next task
-      mBuf[0] = SVU_CMD_VPU_STATE_GET;
-      mBuf[1] = static_cast<unsigned char>(taskId);
-      send( mBuf );
-      return;
-      }
-    }
-  queryState();
-  }
-
-
-
-
-void SvMirrorExtern::parseFlash(const unsigned char *buf)
-  {
-  //Compare with programm
-  bool equal = true; //At begin we assume that flash equals
-  for( int i = 0; i < SVVMH_HEADER_SIZE && equal; i++ )
-    equal = buf[i] == mProgramm->getCode(i);
-  if( equal )
-    //Flash not need. Immediately restart
-    queryRestart();
   else {
-    //Need to flash
-    mBuf[0] = SVU_CMD_FLASH_ERASE;
-    send( mBuf );
-    emit transferProcess( false, tr("Erase flash...") );
-    mReceivTimeOut = 6000;
+    //Порт не открыт, пробуем открыть
+
+    if( mPrefferedPort.isEmpty() ) {
+      //Порт не задан, выбираем автоматически
+      auto serialPortList = QSerialPortInfo::availablePorts();
+      if( mIndex >= serialPortList.count() ) mIndex = 0;
+      if( mIndex < serialPortList.count() ) {
+        mFactPort = serialPortList.at(mIndex++).portName();
+        }
+      else
+        mFactPort.clear();
+      }
+    else mFactPort = mPrefferedPort;
+
+    mSerialPort.setPortName( mFactPort );
+    mSerialPort.open( QIODevice::ReadWrite );
+
+    stageGet( SV_CB_INFO_GET, svStWaitAnswer, 100 );
+    }
+  }
+
+
+
+void SvMirrorCom::init()
+  {
+
+  }
+
+
+
+void SvMirrorCom::bytesRead()
+  {
+  while( mSerialPort.canReadLine() ) {
+    QByteArray line = mSerialPort.readLine().simplified();
+    SvTextStreamIn in( line.data() );
+    switch( in.getCmd() ) {
+      case SV_CB_INFO :
+        //Получена информация от контроллера
+
+        //Отправить извещение о подключении
+        emit linkChanged( true, controllerType(), programmName() );
+
+        //Если нужно прошить программу, то переходим к стиранию памяти
+        if( mNeedFlash ) {
+          mIndex = 0;
+          stageGet( SV_CB_ERASE, svStWaitAnswer, 10000 );
+          }
+        else
+          stageGet( SV_CB_TICKET_GET, svStWaitAnswer, 100 );
+        break;
+
+
+      case SV_CB_BUSY :
+        if( in.getInt8() )
+          //Пока занят, продолжаем спрашивать
+          stageGet( SV_CB_BUSY_GET, svStWaitAnswer, 0 );
+        else
+          //Освободился, продолжаем загрузку
+          stageFlash();
+        break;
+
+
+      case SV_CB_TICKET : {
+        //Получено извещение
+        int ticketId = in.getInt16();
+        //Проверить, есть ли извещение. Если есть, то возимся дальше
+        //иначе - ничего не делаем
+        if( ticketId ) {
+          //Получить параметры
+          int p[8];
+          for( auto &v : p )
+            v = in.getInt32();
+          //Отправить сигнал с извещением
+          emit ticket( ticketId, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7] );
+          }
+        stageMemorySet();
+        }
+        break;
+
+
+
+      case SV_CB_MEMORY : {
+        int addr = in.getInt16();
+        if( mMemory.count() < addr + 12 )
+          mMemory.resize( addr + 12 );
+        for( int i = 0; i < 12; i++ )
+          mMemory[addr + i] = in.getInt32();
+        mMemoryBlockIndex = addr + 12;
+        stageGet( SV_CB_TICKET_GET, svStWaitAnswer, 100 );
+        }
+        break;
+
+
+      case SV_CB_VPU : {
+        //Номер vpu
+        int i = in.getInt8();
+        if( i < mVpuState.count() ) {
+          mVpuState[i].mIp       = in.getInt32(); //!< instruction pointer [указатель инструкций]
+          mVpuState[i].mSp       = in.getInt32(); //!< stack pointer [указатель стека]
+          mVpuState[i].mBp       = in.getInt32(); //!< function frame pointer [указатель базы в стеке локальных переменных для текущей функции (указывает на фрейм возврата из функции)]
+          mVpuState[i].mTm       = in.getInt32(); //!< exception mask [маска обрабатываемых исключений]
+          mVpuState[i].mBaseSp   = in.getInt32(); //!< stack start [Начало стека для данного процессора]
+          mVpuState[i].mThrow    = in.getInt32(); //!< current exception [Текущее значение исключения]
+          mVpuState[i].mDebugRun = in.getInt32(); //!< if eq 0 then in debug state else - in run state
+          }
+        stageVpuGet();
+        }
+
+
+      case SV_CB_LOG :
+        line.remove( 0, 1 );
+        if( line.length() )
+          emit log( QString::fromUtf8( line ) );
+
+        //Теперь снова считывание информации
+        stageGet( SV_CB_INFO_GET, svStWaitAnswer, 100 );
+        break;
+
+      }
     }
   }
 
 
 
 
-void SvMirrorExtern::parseFlashWriteOk(const unsigned char *buf)
+void SvMirrorCom::portClose()
   {
-  int len = buf[1];
-  int addr = svIRead32( buf + 2 );
-  addr += len;
-  queryNextFlash( addr );
+  //Закрыть порт
+  mSerialPort.close();
+  if( !mControllerType.isEmpty() ) {
+    //Сообщить, что порт закрыт и подключения нету
+    mControllerType.clear();
+    emit linkChanged( false, controllerType(), programmName() );
+    }
+  }
+
+
+
+void SvMirrorCom::stageGet(int query, int nextStage, int timeOut )
+  {
+  //Сформировать запрос информации
+  SvTextStreamOut out{};
+  out.begin( query );
+  out.end();
+
+  //Отправить запрос
+  mSerialPort.write( out.buffer() );
+
+  //Переходим в состояние ожидания ответа
+  mStage = nextStage;
+  if( timeOut )
+    mTimeOut = timeOut;
   }
 
 
@@ -323,135 +238,164 @@ void SvMirrorExtern::parseFlashWriteOk(const unsigned char *buf)
 
 
 
-void SvMirrorExtern::queryMemory()
+void SvMirrorCom::stageMemorySet()
   {
   if( mWriteQueue.count() ) {
-    //Memory write
-    mBuf[0] = SVU_CMD_VARS_WRITE;
-    //For variables time out
-    mReceivTimeOut = 100;
-    //Блокировщик доступа к очереди
-    QMutexLocker locker( &mWriteMutex );
+    //Есть данные для передачи
+    //Блокиратор сдвоенного доступа к очереди
+    QMutexLocker locker(&mWriteMutex);
 
-    //Сформировать пакет на установку
-    int size = qMin( mWriteQueue.count(), 10 );
-    mBuf[1] = SVU_CMD_VARS_WRITE;
-    mBuf[2] = static_cast<unsigned char>( size );
+    //Сформировать запрос информации
+    SvTextStreamOut out{};
+    out.begin( SV_CB_MEMORY_SET );
 
-    for( int i = 0; i < size; i++ ) {
-      int adr = mWriteQueue.at(i);
-      int val = mWriteValues.value(adr);
-      svIWrite16( mBuf + 3 + i * 6, adr );
-      svIWrite32( mBuf + 5 + i * 6, val );
+    //Количество элементов для передачи
+    int count = qMin( 8, mWriteQueue.count() );
+    out.addInt8( count );
+
+    for( int i = 0; i < count; i++ ) {
+      //Адрес
+      out.addInt16( mWriteQueue.first() );
+      //Данные
+      out.addInt32( mWriteValues.value(mWriteQueue.first()) );
+      //Исключаем значение из карты
+      mWriteValues.remove( mWriteQueue.first() );
+      //Убрать значение из очереди
+      mWriteQueue.removeFirst();
       }
+    out.end();
 
-    //Remove sended variables
-    for( int i = 0; i < size; i++ )
-      mWriteValues.remove( mWriteQueue.takeFirst() );
+    //Отправить запрос
+    mSerialPort.write( out.buffer() );
 
-    send( mBuf );
+    mStage = svStMemorySet;
+    }
+  else stageMemoryGet();
+  }
+
+
+
+
+void SvMirrorCom::stageMemoryGet()
+  {
+  if( mMemoryBlockIndex < mMemoryCount ) {
+    //Сформировать запрос информации
+    SvTextStreamOut out{};
+    out.begin( SV_CB_MEMORY_SET );
+    out.addInt16( mMemoryBlockIndex );
+    out.end();
+
+    //Отправить запрос
+    mSerialPort.write( out.buffer() );
+
+    //Будем ожидать ответ
+    mStage = svStWaitAnswer;
     }
   else {
-    //Memory read
-    int globalCount = svILimit( mProgramm->globalCount(), 1, 15 );
-    mBuf[0] = SVU_CMD_VARS_READ;
-    //For variables time out
-    mReceivTimeOut = 100;
-    mBuf[1] = static_cast<unsigned char>(globalCount);
-    svIWrite16( mBuf + 2, 0 );
-    send( mBuf );
+    mMemoryBlockIndex = 0;
+    if( mScanTasks ) stageDebugSet();
+    else             stageGet( SV_CB_LOG_GET, svStWaitAnswer, 100 );
     }
   }
 
 
 
 
-void SvMirrorExtern::queryNextDebug()
-  {
-  for( int i = 0; i < mControllerInfo.mVpuMax; i++ )
-    if( mVpuDebug[i].mCommand ) {
-      //Execute debug command
-      QMutexLocker locker( &mVpuMutex );
 
-      mBuf[0] = SVU_CMD_DEBUG;
-      mBuf[1] = static_cast<unsigned char>(i);
-      mBuf[2] = static_cast<unsigned char>(mVpuDebug[i].mCommand);
-      svIWrite32( mBuf + 3, mVpuDebug[i].mParam1 );
-      svIWrite32( mBuf + 7, mVpuDebug[i].mParam2 );
-      send( mBuf );
+void SvMirrorCom::stageVpuGet()
+  {
+  if( mVpuIndex < mVpuState.count() ) {
+    //Сформировать запрос информации
+    SvTextStreamOut out{};
+    out.begin( SV_CB_VPU_GET );
+    out.addInt8( mVpuIndex );
+    out.end();
+
+    //Отправить запрос
+    mSerialPort.write( out.buffer() );
+
+    //Будем ожидать ответ
+    mStage = svStWaitAnswer;
+    mVpuIndex++;
+    }
+  else stageGet( SV_CB_LOG_GET, svStWaitAnswer, 100 );
+  }
+
+
+
+
+void SvMirrorCom::stageDebugSet()
+  {
+  //Проверить наличие команд отладчика
+  for( int i = 0; i < mVpuDebug.count(); i++ )
+    if( mVpuDebug.at(i).mCommand ) {
+      //Есть данные для передачи
+      //Блокиратор сдвоенного доступа к очереди
+      QMutexLocker locker(&mVpuMutex);
+
+      //Сформировать запрос информации
+      SvTextStreamOut out{};
+      out.begin( SV_CB_DEBUG );
+      out.addInt8( i );
+      out.addInt8( mVpuDebug.at(i).mCommand );
+      out.addInt32( mVpuDebug.at(i).mParam1 );
+      out.addInt32( mVpuDebug.at(i).mParam2 );
+      out.end();
+
+      //Отправить запрос
+      mSerialPort.write( out.buffer() );
+
+      //Обозначить, что команда выполнена
       mVpuDebug[i].mCommand = 0;
+
+      //Будем ожидать ответ
+      mStage = svStDebugSet;
       return;
       }
 
-  //Query next task
-  mBuf[0] = SVU_CMD_VPU_STATE_GET;
-  mBuf[1] = 0;
-  send( mBuf );
+  //У отладчика нету команд, получить состояние процессоров
+  mVpuIndex = 0;
+  stageVpuGet();
   }
 
 
 
 
-void SvMirrorExtern::queryNextFlash( int addr )
+void SvMirrorCom::stageFlash()
   {
-  if( addr < mProgramm->codeCount() ) {
-    int len = svILimit( mProgramm->codeCount() - addr, 1, 58 );
-    mBuf[0] = SVU_CMD_FLASH_WRITE;
-    mBuf[1] = static_cast<unsigned char>(len);
-    svIWrite32( mBuf + 2, addr );
-    for( int i = 0; i < len; i++ )
-      mBuf[i + 6] = static_cast<unsigned char>( mProgramm->getCode(addr + i) );
-    send( mBuf );
-    emit transferProcess( false, tr("Programming %1 from %2").arg(addr).arg(mProgramm->codeCount()) );
+  if( mIndex < mProgramm->codeCount() ) {
+    int count = qMin( 48, mProgramm->codeCount() - mIndex );
+    //Сформировать запрос информации
+    SvTextStreamOut out{};
+    out.begin( SV_CB_FLASH );
+    out.addInt32( mIndex );
+    out.addInt8( count );
+    for( int i = 0; i < count; i++ )
+      out.addInt8( mProgramm->getCode(mIndex + i) );
+    out.end();
+
+    //Отправить запрос
+    mSerialPort.write( out.buffer() );
+
+    mStage = svStWaitAnswer;
+    mTimeOut = 1000;
     }
-  else queryRestart();
+  else {
+    //Прошивка закончена, выполнить сброс
+    //Сформировать запрос информации
+    SvTextStreamOut out{};
+    out.begin( SV_CB_RESET );
+    out.addInt8( mRunOrPause ? 1 : 0 );
+    out.end();
+
+    //Отправить запрос
+    mSerialPort.write( out.buffer() );
+
+    //Переходим в состояние ожидания ответа
+    mStage = svStWaitAnswer;
+    mTimeOut = 100;
+    }
   }
 
 
 
-void SvMirrorExtern::queryState()
-  {
-  //Command
-  mBuf[0] = SVU_CMD_STATE_GET;
-  //Send query
-  send( mBuf );
-  }
-
-
-
-void SvMirrorExtern::queryReset()
-  {
-  mReset = false;
-  //Command
-  mBuf[0] = SVU_CMD_VPU_RESET;
-  //Send query
-  send( mBuf );
-  }
-
-
-
-void SvMirrorExtern::queryFlashRead()
-  {
-  mFlash = false;
-  mBuf[0] = SVU_CMD_FLASH_READ;
-  mBuf[1] = SVVMH_HEADER_SIZE;
-  svIWrite32( mBuf + 2, 0 );
-  send( mBuf );
-  }
-
-
-
-
-void SvMirrorExtern::queryRestart()
-  {
-  mBuf[0] = SVU_CMD_VPU_RESTART;
-  mBuf[1] = static_cast<unsigned char>(mRun);
-  send( mBuf );
-  emit transferProcess( true, QString() );
-  }
-
-
-
-
-
-#endif

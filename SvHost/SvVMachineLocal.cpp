@@ -15,7 +15,7 @@
     Данная реализация обеспечивает локальную машину.
 */
 
-#include "SvVMachine/Sv6Sys.h"
+#include "SvVMachine/Sv7Sys.h"
 #include "SvVMachineLocal.h"
 
 #include <QDebug>
