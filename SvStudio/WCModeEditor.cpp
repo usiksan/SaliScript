@@ -438,54 +438,56 @@ void WCModeEditor::parsingComplete()
 
 void WCModeEditor::onMemoryChanged(SvMirror *mirror)
   {
-  //Update variables
-  mDebugVar->updateVariables();
+  if( !mMirror.isNull() ) {
+    //Update variables
+    mDebugVar->updateVariables();
 
-  //Update tasks
-  SvVpuVector vpus = mirror->vpuVector();
-  int taskCount = qMin( SV_MAX_TASK, vpus.count() );
-  for( int taskIndex = 0; taskIndex < taskCount; taskIndex++ ) {
-    //Задача присутствует, обновить информацию
-    mIps[taskIndex] = vpus.at(taskIndex).mIp;
-    //Заголовок
-    mTasks->item( taskIndex, DE_TASK_TASK )->setText( QString::number(taskIndex) );
-    if( vpus.at(taskIndex).mDebugRun ) {
-      //Задача исполняется
-      mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskRun.png") );
-      //Очистить регистры
-      mTasks->item( taskIndex, DE_TASK_IP )->setText( QString() );
-      mTasks->item( taskIndex, DE_TASK_SP )->setText( QString() );
-      mTasks->item( taskIndex, DE_TASK_TM )->setText( QString() );
-      mTasks->item( taskIndex, DE_TASK_BP )->setText( QString() );
-      }
-    else {
-      //Задача заторможена
-      if( vpus.at(taskIndex).mIp )
-        mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskPause.png") );
-      else
-        mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskStop.png") );
-      //Если ip изменился с предыдущего значения, то позиционировать курсор редактора к данной строке
-      if( mTasks->item( taskIndex, DE_TASK_IP )->text() != QString::number( vpus.at(taskIndex).mIp ) && !mProgramm.isNull() ) {
-        //Получить имя файла, где находится текущая точка исполнения
-        qDebug() << "debug task" << taskIndex << "ip" << vpus.at(taskIndex).mIp << "fname" << mProgramm->getFileName( vpus.at(taskIndex).mIp ) << "line" << mProgramm->getLine( vpus.at(taskIndex).mIp );
-        trackToFileLine( mProgramm->getFileName( vpus.at(taskIndex).mIp ), mProgramm->getLine( vpus.at(taskIndex).mIp ) );
+    //Update tasks
+    SvVpuVector vpus = mirror->vpuVector();
+    int taskCount = qMin( SV_MAX_TASK, vpus.count() );
+    for( int taskIndex = 0; taskIndex < taskCount; taskIndex++ ) {
+      //Задача присутствует, обновить информацию
+      mIps[taskIndex] = vpus.at(taskIndex).mIp;
+      //Заголовок
+      mTasks->item( taskIndex, DE_TASK_TASK )->setText( QString::number(taskIndex) );
+      if( vpus.at(taskIndex).mDebugRun ) {
+        //Задача исполняется
+        mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskRun.png") );
+        //Очистить регистры
+        mTasks->item( taskIndex, DE_TASK_IP )->setText( QString() );
+        mTasks->item( taskIndex, DE_TASK_SP )->setText( QString() );
+        mTasks->item( taskIndex, DE_TASK_TM )->setText( QString() );
+        mTasks->item( taskIndex, DE_TASK_BP )->setText( QString() );
         }
-      mTasks->item( taskIndex, DE_TASK_IP )->setText( QString::number( vpus.at(taskIndex).mIp ) );
-      mTasks->item( taskIndex, DE_TASK_SP )->setText( QString::number( vpus.at(taskIndex).mSp ) );
-      mTasks->item( taskIndex, DE_TASK_TM )->setText( QString::number( vpus.at(taskIndex).mTm ) );
-      mTasks->item( taskIndex, DE_TASK_BP )->setText( QString::number( vpus.at(taskIndex).mBp ) );
+      else {
+        //Задача заторможена
+        if( vpus.at(taskIndex).mIp )
+          mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskPause.png") );
+        else
+          mTasks->item( taskIndex, DE_TASK_RUN )->setIcon( QIcon(":/pic/taskStop.png") );
+        //Если ip изменился с предыдущего значения, то позиционировать курсор редактора к данной строке
+        if( mTasks->item( taskIndex, DE_TASK_IP )->text() != QString::number( vpus.at(taskIndex).mIp ) && !mProgramm.isNull() ) {
+          //Получить имя файла, где находится текущая точка исполнения
+          qDebug() << "debug task" << taskIndex << "ip" << vpus.at(taskIndex).mIp << "fname" << mProgramm->getFileName( vpus.at(taskIndex).mIp ) << "line" << mProgramm->getLine( vpus.at(taskIndex).mIp );
+          trackToFileLine( mProgramm->getFileName( vpus.at(taskIndex).mIp ), mProgramm->getLine( vpus.at(taskIndex).mIp ) );
+          }
+        mTasks->item( taskIndex, DE_TASK_IP )->setText( QString::number( vpus.at(taskIndex).mIp ) );
+        mTasks->item( taskIndex, DE_TASK_SP )->setText( QString::number( vpus.at(taskIndex).mSp ) );
+        mTasks->item( taskIndex, DE_TASK_TM )->setText( QString::number( vpus.at(taskIndex).mTm ) );
+        mTasks->item( taskIndex, DE_TASK_BP )->setText( QString::number( vpus.at(taskIndex).mBp ) );
+        }
       }
-    }
 
-  //Clear unused task cell
-  while( taskCount < SV_MAX_TASK ) {
-    mTasks->item( taskCount, DE_TASK_TASK )->setText( QString() );
-    mTasks->item( taskCount, DE_TASK_RUN )->setIcon( QIcon() );
-    mTasks->item( taskCount, DE_TASK_IP )->setText( QString() );
-    mTasks->item( taskCount, DE_TASK_SP )->setText( QString() );
-    mTasks->item( taskCount, DE_TASK_TM )->setText( QString() );
-    mTasks->item( taskCount, DE_TASK_BP )->setText( QString() );
-    taskCount++;
+    //Clear unused task cell
+    while( taskCount < SV_MAX_TASK ) {
+      mTasks->item( taskCount, DE_TASK_TASK )->setText( QString() );
+      mTasks->item( taskCount, DE_TASK_RUN )->setIcon( QIcon() );
+      mTasks->item( taskCount, DE_TASK_IP )->setText( QString() );
+      mTasks->item( taskCount, DE_TASK_SP )->setText( QString() );
+      mTasks->item( taskCount, DE_TASK_TM )->setText( QString() );
+      mTasks->item( taskCount, DE_TASK_BP )->setText( QString() );
+      taskCount++;
+      }
     }
 
   }
@@ -908,19 +910,22 @@ void WCModeEditor::textChanged()
 void WCModeEditor::mirrorChanged(int id, SvMirrorPtr mirrorPtr)
   {
   Q_UNUSED(id)
-//  qDebug() << "mirrorChanged" << id << mirrorPtr.data();
-  //При изменении памяти
-  mDebugVar->setupMirror(mirrorPtr);
+  qDebug() << "mirrorChanged" << id << mirrorPtr.data();
+  mMirror = mirrorPtr;
+  if( !mirrorPtr.isNull() ) {
+    //При изменении памяти
+    mDebugVar->setupMirror(mirrorPtr);
 
-  //При поступлении loga
-  connect( mirrorPtr.data(), &SvMirror::log, this, &WCModeEditor::onLog );
-  //При изменении текстового статуса
-  connect( mirrorPtr.data(), &SvMirror::linkChanged, this, &WCModeEditor::onTextStatusChanged );
+    //При поступлении loga
+    connect( mirrorPtr.data(), &SvMirror::log, this, &WCModeEditor::onLog, Qt::QueuedConnection );
+    //При изменении текстового статуса
+    connect( mirrorPtr.data(), &SvMirror::linkChanged, this, &WCModeEditor::onTextStatusChanged, Qt::QueuedConnection );
 
-  connect( mirrorPtr.data(), &SvMirror::memoryChanged, this, &WCModeEditor::onMemoryChanged );
+    connect( mirrorPtr.data(), &SvMirror::memoryChanged, this, &WCModeEditor::onMemoryChanged, Qt::QueuedConnection );
 
-  connect( this, &WCModeEditor::debug, mirrorPtr.data(), &SvMirror::debug );
+    connect( this, &WCModeEditor::debug, mirrorPtr.data(), &SvMirror::debug, Qt::QueuedConnection );
 
+    }
   //Обновить текстовый статус
   onTextStatusChanged( false, QString{}, QString{} );
   }

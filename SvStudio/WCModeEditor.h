@@ -78,6 +78,8 @@ class WCModeEditor : public QSplitter
     SvPeriodicParser  *mParser;          //Периодический разборщик для обеспечения адекватной подсветки синтаксиса
     SvErrorList        mErrorList;       //Список ошибок
 
+    SvMirrorPtr        mMirror;          //Зеркало
+
     bool               mVarChangeLock;   //Блокировка от изменения ячейки внутренними средствами
     QStringList        mFilesList;
 

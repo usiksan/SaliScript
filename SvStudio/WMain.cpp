@@ -43,13 +43,13 @@ WMain::WMain(QWidget *parent)
   mCModeEditor = new WCModeEditor( this );
   mCModeHelp   = new WCModeHelp();
 
-  connect( maDebugPause, SIGNAL(triggered()), mCModeEditor, SLOT(debugPause()) );
-  connect( maDebugPauseAll, SIGNAL(triggered()), mCModeEditor, SLOT(debugPauseAll()) );
-  connect( maDebugRun, SIGNAL(triggered()), mCModeEditor, SLOT(debugRun()) );
-  connect( maDebugRunAll, SIGNAL(triggered()), mCModeEditor, SLOT(debugRunAll()) );
-  connect( maDebugStep, SIGNAL(triggered()), mCModeEditor, SLOT(debugStep()) );
-  connect( maDebugTrace, SIGNAL(triggered()), mCModeEditor, SLOT(debugTrace()) );
-  connect( maDebugAddWatch, SIGNAL(triggered()), mCModeEditor, SLOT(debugAddWatch()) );
+  connect( maDebugPause, &QAction::triggered, mCModeEditor, &WCModeEditor::debugPause );
+  connect( maDebugPauseAll, &QAction::triggered, mCModeEditor, &WCModeEditor::debugPauseAll );
+  connect( maDebugRun, &QAction::triggered, mCModeEditor, &WCModeEditor::debugRun );
+  connect( maDebugRunAll, &QAction::triggered, mCModeEditor, &WCModeEditor::debugRunAll );
+  connect( maDebugStep, &QAction::triggered, mCModeEditor, &WCModeEditor::debugStep );
+  connect( maDebugTrace, &QAction::triggered, mCModeEditor, &WCModeEditor::debugTrace );
+  connect( maDebugAddWatch, &QAction::triggered, mCModeEditor, &WCModeEditor::debugAddWatch );
 
   //Создать боковой бар с режимами
   QToolBar *bar = new QToolBar( tr("Modes") );
@@ -443,7 +443,7 @@ void WMain::mirrorBridge()
 void WMain::onMirrorChanged(int id, SvMirrorPtr mirror)
   {
   //Подключить
-  if( mirror ) {
+  if( !mirror.isNull() ) {
 
     //В соответствии с отладчиком изменить команду
     switch( id ) {
@@ -473,7 +473,7 @@ void WMain::onMirrorChanged(int id, SvMirrorPtr mirror)
     mCModeEditor->mirrorChanged( id, mirror );
 
     connect( this, &WMain::setProgrammFlashRun, mirror.data(), &SvMirror::setProgrammFlashRun, Qt::QueuedConnection );
-    connect( this, &WMain::linkTo, mirror, &SvMirror::linkTo );
+    connect( this, &WMain::linkTo, mirror.data(), &SvMirror::linkTo );
 
     emit linkTo( svProject->mRemoteIp, svProject->mRemotePort, svProject->mControllerName, svProject->mControllerPassw );
     }
