@@ -59,6 +59,12 @@ inline void svIWrite32( unsigned char *dest, int val ) {
   dest[1] = (unsigned char)(val >> 16);
   dest[0] = (unsigned char)(val >> 24);
   }
+inline void svIWrite32lsb( unsigned char *dest, int val ) {
+  dest[0] = (unsigned char)(val);
+  dest[1] = (unsigned char)(val >> 8);
+  dest[2] = (unsigned char)(val >> 16);
+  dest[3] = (unsigned char)(val >> 24);
+  }
 
 inline unsigned svUMin( unsigned i1, unsigned i2 ) { return i1 < i2 ? i1 : i2; }
 inline unsigned svUMax( unsigned i1, unsigned i2 ) { return i1 > i2 ? i1 : i2; }

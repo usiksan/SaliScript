@@ -11,7 +11,7 @@ void SvNetHandlerMirror::mirrorChanged(int id, SvMirrorPtr mirrorPtr)
   {
   Q_UNUSED(id)
   mMirror = mirrorPtr;
-  connect( mMirror, &SvMirror::log, this, [this] ( const QString msg ) {
+  connect( mMirror.data(), &SvMirror::log, this, [this] ( const QString msg ) {
     mLogList.append(msg);
     });
   }
@@ -40,7 +40,8 @@ void SvNetHandlerMirror::receivedBlock(SvNetChannel *ch, qint8 cmd, QByteArray b
       state.mLog            = mLogList;
       mLogList.clear();
       int count = mMirror->memoryGlobalCount();
-      for( int i = 0; i < count; i++ )
+      state.mMemory.append( 0 );
+      for( int i = 1; i < count; i++ )
         state.mMemory.append( mMirror->memoryGet( i ) );
 
       //Send answer
