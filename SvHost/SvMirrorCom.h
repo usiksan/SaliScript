@@ -19,7 +19,7 @@ class SvMirrorCom : public SvMirrorExtern
 
     //char padding[4];
   public:
-    SvMirrorCom( const QString portName = QString{} );
+    SvMirrorCom( const QString portName = QString{} , bool doScanTask = false );
 
     //!
     //! \brief controllerType Return current linked controller type name string

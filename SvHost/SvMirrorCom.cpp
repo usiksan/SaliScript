@@ -17,7 +17,7 @@ enum SvMirrorComStage {
 
 
 
-SvMirrorCom::SvMirrorCom(const QString portName) :
+SvMirrorCom::SvMirrorCom(const QString portName, bool doScanTask ) :
   SvMirrorExtern(),
   mSerialPort(),
   mPrefferedPort(portName),
@@ -27,6 +27,7 @@ SvMirrorCom::SvMirrorCom(const QString portName) :
   mMemoryBlockIndex(0),
   mVpuIndex(0)
   {
+  mScanTasks = doScanTask;
   //Подключить порт к приемнику данных
   connect( &mSerialPort, &QSerialPort::readyRead, this, &SvMirrorCom::bytesRead );
   }

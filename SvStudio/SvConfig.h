@@ -30,12 +30,13 @@
     27.03.2020 v0.14 Сделал подключение к контролллеру через SvMirrorCom
                      Добавил прошивку программы
                      Добавил чтение глобальных переменных
+               v0.15 Пробую добавить отладку
 */
 
 #ifndef SVCONFIG
 #define SVCONFIG
 
-#define SV_VERSION "v0.14"
+#define SV_VERSION "v0.15"
 
 #define PATH_HELP              ""
 #define EXTENSION_PROJECT      ".svproject"

@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
   //Создать менеджер зеркал
   svMirrorManager = new SvMirrorManager();
   svMirrorManager->addMirrorFabric( SMT_LOCAL, [] () { return new SvMirrorLocal( new SvVMachineLocal() ); } );
-  svMirrorManager->addMirrorFabric( SMT_USB, [] () { return new SvMirrorCom(); } );
+  svMirrorManager->addMirrorFabric( SMT_USB, [] () { return new SvMirrorCom( QString{}, true ); } );
   svMirrorManager->addMirrorFabric( SMT_REMOTE, [] () { return new SvMirrorRemote(); } );
 
   QSettings s;
