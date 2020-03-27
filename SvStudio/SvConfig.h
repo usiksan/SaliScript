@@ -27,12 +27,15 @@
                      программами, а также для вызова удаленных функций
                v0.12 Начал делать зеркало для микроконтроллера через usb-com
     03.03.2020 v0.13 Удалил зеркало для libusb. Подключил к проекту библиотеку serialport
+    27.03.2020 v0.14 Сделал подключение к контролллеру через SvMirrorCom
+                     Добавил прошивку программы
+                     Добавил чтение глобальных переменных
 */
 
 #ifndef SVCONFIG
 #define SVCONFIG
 
-#define SV_VERSION "v0.13"
+#define SV_VERSION "v0.14"
 
 #define PATH_HELP              ""
 #define EXTENSION_PROJECT      ".svproject"

@@ -77,26 +77,6 @@ class SvMirrorCom : public SvMirrorExtern
 
             void stageFlash();
 
-  protected:
-    void send( const unsigned char *buf );
-
-            void          onReceived(const unsigned char *buf );
-
-  protected:
-            void          parseVersion( const unsigned char *buf );
-            void          parseState( const unsigned char *buf );
-            void          parseVariables( const unsigned char *buf );
-            void          parseTask( const unsigned char *buf );
-            void          parseFlash( const unsigned char *buf );
-            void          parseFlashWriteOk( const unsigned char *buf );
-
-            void          queryMemory();
-            void          queryNextDebug();
-            void          queryNextFlash(int addr);
-            void          queryState();
-            void          queryReset();
-            void          queryFlashRead();
-            void          queryRestart();
   };
 
 #endif // SVMIRRORCOM_H

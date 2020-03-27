@@ -8,7 +8,6 @@
 
 #include "SvMirrorExtern.h"
 #include "SvVMachine/SvVmUtils.h"
-#include "SvVMachine/SvVmInterface.h"
 
 #include <QDebug>
 

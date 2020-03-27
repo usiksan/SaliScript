@@ -83,7 +83,6 @@ HEADERS += \
   SvVMachine/SvVMachine.h \
   SvVMachine/SvVmByteCode.h \
   SvVMachine/SvVmCodeHeader.h \
-  SvVMachine/SvVmInterface.h \
   SvVMachine/SvVmTypes.h \
   SvVMachine/SvVmUtils.h \
   SvVMachine/SvVmVpu.h \

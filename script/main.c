@@ -1,4 +1,6 @@
 
+#define SV_SIGNATURE "test 2"
+
 int a;
 
 void fun() {

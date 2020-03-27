@@ -62,6 +62,7 @@ void SvMirrorCom::setProgrammFlashRun(SvProgrammPtr prog, bool runOrPause, bool 
     mRunOrPause = runOrPause;
     mProgramm   = prog;
     mNeedFlash  = true;
+    qDebug() << "start flash";
     }
   }
 
@@ -96,9 +97,10 @@ void SvMirrorCom::processing(int tickOffset)
 
     mSerialPort.setPortName( mFactPort );
     if( mSerialPort.open( QIODevice::ReadWrite ) ) {
-      mSerialPort.write( "primer" );
-      qDebug() << "primer sended";
-  //    stageGet( SV_CB_INFO_GET, svStWaitAnswer, 100 );
+      qDebug() << "opened" << mFactPort;
+//      mSerialPort.write( "primer" );
+//      qDebug() << "primer sended";
+      stageGet( SV_CB_INFO_GET, svStWaitAnswer, 100 );
       }
     }
   }
@@ -115,23 +117,78 @@ void SvMirrorCom::init()
 void SvMirrorCom::bytesRead()
   {
   while( mSerialPort.canReadLine() ) {
-    QByteArray line = mSerialPort.readLine().simplified();
+    QByteArray line = mSerialPort.readAll().simplified();
+    qDebug() << "received" << line;
     SvTextStreamIn in( line.data() );
     switch( in.getCmd() ) {
-      case SV_CB_INFO :
+      case SV_CB_INFO : {
         //Получена информация от контроллера
-        qDebug() << in.getInt32() << in.getInt32();
+        // Информация о контроллере
+        // SV_CB_INFO
+        // i8[20] - тип контроллера
+        // i8     - количество доступных процессоров
+        // i32[3] - серийный номер процессора
+        // i32    - hash-значение загруженной программы
+        // i8[20] - наименование загруженной программы
+        char type[21];
+        for( int i = 0; i < 20; i++ )
+          type[i] = in.getInt8();
+        type[20] = 0;
 
-        //Отправить извещение о подключении
-        emit linkChanged( true, controllerType(), programmName() );
+        int vpuCount = in.getInt8();
+        if( mVpuState.count() != vpuCount )
+          mVpuState.resize(vpuCount);
+
+        int serial[3];
+        serial[0] = in.getInt32();
+        serial[1] = in.getInt32();
+        serial[2] = in.getInt32();
+        QString serialString = QString("%1%2%3").arg( serial[0], 8, 16, QChar('0')).arg( serial[1], 8, 16, QChar('0')).arg( serial[2], 8, 16, QChar('0'));
+        qDebug() << "serial" << serialString;
+        int hash = in.getInt32();
+        Q_UNUSED(hash);
+        char name[21];
+        for( int i = 0; i < 20; i++ ) {
+          name[i] = in.getInt8();
+          //Все непечатные символы заменяем на черточку
+          if( name[i] & 0x80 || name[i] < ' ' )
+            name[i] = '-';
+          }
+        name[20] = 0;
+
+        //Сформируем имя контроллера из его серийного номера
+        if( !mControllerName.isEmpty() && mControllerName != serialString ) {
+          //Задано имя контроллера и оно не совпадает с контроллером
+          //Поэтому будем переходить к следующему контроллеру
+          mSerialPort.close();
+          return;
+          }
+
+        //Проверить тип контроллера и имя программы. Совпадают ли с текущими
+        QString theControllerType = QString::fromUtf8( type );
+        QString theProgrammName = QString::fromUtf8( name );
+        if( mControllerType != theControllerType || mProgrammName != theProgrammName ) {
+
+          //Обновить тип контроллера
+          mControllerType = theControllerType;
+          //Обновить имя программы
+          mProgrammName = theProgrammName;
+
+          //Отправить извещение о подключении
+          emit linkChanged( true, controllerType(), programmName() );
+
+          }
 
         //Если нужно прошить программу, то переходим к стиранию памяти
         if( mNeedFlash ) {
+          qDebug() << "begin erase";
           mIndex = 0;
+          mNeedFlash = false;
           stageGet( SV_CB_ERASE, svStWaitAnswer, 10000 );
           }
         else
           stageGet( SV_CB_TICKET_GET, svStWaitAnswer, 100 );
+        }
         break;
 
 
@@ -223,6 +280,7 @@ void SvMirrorCom::portClose()
 
 void SvMirrorCom::stageGet(int query, int nextStage, int timeOut )
   {
+  qDebug() << "stageGet" << query << nextStage;
   //Сформировать запрос информации
   SvTextStreamOut out{};
   out.begin( query );
@@ -285,7 +343,7 @@ void SvMirrorCom::stageMemoryGet()
   if( mMemoryBlockIndex < mMemoryCount ) {
     //Сформировать запрос информации
     SvTextStreamOut out{};
-    out.begin( SV_CB_MEMORY_SET );
+    out.begin( SV_CB_MEMORY_GET );
     out.addInt16( mMemoryBlockIndex );
     out.end();
 
@@ -296,6 +354,10 @@ void SvMirrorCom::stageMemoryGet()
     mStage = svStWaitAnswer;
     }
   else {
+    //Известить, что память обновлена
+    emit memoryChanged( this );
+
+    //Подготовить следующий цикл обновления памяти
     mMemoryBlockIndex = 0;
     if( mScanTasks ) stageDebugSet();
     else             stageGet( SV_CB_LOG_GET, svStWaitAnswer, 100 );
@@ -378,6 +440,11 @@ void SvMirrorCom::stageFlash()
       out.addInt8( mProgramm->getCode(mIndex + i) );
     out.end();
 
+    qDebug() << "flash" << mIndex << count;
+    mIndex += count;
+
+    emit transferProcess( false, tr("Flash %1 bytes").arg( mIndex ) );
+
     //Отправить запрос
     mSerialPort.write( out.buffer() );
 
@@ -394,6 +461,13 @@ void SvMirrorCom::stageFlash()
 
     //Отправить запрос
     mSerialPort.write( out.buffer() );
+
+    emit transferProcess( true, QString{} );
+
+    //Установить количество глобальных переменных в соответствии с программой
+    mMemoryCount = mProgramm->globalCount();
+    if( mMemoryCount > mMemory.count() )
+      mMemory.resize( mMemoryCount );
 
     //Переходим в состояние ожидания ответа
     mStage = svStWaitAnswer;
