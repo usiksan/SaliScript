@@ -148,7 +148,7 @@ SvCompiler::Reset() {
   mGlobalAddress = 2;
 
   //Добавить переменную svTickCount;
-  mVarGlobal.addVariable( new SvVariable(mark(), QString("svTickCount"), mTypeInt, 1, 0 ) );
+  //mVarGlobal.addVariable( new SvVariable(mark(), QString("svTickCount"), mTypeInt, 1, 0 ) );
   }
 
 
