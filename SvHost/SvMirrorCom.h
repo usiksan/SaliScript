@@ -1,3 +1,16 @@
+/*
+  Проект     "Скриптовый язык SaliScript: упрощенный c++"
+  Подпроект  "Host-система"
+  Автор
+    Alexander Sibilev
+  Интернет
+    www.rc.saliLab.ru - домашний сайт проекта
+    www.saliLab.ru
+    www.saliLab.com
+
+  Описание
+    Зеркало для внешних контроллеров, подключенных по usb.
+*/
 #ifndef SVMIRRORCOM_H
 #define SVMIRRORCOM_H
 
@@ -6,13 +19,21 @@
 
 class SvMirrorCom : public SvMirrorExtern
   {
-    QSerialPort    mSerialPort;
-    QString        mPrefferedPort;
-    QString        mControllerName;
-    QString        mFactPort;
+    QSerialPort    mSerialPort;     //! Последовательный порт. Через этот объект осуществляется фактическое подключение
 
-    int            mIndex;
-    int            mStage;
+    QString        mPrefferedPort;  //! Порт, через который нужно выполнить подключение. Если это
+                                    //! поле оставить пустым, то подключение будет выполнено через любой порт
+
+    QString        mControllerName; //! Имя контроллера, к которому нужно подключиться
+                                    //! Здесь записывается серийный номер конкретного контроллера, к которому нужно подключиться
+                                    //! Если это поле оставить пустым, то подключится к любому контроллеру
+
+    QString        mFactPort;       //! Фактический порт, через который выполнено подключение
+
+    QString        mSerial;         //! Серийный номер подключенного контроллера
+
+    int            mPortIndex;      //! Счетчик перебора доступных портов для подключения к контроллеру
+    int            mFlashIndex;     //! Счетчик байтов прошивки программ
     int            mTimeOut;
     int            mMemoryBlockIndex;
     int            mVpuIndex;
@@ -59,22 +80,48 @@ class SvMirrorCom : public SvMirrorExtern
     //!
     virtual void init() override;
 
+    //!
+    //! \brief bytesRead Слот вызывается при наличии байтов для чтения
+    //!
             void bytesRead();
 
   private:
-            //Закрыть порт
+            //!
+            //! \brief portClose Закрыть последовательный порт
+            //!
             void portClose();
 
-            void stageGet( int query, int nextStage, int timeOut );
+            //!
+            //! \brief stageGet  Отправить запрос query и перейти в стадию nextStage.
+            //!                  Это обычно ожидание ответа
+            //! \param query     Запрос, который необходимо отправить
+            //! \param timeOut   Тайм-аут ожидания. Если не нулевой то разрешаем контроль тайм-аута
+            //!
+            void stageGet(int query, int timeOut );
 
+            //!
+            //! \brief stageMemorySet Перейти в стадию "Запись в память"
+            //!
             void stageMemorySet();
 
+            //!
+            //! \brief stageMemoryGet Перейти в стадию "Чтение из памяти"
+            //!
             void stageMemoryGet();
 
+            //!
+            //! \brief stageVpuGet Перейти в стадию "Получить состояние vpu"
+            //!
             void stageVpuGet();
 
+            //!
+            //! \brief stageDebugSet Перейти в стадию "Отправка команды отладки"
+            //!
             void stageDebugSet();
 
+            //!
+            //! \brief stageFlash Перейти в стадию "Прошивка flash"
+            //!
             void stageFlash();
 
   };

@@ -6,23 +6,14 @@
 #include <QtSerialPort/QSerialPortInfo>
 #include <QDebug>
 
-enum SvMirrorComStage {
-  svStWaitAnswer,
-  svStMemorySet,
-  svStMemoryGet,
-  svStLogGet,
-  svStVpuGet,
-  svStDebugSet
-  };
-
-
+QString stage;
 
 SvMirrorCom::SvMirrorCom(const QString portName, bool doScanTask ) :
   SvMirrorExtern(),
   mSerialPort(),
   mPrefferedPort(portName),
-  mIndex(0),
-  mStage(0),
+  mPortIndex(0),
+  mFlashIndex(0),
   mTimeOut(0),
   mMemoryBlockIndex(0),
   mVpuIndex(0)
@@ -39,7 +30,7 @@ QString SvMirrorCom::controllerType() const
   {
   if( mControllerType.isEmpty() )
     return tr("USB not found");
-  return tr("USB %1 -> %2").arg(mFactPort).arg(mControllerType);
+  return tr("USB %1 -> %2 (Serial: %3)").arg(mFactPort).arg(mControllerType).arg(mSerial);
   }
 
 
@@ -76,10 +67,9 @@ void SvMirrorCom::processing(int tickOffset)
 
   if( mSerialPort.isOpen() ) {
     //Порт открыт, продолжаем обмен
-    if( mStage == svStWaitAnswer ) {
-      if( mTimeOut < 0 )
-        portClose();
-      }
+    if( mTimeOut < 0 )
+      //Если время ожидания истекло, то закрываем порт
+      portClose();
     }
   else {
     //Порт не открыт, пробуем открыть
@@ -87,9 +77,9 @@ void SvMirrorCom::processing(int tickOffset)
     if( mPrefferedPort.isEmpty() ) {
       //Порт не задан, выбираем автоматически
       auto serialPortList = QSerialPortInfo::availablePorts();
-      if( mIndex >= serialPortList.count() ) mIndex = 0;
-      if( mIndex < serialPortList.count() ) {
-        mFactPort = serialPortList.at(mIndex++).portName();
+      if( mPortIndex >= serialPortList.count() ) mPortIndex = 0;
+      if( mPortIndex < serialPortList.count() ) {
+        mFactPort = serialPortList.at(mPortIndex++).portName();
         }
       else
         mFactPort.clear();
@@ -98,10 +88,12 @@ void SvMirrorCom::processing(int tickOffset)
 
     mSerialPort.setPortName( mFactPort );
     if( mSerialPort.open( QIODevice::ReadWrite ) ) {
+      //Прочитать все, что накоплено в буфере порта
+      mSerialPort.readAll();
       qDebug() << "opened" << mFactPort;
 //      mSerialPort.write( "primer" );
 //      qDebug() << "primer sended";
-      stageGet( SV_CB_INFO_GET, svStWaitAnswer, 100 );
+      stageGet( SV_CB_INFO_GET, 200 );
       }
     }
   }
@@ -119,7 +111,7 @@ void SvMirrorCom::bytesRead()
   {
   while( mSerialPort.canReadLine() ) {
     QByteArray line = mSerialPort.readAll().simplified();
-    qDebug() << "received" << line;
+    //qDebug() << "received" << line;
     SvTextStreamIn in( line.data() );
     switch( in.getCmd() ) {
       case SV_CB_INFO : {
@@ -139,6 +131,12 @@ void SvMirrorCom::bytesRead()
         int vpuCount = in.getInt8();
         if( mVpuState.count() != vpuCount )
           mVpuState.resize(vpuCount);
+
+        if( mVpuDebug.count() < mVpuState.count() ) {
+          //Дополнить количество отладочных ячеек до количества процессов
+          mVpuDebug.resize( mVpuState.count() );
+          clearDebug();
+          }
 
         int serial[3];
         serial[0] = in.getInt32();
@@ -168,27 +166,21 @@ void SvMirrorCom::bytesRead()
         //Проверить тип контроллера и имя программы. Совпадают ли с текущими
         QString theControllerType = QString::fromUtf8( type );
         QString theProgrammName = QString::fromUtf8( name );
-        if( mControllerType != theControllerType || mProgrammName != theProgrammName ) {
+        if( mControllerType != theControllerType || mProgrammName != theProgrammName || mSerial != serialString ) {
 
           //Обновить тип контроллера
           mControllerType = theControllerType;
           //Обновить имя программы
           mProgrammName = theProgrammName;
+          //Обновить серийный номер контроллера
+          mSerial = serialString;
 
           //Отправить извещение о подключении
           emit linkChanged( true, controllerType(), programmName() );
 
           }
 
-        //Если нужно прошить программу, то переходим к стиранию памяти
-        if( mNeedFlash ) {
-          qDebug() << "begin erase";
-          mIndex = 0;
-          mNeedFlash = false;
-          stageGet( SV_CB_ERASE, svStWaitAnswer, 10000 );
-          }
-        else
-          stageGet( SV_CB_TICKET_GET, svStWaitAnswer, 100 );
+        stageGet( SV_CB_TICKET_GET, 100 );
         }
         break;
 
@@ -196,7 +188,7 @@ void SvMirrorCom::bytesRead()
       case SV_CB_BUSY :
         if( in.getInt8() )
           //Пока занят, продолжаем спрашивать
-          stageGet( SV_CB_BUSY_GET, svStWaitAnswer, 0 );
+          stageGet( SV_CB_BUSY_GET, 0 );
         else
           //Освободился, продолжаем загрузку
           stageFlash();
@@ -216,7 +208,16 @@ void SvMirrorCom::bytesRead()
           //Отправить сигнал с извещением
           emit ticket( ticketId, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7] );
           }
-        stageMemorySet();
+
+        //Если нужно прошить программу, то переходим к стиранию памяти
+        if( mNeedFlash ) {
+          qDebug() << "begin erase";
+          mFlashIndex = 0;
+          mNeedFlash = false;
+          stageGet( SV_CB_ERASE, 10000 );
+          }
+        else
+          stageMemorySet();
         }
         break;
 
@@ -229,7 +230,7 @@ void SvMirrorCom::bytesRead()
         for( int i = 0; i < 12; i++ )
           mMemory[addr + i] = in.getInt32();
         mMemoryBlockIndex = addr + 12;
-        stageGet( SV_CB_TICKET_GET, svStWaitAnswer, 100 );
+        stageGet( SV_CB_TICKET_GET, 100 );
         }
         break;
 
@@ -248,6 +249,7 @@ void SvMirrorCom::bytesRead()
           }
         stageVpuGet();
         }
+        break;
 
 
       case SV_CB_LOG :
@@ -256,9 +258,18 @@ void SvMirrorCom::bytesRead()
           emit log( QString::fromUtf8( line ) );
 
         //Теперь снова считывание информации
-        stageGet( SV_CB_INFO_GET, svStWaitAnswer, 100 );
+        stageGet( SV_CB_TICKET_GET, 100 );
         break;
 
+      case SV_CB_DEBUG :
+        //Подтверждена команда отладки, проверяем наличие следующих команд
+        stageDebugSet();
+        break;
+
+      case SV_CB_MEMORY_SET :
+        //Подтверждена запись переменных, проверяем следующие записи
+        stageMemorySet();
+        break;
       }
     }
   }
@@ -268,20 +279,23 @@ void SvMirrorCom::bytesRead()
 
 void SvMirrorCom::portClose()
   {
+  qDebug() << "Time out" << stage;
   //Закрыть порт
   mSerialPort.close();
   if( !mControllerType.isEmpty() ) {
     //Сообщить, что порт закрыт и подключения нету
     mControllerType.clear();
+    mSerial.clear();
     emit linkChanged( false, controllerType(), programmName() );
     }
   }
 
 
 
-void SvMirrorCom::stageGet(int query, int nextStage, int timeOut )
+void SvMirrorCom::stageGet(int query, int timeOut )
   {
-  qDebug() << "stageGet" << query << nextStage;
+  //qDebug() << "stageGet" << query << nextStage;
+  stage = QString("stage get %1 time %2").arg( QChar(query) ).arg( timeOut );
   //Сформировать запрос информации
   SvTextStreamOut out{};
   out.begin( query );
@@ -291,7 +305,6 @@ void SvMirrorCom::stageGet(int query, int nextStage, int timeOut )
   mSerialPort.write( out.buffer() );
 
   //Переходим в состояние ожидания ответа
-  mStage = nextStage;
   if( timeOut )
     mTimeOut = timeOut;
   }
@@ -331,7 +344,11 @@ void SvMirrorCom::stageMemorySet()
     //Отправить запрос
     mSerialPort.write( out.buffer() );
 
-    mStage = svStMemorySet;
+    //Будем ожидать ответ
+    mTimeOut = 100;
+
+    stage = "stageMemorySet";
+    return;
     }
   else stageMemoryGet();
   }
@@ -352,7 +369,9 @@ void SvMirrorCom::stageMemoryGet()
     mSerialPort.write( out.buffer() );
 
     //Будем ожидать ответ
-    mStage = svStWaitAnswer;
+    mTimeOut = 100;
+
+    stage = "stageMemoryGet";
     }
   else {
     //Известить, что память обновлена
@@ -361,7 +380,7 @@ void SvMirrorCom::stageMemoryGet()
     //Подготовить следующий цикл обновления памяти
     mMemoryBlockIndex = 0;
     if( mScanTasks ) stageDebugSet();
-    else             stageGet( SV_CB_LOG_GET, svStWaitAnswer, 100 );
+    else             stageGet( SV_CB_LOG_GET, 100 );
     }
   }
 
@@ -382,10 +401,12 @@ void SvMirrorCom::stageVpuGet()
     mSerialPort.write( out.buffer() );
 
     //Будем ожидать ответ
-    mStage = svStWaitAnswer;
+    mTimeOut = 100;
     mVpuIndex++;
+
+    stage = QString("stageVpuGet %1").arg(mVpuIndex);
     }
-  else stageGet( SV_CB_LOG_GET, svStWaitAnswer, 100 );
+  else stageGet( SV_CB_LOG_GET, 100 );
   }
 
 
@@ -412,11 +433,14 @@ void SvMirrorCom::stageDebugSet()
       //Отправить запрос
       mSerialPort.write( out.buffer() );
 
+      stage = QString("stageDebugSet[%1] cmd=%2").arg(i).arg(mVpuDebug.at(i).mCommand);
+
       //Обозначить, что команда выполнена
       mVpuDebug[i].mCommand = 0;
 
       //Будем ожидать ответ
-      mStage = svStDebugSet;
+      mTimeOut = 1000;
+
       return;
       }
 
@@ -430,26 +454,27 @@ void SvMirrorCom::stageDebugSet()
 
 void SvMirrorCom::stageFlash()
   {
-  if( mIndex < mProgramm->codeCount() ) {
-    int count = qMin( 48, mProgramm->codeCount() - mIndex );
+  if( mFlashIndex < mProgramm->codeCount() ) {
+    int count = qMin( 48, mProgramm->codeCount() - mFlashIndex );
     //Сформировать запрос информации
     SvTextStreamOut out{};
     out.begin( SV_CB_FLASH );
-    out.addInt32( mIndex );
+    out.addInt32( mFlashIndex );
     out.addInt8( count );
     for( int i = 0; i < count; i++ )
-      out.addInt8( mProgramm->getCode(mIndex + i) );
+      out.addInt8( mProgramm->getCode(mFlashIndex + i) );
     out.end();
 
-    qDebug() << "flash" << mIndex << count;
-    mIndex += count;
+    qDebug() << "flash" << mFlashIndex << count;
+    stage = QString("stageFlash %1").arg(mFlashIndex);
 
-    emit transferProcess( false, tr("Flash %1 bytes").arg( mIndex ) );
+    mFlashIndex += count;
+
+    emit transferProcess( false, tr("Flash %1 bytes").arg( mFlashIndex ) );
 
     //Отправить запрос
     mSerialPort.write( out.buffer() );
 
-    mStage = svStWaitAnswer;
     mTimeOut = 1000;
     }
   else {
@@ -471,8 +496,9 @@ void SvMirrorCom::stageFlash()
       mMemory.resize( mMemoryCount );
 
     //Переходим в состояние ожидания ответа
-    mStage = svStWaitAnswer;
     mTimeOut = 100;
+
+    stage = QString("stageReset %1").arg(mRunOrPause);
     }
   }
 
