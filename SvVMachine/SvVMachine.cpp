@@ -781,56 +781,47 @@ void SvVMachine::executeCore(SvVmVpu *vpu)
       case VBC2_CALL :            //call( param );
         SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC2_CALL" << PARAM8;)
         tmp = PARAM8;
-        vpu->mIp += 2;
-        call( vpu, tmp );
+        if( call( vpu, tmp, 2 ) ) return;
         break;
 
       case VBC1_CALL0 :
         SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL0";)
-        vpu->mIp++;
-        call( vpu, 0 );
+        if( call( vpu, 0, 1 ) ) return;
         break;
 
       case VBC1_CALL1 :
         SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL1";)
-        vpu->mIp++;
-        call( vpu, 1 );
+        if( call( vpu, 1, 1 ) ) return;
         break;
 
       case VBC1_CALL2 :
         SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL2";)
-        vpu->mIp++;
-        call( vpu, 2 );
+        if( call( vpu, 2, 1 ) ) return;
         break;
 
       case VBC1_CALL3 :
         SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL3";)
-        vpu->mIp++;
-        call( vpu, 3 );
+        if( call( vpu, 3, 1 ) ) return;
         break;
 
       case VBC1_CALL4 :
         SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL4";)
-        vpu->mIp++;
-        call( vpu, 4 );
+        if( call( vpu, 4, 1 ) ) return;
         break;
 
       case VBC1_CALL5 :
         SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL5";)
-        vpu->mIp++;
-        call( vpu, 5 );
+        if( call( vpu, 5, 1 ) ) return;
         break;
 
       case VBC1_CALL6 :
         SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL6";)
-        vpu->mIp++;
-        call( vpu, 6 );
+        if( call( vpu, 6, 1 ) ) return;
         break;
 
       case VBC1_CALL7 :
         SV_DEBUG(qDebug() << vpu->mIp << vpu->mSp << ":VBC1_CALL7";)
-        vpu->mIp++;
-        call( vpu, 7 );
+        if( call( vpu, 7, 1 ) ) return;
         break;
 
         //Инкремент
@@ -1107,7 +1098,7 @@ void SvVMachine::callInternal( SvVmVpu *vpu, int addr, int retAddr ) {
 
 //Универсальный вызов подпрограммы
 //по смещению addrOffset относительно sp содержится адрес вызова
-void SvVMachine::call(SvVmVpu *vpu, int addrOffset)
+bool SvVMachine::call(SvVmVpu *vpu, int addrOffset, int inc)
   {
   //Вызов любой функции
   //operand - это смещение комплексного адреса вызова
@@ -1122,17 +1113,24 @@ void SvVMachine::call(SvVmVpu *vpu, int addrOffset)
   if( vpu->mSp - 3 <= 0 || vpu->mSp > mMemorySize ) {
     memFail( vpu, vpu->mSp );
     vpu->mIp = 0;
-    return;
+    return true;
     }
   if( static_cast<unsigned>(tmp) & 0x80000000 ) {
     //import - функции
     //Статическая внешняя функция
+    //Если вернется true, то переключаемся на другую задачу, а вызов функции будет повторен
     if( executeMethod( vpu, static_cast<int>( static_cast<unsigned>(tmp) & 0x7fffffff ) ) )
-      return;
+      return true;
+    //Если вернется false, то выполнение программы будет продолжено
+    vpu->mIp += inc;
     }
-  else
+  else {
+    vpu->mIp += inc;
     //внутренние функции
     callInternal( vpu, tmp, vpu->mIp );
+    }
+  //Не переключаемся и продолжаем выполнение
+  return false;
   }
 
 

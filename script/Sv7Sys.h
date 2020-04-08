@@ -104,9 +104,10 @@ svWaitTick( int time ) {
   svWaitTimeOut( time + svTickCount );
   }
 
-int svIsTimeOut( int time ) {
-  return (time - svTickCount) <= 0;
-  }
+
+//int svIsTimeOut( int time ) {
+//  return (time - svTickCount) <= 0;
+//  }
 #endif
 
 

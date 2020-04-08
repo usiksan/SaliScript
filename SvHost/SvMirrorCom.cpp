@@ -252,11 +252,36 @@ void SvMirrorCom::bytesRead()
         break;
 
 
-      case SV_CB_LOG :
-        line.remove( 0, 1 );
-        if( line.length() )
-          emit log( QString::fromUtf8( line ) );
+      case SV_CB_LOG : {
+        int count = in.getInt8();
+        while( count ) {
+          int textIndex = in.getInt32();
+          int value0    = in.getInt32();
+          int value1    = in.getInt32();
+          int value2    = in.getInt32();
 
+          QString pat;
+
+          if( mProgramm != nullptr && textIndex < mProgramm->mStrings.count() ) {
+            //Получить строку
+            pat = mProgramm->mStrings.at( textIndex );
+            //Теперь добавляем параметры, если есть
+            if( pat.contains("%3") )
+              pat = pat.arg(value0).arg(value1).arg(value2);
+            if( pat.contains("%2") )
+              pat = pat.arg(value0).arg(value1);
+            if( pat.contains("%1") )
+              pat = pat.arg(value0);
+            }
+          else {
+            //В программе нету соответствующей строки, формируем общий лог
+            pat = QString("Log[%1]: %2, %3, %4").arg( textIndex ).arg( value0 ).arg( value1 ).arg( value2 );
+            }
+
+          emit log( pat );
+          count--;
+          }
+        }
         //Теперь снова считывание информации
         stageGet( SV_CB_TICKET_GET, 100 );
         break;
@@ -454,7 +479,7 @@ void SvMirrorCom::stageDebugSet()
 
 void SvMirrorCom::stageFlash()
   {
-  if( mFlashIndex < mProgramm->codeCount() ) {
+  if( mProgramm && mFlashIndex < mProgramm->codeCount() ) {
     int count = qMin( 48, mProgramm->codeCount() - mFlashIndex );
     //Сформировать запрос информации
     SvTextStreamOut out{};

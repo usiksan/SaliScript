@@ -6,7 +6,11 @@
     "CtrVersion": 0,
     "DebugType": 1,
     "FileList": [
-        "/home/salilab/work/SaliScript/script/main.c"
+        "/home/salilab/work/SaliScript/script/main.c",
+        "/home/salilab/work/SaliScript/script/Sv7Sys.h",
+        "/home/salilab/work/SaliScript/script/stepController.c",
+        "/home/salilab/work/SaliScript/script/stepMotor.h",
+        "/home/salilab/work/SaliScript/script/Sv7Plc.h"
     ],
     "GlobalID": "",
     "MainScript": "main.c",
@@ -27,56 +31,56 @@
             "form": "",
             "max": "",
             "min": "",
-            "name": ""
+            "name": "b"
         },
         {
             "axiz": "",
             "form": "",
             "max": "",
             "min": "",
-            "name": ""
+            "name": "svTickCount"
         },
         {
             "axiz": "",
             "form": "",
             "max": "",
             "min": "",
-            "name": ""
+            "name": "г"
         },
         {
             "axiz": "",
             "form": "",
             "max": "",
             "min": "",
-            "name": ""
+            "name": "pos"
         },
         {
             "axiz": "",
             "form": "",
             "max": "",
             "min": "",
-            "name": ""
+            "name": "vpos"
         },
         {
             "axiz": "",
             "form": "",
             "max": "",
             "min": "",
-            "name": ""
+            "name": "velo"
         },
         {
             "axiz": "",
             "form": "",
             "max": "",
             "min": "",
-            "name": ""
+            "name": "rid"
         },
         {
             "axiz": "",
             "form": "",
             "max": "",
             "min": "",
-            "name": ""
+            "name": "rd0"
         },
         {
             "axiz": "",

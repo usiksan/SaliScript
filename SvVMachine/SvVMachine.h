@@ -297,18 +297,13 @@ class SvVMachine
 
 
     /*!
-       \brief signature0 Возвращает сигнатуру программы как целое
-       \return 4 байта сигнатуры программы
+       \brief signature Возвращает заданный знак сигнатуры программы
+       \return          Байт сигнатуры
 
-       Группа функций возвращает сигнатуру программы как набор целых.
        Все вместе они образуют текстовую строку, представляющую собой сигнатуру
        программы - текстовое имя.
      */
-    int  signature0()  const { return svIRead32( mProg + SVVMH_SIGNATURE ); }
-    int  signature1()  const { return svIRead32( mProg + SVVMH_SIGNATURE + 4 ); }
-    int  signature2()  const { return svIRead32( mProg + SVVMH_SIGNATURE + 8 ); }
-    int  signature3()  const { return svIRead32( mProg + SVVMH_SIGNATURE + 12 ); }
-    int  signature4()  const { return svIRead32( mProg + SVVMH_SIGNATURE + 16 ); }
+    unsigned char signature( int i)  const { return mProg[SVVMH_SIGNATURE + i]; }
 
 
 
@@ -536,10 +531,12 @@ class SvVMachine
                \brief call Универсальный вызов подпрограммы. Это может быть вызов
                   обычной функции из скрипта или вызов внешней функции,
                   обработка которой осуществляется с помощью executeMethod
-               \param vpu Виртуальный процессор, осуществляющий вызов
+               \param vpu        Виртуальный процессор, осуществляющий вызов
                \param addrOffset по смещению addrOffset относительно sp содержится адрес вызова
+               \param inc        Инкремент счетчика адреса в случае успешного вызова
+               \return           Если возвращает истину, то переключаться на другой процесс, иначе - продолжать выполнение
              */
-            void call( SvVmVpu *vpu, int addrOffset );
+            bool call( SvVmVpu *vpu, int addrOffset, int inc );
 
 
 

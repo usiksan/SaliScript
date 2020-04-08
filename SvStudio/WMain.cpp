@@ -712,9 +712,12 @@ void WMain::debugMode()
   {
   //Диалог свойств проекта
   DPrjProp dprjProp( tr("Apply"), this );
-  if( dprjProp.exec() )
+  if( dprjProp.exec() ) {
     //Установить тип канала связи с аппаратурой
     emit setMirror( svProject->mDebugType );
+    //Внести изменения в соответствии с настройками проекта
+    emit linkTo( svProject->mRemoteIp, svProject->mRemotePort, svProject->mControllerName, svProject->mControllerPassw );
+    }
   }
 
 
