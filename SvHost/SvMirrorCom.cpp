@@ -138,6 +138,10 @@ void SvMirrorCom::bytesRead()
           clearDebug();
           }
 
+        if( mMemory.count() == 0 ) {
+          mMemory.resize( mMemoryCount = 100 );
+          }
+
         int serial[3];
         serial[0] = in.getInt32();
         serial[1] = in.getInt32();
@@ -239,13 +243,15 @@ void SvMirrorCom::bytesRead()
         //Номер vpu
         int i = in.getInt8();
         if( i < mVpuState.count() ) {
-          mVpuState[i].mIp       = in.getInt32(); //!< instruction pointer [указатель инструкций]
-          mVpuState[i].mSp       = in.getInt32(); //!< stack pointer [указатель стека]
-          mVpuState[i].mBp       = in.getInt32(); //!< function frame pointer [указатель базы в стеке локальных переменных для текущей функции (указывает на фрейм возврата из функции)]
-          mVpuState[i].mTm       = in.getInt32(); //!< exception mask [маска обрабатываемых исключений]
-          mVpuState[i].mBaseSp   = in.getInt32(); //!< stack start [Начало стека для данного процессора]
-          mVpuState[i].mThrow    = in.getInt32(); //!< current exception [Текущее значение исключения]
-          mVpuState[i].mDebugRun = in.getInt32(); //!< if eq 0 then in debug state else - in run state
+          SvVmVpuState st;
+          st.mIp       = in.getInt32(); //!< instruction pointer [указатель инструкций]
+          st.mSp       = in.getInt32(); //!< stack pointer [указатель стека]
+          st.mBp       = in.getInt32(); //!< function frame pointer [указатель базы в стеке локальных переменных для текущей функции (указывает на фрейм возврата из функции)]
+          st.mTm       = in.getInt32(); //!< exception mask [маска обрабатываемых исключений]
+          st.mBaseSp   = in.getInt32(); //!< stack start [Начало стека для данного процессора]
+          st.mThrow    = in.getInt32(); //!< current exception [Текущее значение исключения]
+          st.mDebugRun = in.getInt32(); //!< if eq 0 then in debug state else - in run state
+          mVpuState[i] = st;
           }
         stageVpuGet();
         }

@@ -68,7 +68,7 @@ class SvMirrorExtern : public SvMirror
     //! \brief vpuVector Return all vpu current status
     //! \return All vpu current status
     //!
-    virtual SvVpuVector vpuVector() const override { return mVpuState; }
+    virtual SvVpuVector vpuVector() const override;
 
     //!
     //! \brief addressOfName Return address of symbol or zero if name not defined

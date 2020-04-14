@@ -31,6 +31,19 @@ SvMirrorExtern::~SvMirrorExtern()
 
 
 
+SvVpuVector SvMirrorExtern::vpuVector() const
+  {
+  SvVpuVector state;
+  state.resize( mVpuState.count() );
+  for( int i = 0; i < mVpuState.count(); i++ )
+    state[i] = mVpuState.at(i);
+
+  return state;
+  }
+
+
+
+
 int SvMirrorExtern::addressOfName(const QString name) const
   {
   if( mProgramm.isNull() )

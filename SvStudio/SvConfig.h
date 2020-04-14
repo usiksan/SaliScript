@@ -41,12 +41,14 @@
                v0.19 Обновил виртуальную машину. Устранение ошибки вызова встроенной функции
                v0.20 Добавил поддержку лога из контроллера
     08.04.2020 v0.21 Ошибка: не применялись изменения настроек проекта в зеркале
+    14.04.2020 v0.22 Ошибка: чтение в разных потоках SvMirrorExtern::mVpuState приводит к зависанию
+                     из-за shared-object. Решение: делаю полную копию и отдаю ее.
 */
 
 #ifndef SVCONFIG
 #define SVCONFIG
 
-#define SV_VERSION "v0.21"
+#define SV_VERSION "v0.22"
 
 #define PATH_HELP              ""
 #define EXTENSION_PROJECT      ".svproject"
