@@ -59,6 +59,11 @@ class SvMirrorManager : public QObject
     int         mirrorTypeId() const { return mMirrorTypeId; }
 
     //!
+    //! \brief threadStart Запустить поток с обслуживанием зеркал
+    //!
+    void        threadStart();
+
+    //!
     //! \brief addMirrorFabric Добавить фабрику к списку. Фабрика - это функтор, используемый для конструирования зеркала.
     //!                        Фабрика вызывается в контексте потока-обработчика зеркал.
     //! \param id              Идентификатор данной фабрики

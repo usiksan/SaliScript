@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
 
   //Запустить отладчик на исполнение
-//  svMirrorManager->start();
+  svMirrorManager->threadStart();
 
   int res = a.exec();
 

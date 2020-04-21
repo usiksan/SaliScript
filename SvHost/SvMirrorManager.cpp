@@ -14,6 +14,15 @@ SvMirrorManager::SvMirrorManager(QObject *parent) :
   mThread = new QThread();
   moveToThread( mThread );
   connect( mThread, &QThread::started, this, &SvMirrorManager::start );
+  }
+
+
+
+//!
+//! \brief threadStart Запустить поток с обслуживанием зеркал
+//!
+void SvMirrorManager::threadStart()
+  {
   mThread->start();
   }
 

@@ -43,12 +43,13 @@
     08.04.2020 v0.21 Ошибка: не применялись изменения настроек проекта в зеркале
     14.04.2020 v0.22 Ошибка: чтение в разных потоках SvMirrorExtern::mVpuState приводит к зависанию
                      из-за shared-object. Решение: делаю полную копию и отдаю ее.
+    16.04.2020 v0.23 Дополнительный сервис. Теперь менджер зеркал нужно стартовать явно
 */
 
 #ifndef SVCONFIG
 #define SVCONFIG
 
-#define SV_VERSION "v0.22"
+#define SV_VERSION "v0.23"
 
 #define PATH_HELP              ""
 #define EXTENSION_PROJECT      ".svproject"

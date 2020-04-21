@@ -77,6 +77,15 @@ void SvMirror::startScript(const QString scriptPath)
 
 
 
+
+
+void SvMirror::memorySetByName(const QString varName, int value, int index)
+  {
+  memorySet( addressOfName(varName) + index, value );
+  }
+
+
+
 #if 0
 
 void SvMirror::proceccingRemoteCall()

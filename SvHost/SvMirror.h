@@ -201,6 +201,14 @@ class SvMirror : public QObject
     virtual void memorySet( int index, int value ) = 0;
 
     //!
+    //! \brief memorySetByName Установить переменную по имени
+    //! \param varName         Имя переменной
+    //! \param value           Устанавливаемое значение
+    //! \param index           Индекс (смещение) от начала переменной для массивов
+    //!
+    void memorySetByName( const QString varName, int value, int index );
+
+    //!
     //! \brief debug     Execute one debug command
     //! \param taskId    Task index for which debug command
     //! \param debugCmd  Debug command code
