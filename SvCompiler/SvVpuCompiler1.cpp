@@ -153,6 +153,10 @@ SvProgrammPtr SvVpuCompiler::make(const QString prjPath, const QString &mainScri
       }
     }
 
+  //К списку символов добавим список функций
+  for( SvFunction *fun : mFunGlobal.mList )
+    prog->addSymbol( fun->mName, fun->mAddress );
+
   //Обозначить точку входа
   SvFunction *mainFun = mFunGlobal.getFunction( QString("main") );
   if( mainFun ) {
