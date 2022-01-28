@@ -34,7 +34,6 @@ SOURCES += \
   SvDebug/main.cpp \
   SvHost/7bit.cpp \
   SvHost/SvDir.cpp \
-  SvHost/SvTextStream.cpp \
   SvHost/SvTextStreamIn.cpp \
   SvHost/SvTextStreamOut.cpp
 
@@ -52,7 +51,6 @@ HEADERS += \
   SvDebug/WOscillograph.h \
   SvHost/7bit.h \
   SvHost/SvDir.h \
-  SvHost/SvTextStream.h \
   SvHost/SvTextStreamIn.h \
   SvHost/SvTextStreamOut.h
 

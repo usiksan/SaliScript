@@ -1,0 +1,36 @@
+//====================================================================
+//      SvCompiler V6.06
+//By A.Sibilev
+//====================================================================
+;fun <void()>
+[1:5] ;a = 5;
+VBC1_PUSH_2 //a
+VBC2_PUSH_CONST 5 
+VBC1_POP
+[1:8] ;
+VBC1_RETURN
+;main <void()>
+[1:9] ;while(1) {
+LAB61: //while condition
+;
+[1:10] ;a++;
+VBC1_PUSH_2 //a
+VBC1_INC
+[1:11] ;fun();
+VBC2_PUSH_CONST 56  //func address fun
+VBC1_CALL0
+VBC1_STACK_UP1//remove result, call address and params
+[1:12] ;a--;
+VBC1_PUSH_2 //a
+VBC1_DEC
+[1:13] ;a++;
+VBC1_PUSH_2 //a
+VBC1_INC
+VBC4_JUMP LAB61 //while forever loop
+LAB75: //while exit
+[1:15] ;
+VBC1_RETURN
+//Init table
+//Variables
+svTickCount : 1
+a : 2

@@ -1,0 +1,56 @@
+//*****************************************************************
+// Script Compiler V6.06
+// Author: Sibilev A.S.
+// Web: www.rc.saliLab.com
+//*****************************************************************
+
+//==================
+// types list
+int int
+*int *int
+cstring cstring
+*cstring *cstring
+void void
+*void *void
+fail type undef
+cblock cblock
+*cblock *cblock
+empty type <void()>
+
+//==================
+// global variables
+int 1:svTickCount
+int 2:a
+
+//==================
+//  functions
+function declare void fun(
+) end function declare
+function declare void main(
+) end function declare
+
+//==================
+//  functions bodies
+function declare void fun(
+) end function declare
+{
+ {
+  ( <int 2:a> ) = (5) 
+ return
+ }
+}
+
+
+
+function declare void main(
+) end function declare
+{
+ {
+ loop return
+ }
+}
+
+
+
+
+Compilation success
